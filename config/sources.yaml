@@ -1,0 +1,77 @@
+# BankLens data-source registry.
+# The single source of truth for WHERE data comes from and HOW it may be used.
+# The serving / MCP layer enforces `license.redistributable` at its boundary.
+
+version: 1
+
+sources:
+  fdic_bankfind:
+    name: "FDIC BankFind Suite"
+    kind: rest_api
+    base_url: "https://banks.data.fdic.gov/api"
+    auth: none
+    cadence: quarterly
+    entities: ~4500          # FDIC-insured institutions
+    docs: "https://banks.data.fdic.gov/docs/"
+    license:
+      tag: public-domain-us-gov
+      redistributable: true
+    status: active           # implemented in Phase 1
+
+  ffiec_cdr:
+    name: "FFIEC Central Data Repository (Call Reports / UBPR)"
+    kind: bulk + soap_pws
+    base_url: "https://cdr.ffiec.gov/public"
+    auth: pws_token          # free registration for the Public Web Service
+    cadence: quarterly       # available ~45 days after quarter-end
+    formats: [tab_delimited, xbrl]
+    license: { tag: public-domain-us-gov, redistributable: true }
+    status: planned
+
+  sec_edgar:
+    name: "SEC EDGAR (XBRL + filings text)"
+    kind: rest_api + nightly_bulk
+    base_url: "https://data.sec.gov"
+    auth: identifying_user_agent
+    rate_limit_rps: 10
+    cadence: continuous
+    license: { tag: public-domain-us-gov, redistributable: true }
+    status: planned
+
+  fed_nic:
+    name: "Federal Reserve NIC (FR Y-9C holding-company data)"
+    kind: bulk_zip
+    base_url: "https://www.ffiec.gov/npw/FinancialReport/FinancialDataDownload"
+    auth: none
+    cadence: quarterly
+    license: { tag: public-domain-us-gov, redistributable: true }
+    status: planned
+
+  fred:
+    name: "FRED (macro series)"
+    kind: rest_api
+    base_url: "https://api.stlouisfed.org/fred"
+    auth: api_key            # FRED_API_KEY
+    cadence: varies
+    license: { tag: public-domain-us-gov, redistributable: true }
+    status: planned
+
+  market_ohlc:
+    name: "Market OHLC / candles (vendor TBD)"
+    kind: rest_api + websocket
+    candidates: [polygon, tiingo, alpha_vantage, financial_modeling_prep]
+    auth: api_key
+    cadence: eod_or_intraday
+    license:
+      tag: commercial-licensed
+      redistributable: false     # <-- enforced: display-only, no bulk export via public tools
+    status: planned
+
+  eba_transparency:
+    name: "EBA EU-wide Transparency Exercise / EUCLID"
+    kind: bulk_download
+    base_url: "https://www.eba.europa.eu"
+    auth: none
+    cadence: semiannual/annual
+    license: { tag: eba-open, redistributable: true }
+    status: stretch

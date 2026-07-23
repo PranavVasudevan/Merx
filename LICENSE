@@ -1,0 +1,14 @@
+Copyright (c) 2026 BankLens. All rights reserved.
+
+PLACEHOLDER LICENSE — choose before any external distribution.
+
+This is a placeholder pending a licensing decision by the project owners.
+For an internal enterprise service, a proprietary "all rights reserved" notice
+(this file) is a safe default. If the project is later open-sourced, replace
+this file with the chosen license (e.g. Apache-2.0 or MIT) and update the
+notice in README.md.
+
+NOTE ON DATA: source code and this license do not cover third-party data.
+Government filing data (FDIC, FFIEC, SEC, Fed, FRED, EBA) is public-domain.
+Commercial market data is separately licensed and must not be redistributed —
+see config/sources.yaml for per-source license tags.

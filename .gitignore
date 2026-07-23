@@ -1,0 +1,63 @@
+# ---- Data (never commit landed data; it's reproducible from source) ----
+/data/bronze/
+/data/silver/
+/data/gold/
+!/data/samples/
+*.parquet
+*.duckdb
+
+# ---- Secrets / env ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# ---- Rust ----
+target/
+Cargo.lock  # keep for binaries, ignore for libs; adjust per-crate as needed
+
+# ---- Node / frontend ----
+node_modules/
+.next/
+dist-ssr/
+*.local
+
+# ---- Java / Spark ----
+*.class
+.gradle/
+build/
+
+# ---- Terraform ----
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+
+# ---- IDE / OS ----
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+*.swp
+
+# ---- ML artifacts ----
+mlruns/
+/ml/model_registry/*
+!/ml/model_registry/.gitkeep

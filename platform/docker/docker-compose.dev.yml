@@ -1,0 +1,50 @@
+# Local development infrastructure for BankLens.
+# Not needed for the Phase-1 vertical slice (FDIC is a public API) — this comes
+# online in Phase 1/2 when we land data into a real store and serve time-series.
+#
+#   docker compose -f platform/docker/docker-compose.dev.yml up -d
+#
+# Values come from your .env (copy from .env.example).
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16      # Postgres 16 + pgvector for RAG (Phase 6)
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-banklens}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_locally}
+      POSTGRES_DB: ${POSTGRES_DB:-banklens}
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-banklens}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.8
+    environment:
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-banklens}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-change_me_locally}
+    ports: ["8123:8123", "9000:9000"]     # HTTP + native
+    volumes: ["chdata:/var/lib/clickhouse"]
+    ulimits:
+      nofile: { soft: 262144, hard: 262144 }
+
+  minio:                                   # S3-compatible object store for the lakehouse
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-banklens}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change_me_locally}
+    ports: ["9002:9000", "9001:9001"]      # API + console
+    volumes: ["miniodata:/data"]
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+
+volumes:
+  pgdata:
+  chdata:
+  miniodata:

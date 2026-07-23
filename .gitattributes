@@ -1,0 +1,15 @@
+# Normalise line endings; keep Windows scripts CRLF
+* text=auto eol=lf
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+
+# Treat these as binary
+*.parquet binary
+*.duckdb binary
+*.png binary
+*.jpg binary
+*.ico binary
+
+# Language stats: don't count vendored / generated as "your" code
+docs/** linguist-documentation
+schemas/** linguist-generated=false

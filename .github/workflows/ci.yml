@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  python-pipelines:
+    name: Pipelines (lint + hermetic tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dev tooling
+        run: pip install ruff
+      - name: Lint
+        run: ruff check pipelines || true   # non-blocking until the style baseline lands
+      - name: Gold metric tests (hermetic)
+        run: python pipelines/transforms/tests/test_gold_metrics.py
+      - name: FDIC connector tests (hermetic)
+        run: python pipelines/ingestion/tests/test_fdic.py
+
+  # Placeholder jobs — enabled as those stacks land.
+  # rust-engines:   cargo test  (services/ingestion, services/stress-engine)
+  # frontend:       vitest      (frontend/)
+  # data-quality:   great_expectations / soda checks on sample data

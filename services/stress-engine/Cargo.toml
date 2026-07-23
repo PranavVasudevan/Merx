@@ -1,0 +1,15 @@
+# BankLens Capital Buffer Simulator (Feature 16) — Rust.
+# Deterministic, auditable, property-tested money-math. C++/QuantLib is bridged
+# in later for duration/curve analytics. Skeleton for Phase 3.
+[package]
+name = "banklens-stress-engine"
+version = "0.1.0"
+edition = "2021"
+description = "Deterministic capital-buffer stress simulator (Feature 16)"
+license = "LicenseRef-Proprietary"
+
+[dependencies]
+# serde = { version = "1", features = ["derive"] }
+
+[dev-dependencies]
+# proptest = "1"   # property-based tests for the ratio math

@@ -1,0 +1,12 @@
+# Default owners for everything (update handles once the team exists).
+*                       @banklens/maintainers
+
+# Domain-specific ownership as teams form:
+/pipelines/             @banklens/data-platform
+/services/stress-engine/ @banklens/quant
+/ml/                    @banklens/ml
+/services/mcp-server/   @banklens/platform
+/services/agents/       @banklens/ai
+/frontend/              @banklens/frontend
+/platform/              @banklens/sre
+/docs/architecture/adr/ @banklens/architecture
