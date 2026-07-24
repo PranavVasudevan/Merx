@@ -73,6 +73,10 @@ Full reference: https://banks.data.fdic.gov/docs/
 We recompute loan-to-deposit and equity-to-assets from the dollar fields and
 **assert they match** `LNLSDEPR`/`EQV` in tests — proof the pipeline math is correct.
 
+## Data-quality caveats (observed in the 1,049-bank MVP slice)
+- **Foreign-bank US branches/agencies** (e.g. Bank of China, State Bank of India, Standard Chartered) report **0/null CET1** — they are capitalized at the parent level and don't file the ratio the same way. They pollute "lowest CET1" rankings. Phase 2: treat 0/null CET1 as *missing* (exclude from capital percentiles) rather than as a real 0.
+- The cohort is **CRE-heavy by nature** (median ~48% CRE), so peer-relative percentiles — not absolute thresholds alone — should drive the X-Ray's concentration verdict.
+
 ## Still to map (Phase 2)
 Brokered deposits, FHLB advances, short-term borrowings (funding-stability score);
 the CET1/RWA **dollar** amounts (for a precise CRE-to-capital ratio); the

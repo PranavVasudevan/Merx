@@ -5,6 +5,13 @@ All notable changes to this project are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Added — Phase 1c (peer set + percentile ranks)
+- Population fetch of the MVP slice (US banks $1B–$250B, 1,049 banks for 2026Q1) landed to Bronze in a single filtered request.
+- `transforms/peers.py`: `percentile_rank`, `add_percentile_ranks`, `summary_stats` — a bank's standing vs its peers.
+- `gold.gold_features(row, prev=None)`: cross-sectional deriver (population = one quarter × many banks) refactored out of `derive_gold`.
+- X-Ray flags now carry `peer_percentile` when ranks are attached.
+- `banklens_ingestion.population` + `scripts/population_report.ps1`: slice distribution, leaderboards (CRE, uninsured, CET1), and one bank's peer standing. Dime Community Bank: 73.8% CRE = 93rd percentile of peers.
+
 ### Added — Phase 1b (Feature 11 X-Ray + real concentration/capital)
 - Verified (probed, not guessed) FDIC codes for full loan composition, securities (AFS), and the four regulatory capital ratios (CET1/Tier1/Total/Leverage).
 - Silver: loan-composition columns, `cre_loans` aggregate, `core_deposits`, capital-ratio pass-through, derived `securities_htm`.

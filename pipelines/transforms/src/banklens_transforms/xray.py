@@ -85,14 +85,19 @@ def evaluate_xray(gold_row: dict) -> dict:
         if sev == "low":
             continue
         threshold = rule.high if sev == "high" else rule.elevated
-        flags.append({
+        flag = {
             "factor": rule.label,
             "metric": rule.key,
             "value": round(value, 2),
             "threshold": threshold,
             "severity": sev,
             "note": rule.why,
-        })
+        }
+        # Peer context, if percentile ranks were attached (see peers.add_percentile_ranks).
+        pctile = gold_row.get(f"percentile_rank_{rule.key}")
+        if pctile is not None:
+            flag["peer_percentile"] = pctile
+        flags.append(flag)
 
     flags.sort(key=lambda f: _ORDER[f["severity"]], reverse=True)
     overall = "low"

@@ -86,39 +86,45 @@ def qoq_delta(current, previous) -> dict | None:
     return {"abs": abs_change, "pct": pct_change}
 
 
-def derive_gold(silver_rows_desc: list[dict]) -> list[dict]:
-    """Given Silver rows newest-first, produce Gold feature rows."""
-    gold: list[dict] = []
-    for i, row in enumerate(silver_rows_desc):
-        prev = silver_rows_desc[i + 1] if i + 1 < len(silver_rows_desc) else None
-        conc = concentration_ratios(row)
-        max_label, max_val = max_concentration(conc)
+def gold_features(row: dict, prev: dict | None = None) -> dict:
+    """Derive one Gold feature row from a Silver row (+ optional prior quarter).
 
-        g = {
-            "cert_number": row.get("cert_number"),
-            "name": row.get("name"),
-            "quarter": row.get("quarter"),
-            # deposits / funding
-            "uninsured_deposit_pct": uninsured_deposit_pct(row),
-            "core_deposit_pct": core_deposit_pct(row),
-            "loan_to_deposit_pct": loan_to_deposit_pct(row),
-            "equity_to_assets_pct": equity_to_assets_pct(row),
-            # concentration (Feature 11 inputs)
-            **conc,
-            "max_loan_concentration_category": max_label,
-            "max_loan_concentration_pct": max_val,
-            "cre_to_equity_pct": cre_to_equity_pct(row),
-            # capital adequacy (straight from FDIC)
-            "cet1_ratio": row.get("cet1_ratio"),
-            "tier1_rbc_ratio": row.get("tier1_rbc_ratio"),
-            "total_rbc_ratio": row.get("total_rbc_ratio"),
-            "leverage_ratio": row.get("leverage_ratio"),
-            # trend
-            "qoq_total_deposits": qoq_delta(
-                row.get("total_deposits"), prev.get("total_deposits") if prev else None),
-            "qoq_uninsured_deposit_pct": qoq_delta(
-                uninsured_deposit_pct(row),
-                uninsured_deposit_pct(prev) if prev else None),
-        }
-        gold.append(g)
-    return gold
+    Pass ``prev=None`` for cross-sectional use (a population of many banks in one
+    quarter), where QoQ deltas don't apply.
+    """
+    conc = concentration_ratios(row)
+    max_label, max_val = max_concentration(conc)
+    return {
+        "cert_number": row.get("cert_number"),
+        "name": row.get("name"),
+        "quarter": row.get("quarter"),
+        "total_assets": row.get("total_assets"),
+        # deposits / funding
+        "uninsured_deposit_pct": uninsured_deposit_pct(row),
+        "core_deposit_pct": core_deposit_pct(row),
+        "loan_to_deposit_pct": loan_to_deposit_pct(row),
+        "equity_to_assets_pct": equity_to_assets_pct(row),
+        # concentration (Feature 11 inputs)
+        **conc,
+        "max_loan_concentration_category": max_label,
+        "max_loan_concentration_pct": max_val,
+        "cre_to_equity_pct": cre_to_equity_pct(row),
+        # capital adequacy (straight from FDIC)
+        "cet1_ratio": row.get("cet1_ratio"),
+        "tier1_rbc_ratio": row.get("tier1_rbc_ratio"),
+        "total_rbc_ratio": row.get("total_rbc_ratio"),
+        "leverage_ratio": row.get("leverage_ratio"),
+        # trend (None when prev is None)
+        "qoq_total_deposits": qoq_delta(
+            row.get("total_deposits"), prev.get("total_deposits") if prev else None),
+        "qoq_uninsured_deposit_pct": qoq_delta(
+            uninsured_deposit_pct(row), uninsured_deposit_pct(prev) if prev else None),
+    }
+
+
+def derive_gold(silver_rows_desc: list[dict]) -> list[dict]:
+    """One bank's Silver rows (newest-first) -> Gold rows, with QoQ from the prior quarter."""
+    return [
+        gold_features(row, silver_rows_desc[i + 1] if i + 1 < len(silver_rows_desc) else None)
+        for i, row in enumerate(silver_rows_desc)
+    ]
