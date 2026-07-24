@@ -15,8 +15,19 @@ records, attach provenance, land immutably in Bronze.
 ## Run
 ```powershell
 $env:PYTHONPATH = "src;../transforms/src"
-python -m banklens_ingestion.cli --cert 3511 --quarters 6
+python -m banklens_ingestion.cli --cert 3511 --quarters 6   # fetch + transform
+python -m banklens_ingestion.cli --cert 3511 --from-bronze  # re-run transforms, no network
 ```
+
+`--from-bronze` replays the Silver→Gold→X-Ray transforms on already-landed Bronze —
+useful for offline iteration and if the source is temporarily throttling you.
+
+## Politeness / throttling
+The connector sends an identifying User-Agent, a per-request delay, and bounded
+retries with backoff, and issues a **single** financials request per bank. Heavy
+bursts (e.g. rapid field-probing) can trip FDIC's CDN into rate-limiting your IP
+(seen as TLS connection resets). Keep request volume modest; the production Rust
+connector will add connection reuse and adaptive backoff.
 
 ## Test (hermetic, no network)
 ```powershell

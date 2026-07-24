@@ -32,5 +32,13 @@
 4. **Restatements (Phase 2):** when a bank refiles a quarter, keep the latest and set `restated_flag`.
 5. **Identity crosswalk (Phase 2):** populate `cik`/`rssd_id` via the CERT↔CIK↔RSSD map so FDIC, SEC, and Fed data join.
 
-## Full-build additions (Phase 2)
-Loan composition (`cre_loans`, `c_and_i_loans`, `consumer_loans`, `residential_mortgage_loans`, `agricultural_loans`), securities (`securities_afs`, `securities_htm`), capital & liquidity ratios (`cet1_ratio`, `tier1_ratio`, `leverage_ratio`), funding (`brokered_deposits`, `fhlb_advances`, `short_term_borrowings`).
+## Implemented in Phase 1b (verified codes — see data-dictionary.md)
+- **Uninsured** now uses reported `DEPUNINS` (not `DEP − DEPINS`); added `core_deposits`.
+- **Loan composition:** `real_estate_loans`, `construction_loans`, `multifamily_loans`, `nonfarm_nonres_loans`, `heloc_loans`, `residential_mortgage_loans`, `farmland_loans`, `agricultural_loans`, `c_and_i_loans`, `consumer_loans` (+ `credit_card_loans`, `auto_loans`, `consumer_other_loans`), and the derived `cre_loans` aggregate.
+- **Securities:** `securities_total`, `securities_afs`, derived `securities_htm`.
+- **Capital ratios (from FDIC, already %):** `cet1_ratio`, `tier1_rbc_ratio`, `total_rbc_ratio`, `leverage_ratio`, plus reported `equity_to_assets_ratio_reported`, `loan_to_deposit_ratio_reported`.
+
+## Still to add (Phase 2)
+Funding detail (`brokered_deposits`, `fhlb_advances`, `short_term_borrowings`) for the
+funding-stability score; CET1/RWA **dollar** amounts for a precise CRE-to-capital ratio;
+the CERT↔CIK↔RSSD crosswalk (`RSSDID` is available) to join Fed/SEC data.

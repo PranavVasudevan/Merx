@@ -1,30 +1,63 @@
 """Silver layer — normalise one raw FDIC record into the canonical schema.
 
-Cleaning steps (Phase 1 subset of the full contract):
-  * map FDIC MDRM-style codes -> human canonical column names
-  * convert amounts from **thousands of USD** to actual USD
+Cleaning steps:
+  * map FDIC codes -> human canonical column names
+  * convert DOLLAR fields from **thousands of USD** to actual USD
+  * pass RATIO fields (already percentages) through unchanged  <-- do NOT rescale
   * parse REPDTE (YYYYMMDD int) -> ISO date + quarter label
   * flag missing values explicitly (None), never silently zero-fill
+  * aggregate CRE (commercial real estate) from its RC-C components
 
-The full Silver contract (loan composition, capital ratios, restated-filing
-dedupe, CERT<->CIK<->RSSD crosswalk) is documented in
-``docs/data-contracts/bank_financials.silver.md``.
+Two important corrections learned from the live FDIC data:
+  1. Uninsured deposits are taken from FDIC's reported ``DEPUNINS`` (an official
+     estimate) rather than derived as ``DEP - DEPINS``. The insured/uninsured
+     estimates use a different base, so the reported figure is authoritative.
+  2. Capital ratios (CET1/Tier1/Total/Leverage) come straight from FDIC — they are
+     already percentages and must not be multiplied by 1000.
 """
 
 from __future__ import annotations
 
-# FDIC financial amounts are reported in thousands of dollars.
 _THOUSANDS = 1000
 
-# raw FDIC code -> canonical Silver column
-_FIELD_MAP = {
+# raw FDIC code -> canonical column, for DOLLAR amounts (reported in thousands)
+_DOLLAR_FIELDS = {
     "ASSET": "total_assets",
     "DEP": "total_deposits",
     "DEPDOM": "domestic_deposits",
     "DEPINS": "insured_deposits",
+    "DEPUNINS": "uninsured_deposits",       # FDIC's reported estimate
+    "COREDEP": "core_deposits",
     "LNLSGR": "total_loans_gross",
     "LNLSNET": "total_loans_net",
     "EQ": "total_equity",
+    # loan composition
+    "LNRE": "real_estate_loans",
+    "LNRECONS": "construction_loans",
+    "LNREMULT": "multifamily_loans",
+    "LNRENRES": "nonfarm_nonres_loans",     # nonfarm nonresidential = CRE core
+    "LNRELOC": "heloc_loans",
+    "LNRERES": "residential_mortgage_loans",
+    "LNREAG": "farmland_loans",
+    "LNAG": "agricultural_loans",
+    "LNCI": "c_and_i_loans",
+    "LNCON": "consumer_loans",
+    "LNCRCD": "credit_card_loans",
+    "LNAUTO": "auto_loans",
+    "LNCONOTH": "consumer_other_loans",
+    # securities
+    "SC": "securities_total",
+    "SCAF": "securities_afs",
+}
+
+# raw FDIC code -> canonical column, for RATIO fields (already %, pass through)
+_RATIO_FIELDS = {
+    "IDT1CER": "cet1_ratio",
+    "IDT1RWAJR": "tier1_rbc_ratio",
+    "RBCRWAJ": "total_rbc_ratio",
+    "RBC1AAJ": "leverage_ratio",
+    "EQV": "equity_to_assets_ratio_reported",
+    "LNLSDEPR": "loan_to_deposit_ratio_reported",
 }
 
 
@@ -34,6 +67,12 @@ def _to_usd(value) -> float | None:
     return float(value) * _THOUSANDS
 
 
+def _to_ratio(value) -> float | None:
+    if value is None or value == "":
+        return None
+    return round(float(value), 4)
+
+
 def _parse_repdte(repdte) -> tuple[str | None, str | None]:
     """20260331 -> ("2026-03-31", "2026Q1")."""
     if repdte is None:
@@ -41,8 +80,7 @@ def _parse_repdte(repdte) -> tuple[str | None, str | None]:
     s = str(int(repdte))
     year, month, day = s[0:4], s[4:6], s[6:8]
     quarter = {"03": 1, "06": 2, "09": 3, "12": 4}.get(month)
-    q_label = f"{year}Q{quarter}" if quarter else None
-    return f"{year}-{month}-{day}", q_label
+    return f"{year}-{month}-{day}", (f"{year}Q{quarter}" if quarter else None)
 
 
 def to_bank_financials(raw: dict) -> dict:
@@ -55,16 +93,26 @@ def to_bank_financials(raw: dict) -> dict:
         "state": raw.get("STALP"),
         "quarter": quarter,
         "filing_date": iso_date,
-        "restated_flag": False,  # dedupe of restatements handled in the full build
+        "restated_flag": False,
         "_source": "fdic.bankfind",
     }
-    for code, col in _FIELD_MAP.items():
+    for code, col in _DOLLAR_FIELDS.items():
         row[col] = _to_usd(raw.get(code))
+    for code, col in _RATIO_FIELDS.items():
+        row[col] = _to_ratio(raw.get(code))
 
-    # derived-but-still-Silver: uninsured deposits = total - insured (estimate)
-    if row["total_deposits"] is not None and row["insured_deposits"] is not None:
-        row["uninsured_deposits"] = row["total_deposits"] - row["insured_deposits"]
+    # Derived (still Silver): HTM securities = total - AFS (FDIC leaves HTM null for
+    # some banks; this transparent derivation keeps the AFS/HTM split — the SVB angle).
+    if row.get("securities_total") is not None and row.get("securities_afs") is not None:
+        row["securities_htm"] = row["securities_total"] - row["securities_afs"]
     else:
-        row["uninsured_deposits"] = None
+        row["securities_htm"] = None
+
+    # CRE (commercial real estate) aggregate, incl. owner-occupied:
+    # construction + multifamily + nonfarm-nonresidential.
+    cre_parts = [row.get("construction_loans"), row.get("multifamily_loans"),
+                 row.get("nonfarm_nonres_loans")]
+    row["cre_loans"] = sum(p for p in cre_parts if p is not None) if any(
+        p is not None for p in cre_parts) else None
 
     return row

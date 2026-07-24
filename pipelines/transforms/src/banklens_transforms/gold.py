@@ -1,15 +1,24 @@
 """Gold layer — derived features every downstream feature/tool/agent reads.
 
-This is the heart of the platform's "build once, reuse everywhere" principle.
-Phase 1 implements the ratios the vertical-slice fields support and documents
-(honestly) what still needs richer inputs.
+The heart of "build once, reuse everywhere". Each function is a pure, testable
+definition, pinned against real figures in the tests. When these move to
+dbt/Spark (Phase 2), the reimplementation must reproduce the same numbers.
 
-Each function is a pure, testable definition. Tests in
-``pipelines/transforms/tests/test_gold_metrics.py`` pin these against real
-Wells Fargo numbers so the dbt/Spark reimplementation can be validated to match.
+Phase-1b additions: loan-concentration ratios (feeds Feature 11 X-Ray),
+CRE concentration, core-deposit ratio, and pass-through of FDIC capital ratios.
+Still TODO (needs the peer population): ``percentile_rank_*``.
 """
 
 from __future__ import annotations
+
+# Loan categories we report concentration for: canonical column -> label.
+LOAN_CATEGORIES = {
+    "cre_loans": "cre",
+    "c_and_i_loans": "c_and_i",
+    "residential_mortgage_loans": "residential_mortgage",
+    "consumer_loans": "consumer",
+    "agricultural_loans": "agricultural",
+}
 
 
 def _pct(numerator, denominator) -> float | None:
@@ -19,31 +28,57 @@ def _pct(numerator, denominator) -> float | None:
 
 
 def uninsured_deposit_pct(row: dict) -> float | None:
-    """Uninsured deposits as % of total deposits. The #1 deposit-flight signal.
+    """Uninsured deposits as % of total deposits — the #1 deposit-flight signal.
 
-    Rationale: insured depositors (<$250k) have no reason to run; uninsured ones
-    (corporations, VCs) flee first. High uninsured % => structurally run-prone.
+    Uses FDIC's reported ``uninsured_deposits`` (DEPUNINS), not DEP - DEPINS.
     """
     return _pct(row.get("uninsured_deposits"), row.get("total_deposits"))
 
 
+def core_deposit_pct(row: dict) -> float | None:
+    """Core (stable, sticky) deposits as % of total. Higher = more stable funding."""
+    return _pct(row.get("core_deposits"), row.get("total_deposits"))
+
+
 def loan_to_deposit_pct(row: dict) -> float | None:
-    """Net loans / total deposits. A crude liquidity/funding-intensity gauge."""
+    """Net loans / total deposits. Validated against FDIC's reported LNLSDEPR."""
     return _pct(row.get("total_loans_net"), row.get("total_deposits"))
 
 
 def equity_to_assets_pct(row: dict) -> float | None:
-    """Total equity / total assets — a simple leverage proxy.
-
-    NOTE: this is *not* the regulatory Tier-1 leverage ratio (which uses Tier-1
-    capital over *average* assets). It is a transparent stand-in until we ingest
-    the FDIC/Call-Report capital fields. Labelled as a proxy on purpose.
-    """
+    """Total equity / total assets. Validated against FDIC's reported EQV."""
     return _pct(row.get("total_equity"), row.get("total_assets"))
 
 
+def concentration_ratios(row: dict) -> dict:
+    """Each loan category as % of gross loans. The core of Feature 11."""
+    gross = row.get("total_loans_gross")
+    out: dict = {}
+    for col, label in LOAN_CATEGORIES.items():
+        out[f"concentration_ratio_{label}"] = _pct(row.get(col), gross)
+    return out
+
+
+def max_concentration(concentrations: dict) -> tuple[str | None, float | None]:
+    """The single most concentrated loan category and its ratio."""
+    best_label, best_val = None, None
+    for key, val in concentrations.items():
+        if val is not None and (best_val is None or val > best_val):
+            best_label, best_val = key.replace("concentration_ratio_", ""), val
+    return best_label, best_val
+
+
+def cre_to_equity_pct(row: dict) -> float | None:
+    """CRE loans / total equity. A capital-relative concentration lens.
+
+    NOTE: the precise supervisory 'CRE concentration' guideline uses *total
+    risk-based capital* (not book equity) and excludes owner-occupied CRE. This
+    equity-based proxy is transparent and directional until we ingest RWA/capital $.
+    """
+    return _pct(row.get("cre_loans"), row.get("total_equity"))
+
+
 def qoq_delta(current, previous) -> dict | None:
-    """Quarter-over-quarter absolute and percentage change for a metric."""
     if current is None or previous is None:
         return None
     abs_change = current - previous
@@ -52,25 +87,38 @@ def qoq_delta(current, previous) -> dict | None:
 
 
 def derive_gold(silver_rows_desc: list[dict]) -> list[dict]:
-    """Given Silver rows sorted newest-first, produce Gold feature rows.
-
-    QoQ deltas use the immediately older quarter as the baseline.
-    """
+    """Given Silver rows newest-first, produce Gold feature rows."""
     gold: list[dict] = []
     for i, row in enumerate(silver_rows_desc):
         prev = silver_rows_desc[i + 1] if i + 1 < len(silver_rows_desc) else None
-        gold.append({
+        conc = concentration_ratios(row)
+        max_label, max_val = max_concentration(conc)
+
+        g = {
             "cert_number": row.get("cert_number"),
             "name": row.get("name"),
             "quarter": row.get("quarter"),
+            # deposits / funding
             "uninsured_deposit_pct": uninsured_deposit_pct(row),
+            "core_deposit_pct": core_deposit_pct(row),
             "loan_to_deposit_pct": loan_to_deposit_pct(row),
             "equity_to_assets_pct": equity_to_assets_pct(row),
+            # concentration (Feature 11 inputs)
+            **conc,
+            "max_loan_concentration_category": max_label,
+            "max_loan_concentration_pct": max_val,
+            "cre_to_equity_pct": cre_to_equity_pct(row),
+            # capital adequacy (straight from FDIC)
+            "cet1_ratio": row.get("cet1_ratio"),
+            "tier1_rbc_ratio": row.get("tier1_rbc_ratio"),
+            "total_rbc_ratio": row.get("total_rbc_ratio"),
+            "leverage_ratio": row.get("leverage_ratio"),
+            # trend
             "qoq_total_deposits": qoq_delta(
                 row.get("total_deposits"), prev.get("total_deposits") if prev else None),
-            "qoq_total_assets": qoq_delta(
-                row.get("total_assets"), prev.get("total_assets") if prev else None),
-            # TODO(phase-2): concentration_ratio_* needs loan-composition fields
-            #   (CRE, C&I, consumer, resi, ag); percentile_rank_* needs the peer set.
-        })
+            "qoq_uninsured_deposit_pct": qoq_delta(
+                uninsured_deposit_pct(row),
+                uninsured_deposit_pct(prev) if prev else None),
+        }
+        gold.append(g)
     return gold

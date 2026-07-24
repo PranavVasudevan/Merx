@@ -1,26 +1,79 @@
 # Data dictionary — FDIC financial field codes
 
-The FDIC BankFind `financials` endpoint uses short codes. These are the ones the
-Phase-1 slice uses (verified live). Full list: https://banks.data.fdic.gov/docs/
+The FDIC BankFind `financials` endpoint uses short codes. Every code below is
+**verified live** against the API (probed, not guessed). Example values are Wells
+Fargo Bank NA (CERT 3511), 2026-03-31, in **$ thousands** unless marked a ratio.
+Full reference: https://banks.data.fdic.gov/docs/
 
-| Code | Meaning | Unit | Canonical Silver column |
+## Identity & headline
+| Code | Meaning | Canonical column |
+|---|---|---|
+| `CERT` | FDIC certificate number | `cert_number` |
+| `REPDTE` | Report date (YYYYMMDD) | → `filing_date`, `quarter` |
+| `NAMEFULL` | Legal name | `name` |
+| `STALP` | State (2-letter) | `state` |
+| `ASSET` | Total assets | `total_assets` |
+
+## Deposits
+| Code | Meaning | Canonical column |
+|---|---|---|
+| `DEP` | Total deposits | `total_deposits` |
+| `DEPDOM` | Domestic-office deposits | `domestic_deposits` |
+| `DEPINS` | Estimated **insured** deposits | `insured_deposits` |
+| `DEPUNINS` | Estimated **uninsured** deposits | `uninsured_deposits` |
+| `COREDEP` | Core (stable) deposits | `core_deposits` |
+
+> **Correction learned from the data:** use the reported `DEPUNINS` for uninsured
+> deposits, **not** `DEP − DEPINS`. The insured/uninsured estimates use a different
+> base than total deposits, so the reported figure is authoritative. (WF: DEPUNINS
+> = 723,812 thousand ⇒ 47.7% of deposits, vs 44.7% if wrongly derived.)
+
+## Loans & leases (RC-C schedule)
+| Code | Meaning | Canonical column | WF value |
 |---|---|---|---|
-| `CERT` | FDIC certificate number | id | `cert_number` |
-| `REPDTE` | Report date | YYYYMMDD | → `filing_date`, `quarter` |
-| `NAMEFULL` | Institution legal name | text | `name` |
-| `STALP` | State (2-letter) | text | `state` |
-| `ASSET` | Total assets | $ thousands | `total_assets` (×1000) |
-| `DEP` | Total deposits | $ thousands | `total_deposits` |
-| `DEPDOM` | Deposits in domestic offices | $ thousands | `domestic_deposits` |
-| `DEPINS` | Estimated insured deposits | $ thousands | `insured_deposits` |
-| `LNLSGR` | Total loans & leases, gross | $ thousands | `total_loans_gross` |
-| `LNLSNET` | Total loans & leases, net | $ thousands | `total_loans_net` |
-| `EQ` | Total equity capital | $ thousands | `total_equity` |
+| `LNLSGR` | Gross loans & leases | `total_loans_gross` | 985,437 |
+| `LNLSNET` | Net loans & leases | `total_loans_net` | 971,566 |
+| `LNRE` | Total real-estate loans | `real_estate_loans` | 361,336 |
+| `LNRECONS` | Construction & land dev | `construction_loans` | 13,459 |
+| `LNREMULT` | Multifamily residential | `multifamily_loans` | 26,383 |
+| `LNRENRES` | Nonfarm nonresidential (CRE core) | `nonfarm_nonres_loans` | 83,180 |
+| `LNRELOC` | Home-equity lines of credit | `heloc_loans` | 10,018 |
+| `LNRERES` | 1-4 family residential | `residential_mortgage_loans` | 233,117 |
+| `LNREAG` | Farmland | `farmland_loans` | 793 |
+| `LNAG` | Agricultural production | `agricultural_loans` | 3,285 |
+| `LNCI` | Commercial & industrial | `c_and_i_loans` | 198,483 |
+| `LNCON` | Consumer (total) | `consumer_loans` | 116,977 |
+| `LNCRCD` | Consumer: credit card | `credit_card_loans` | 57,277 |
+| `LNAUTO` | Consumer: auto | `auto_loans` | 53,794 |
+| `LNCONOTH` | Consumer: other | `consumer_other_loans` | 4,508 |
 
-**Reminder:** all FDIC dollar amounts are in **thousands** — Silver multiplies by 1,000.
+**CRE (commercial real estate)** aggregate = `LNRECONS + LNREMULT + LNRENRES`
+(incl. owner-occupied). WF: 123,022 thousand ⇒ 12.5% of gross loans.
 
-## Phase-2 additions (codes to map next)
-Loan composition (e.g. `LNRECONS`, `LNCI`, `LNCONOTH`, `LNRERES`, `LNAG`),
-securities (`SCAF`, `SCHTMV`/`SCHTM`), capital ratios (`RBCT1J`, `RBC1RWAJ`,
-`RBCRWAJ`), brokered deposits (`DEPBK`/`BRO`), FHLB advances. Confirm each code
-against the FDIC dictionary before use — do not assume.
+## Securities
+| Code | Meaning | Canonical column |
+|---|---|---|
+| `SC` | Total securities | `securities_total` |
+| `SCAF` | Available-for-sale (fair value) | `securities_afs` |
+| — | Held-to-maturity (derived `SC − SCAF`) | `securities_htm` |
+
+> `SCHTM`/`SCHTMV` came back null for WF; HTM is derived as `SC − SCAF` and flagged
+> as a derivation. Refine when a reliable direct HTM code is confirmed per bank.
+
+## Capital & performance RATIOS (already %, do NOT rescale)
+| Code | Meaning | Canonical column | WF value |
+|---|---|---|---|
+| `IDT1CER` | Common Equity Tier 1 (CET1) ratio | `cet1_ratio` | 12.58 |
+| `IDT1RWAJR` | Tier 1 risk-based capital ratio | `tier1_rbc_ratio` | 12.58 |
+| `RBCRWAJ` | Total risk-based capital ratio | `total_rbc_ratio` | 14.06 |
+| `RBC1AAJ` | Tier 1 leverage ratio | `leverage_ratio` | 8.40 |
+| `EQV` | Equity / assets | `equity_to_assets_ratio_reported` | 9.34 |
+| `LNLSDEPR` | Net loans / deposits | `loan_to_deposit_ratio_reported` | 64.05 |
+
+We recompute loan-to-deposit and equity-to-assets from the dollar fields and
+**assert they match** `LNLSDEPR`/`EQV` in tests — proof the pipeline math is correct.
+
+## Still to map (Phase 2)
+Brokered deposits, FHLB advances, short-term borrowings (funding-stability score);
+the CET1/RWA **dollar** amounts (for a precise CRE-to-capital ratio); the
+CERT↔CIK↔RSSD crosswalk (`RSSDID` is in the default record — join key to Fed/SEC).
