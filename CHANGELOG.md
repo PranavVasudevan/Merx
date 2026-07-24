@@ -5,6 +5,12 @@ All notable changes to this project are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Added — Phase 1d (Feature 14 — Peer Group Redefiner)
+- `transforms/clustering.py`: dependency-free K-Means (k-means++ init, standardized features), silhouette scoring, degenerate-k rejection, cluster labeling. (ML-platform phase swaps in scikit-learn/MLflow.)
+- `banklens_ingestion/clustering_cli.py` + `scripts/cluster_report.ps1`: behavioral clusters, silhouette-by-k diagnostic, asset-size × cluster crosstab, and a bank's peer standing with a "misclassified by size" flag. Writes `peer_cluster_id` + `peer_cluster_label` to Gold.
+- Result (2026Q1 slice): 7 behavioral archetypes; Dime Community Bank clusters with Flagstar/Valley/Bank OZK/Banc of California and is flagged behaviorally atypical for its size.
+- `test_clustering.py` (K-Means recovery, silhouette, k-selection, imputation).
+
 ### Added — Phase 1c (peer set + percentile ranks)
 - Population fetch of the MVP slice (US banks $1B–$250B, 1,049 banks for 2026Q1) landed to Bronze in a single filtered request.
 - `transforms/peers.py`: `percentile_rank`, `add_percentile_ranks`, `summary_stats` — a bank's standing vs its peers.
