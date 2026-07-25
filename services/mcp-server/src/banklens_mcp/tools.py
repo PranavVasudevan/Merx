@@ -49,6 +49,8 @@ def list_banks(query: str = None, state: str = None, min_assets_b: float = None,
 
 def get_bank_profile(cert: int) -> dict:
     g = _need_bank(cert)
+    def pct(key):
+        return {"value": g.get(key), "percentile": g.get(f"percentile_rank_{key}")}
     return {
         "cert": cert, "name": g["name"], "state": g.get("state"), "quarter": g["quarter"],
         "assets_b": round((g.get("total_assets") or 0) / 1e9, 1),
@@ -57,6 +59,24 @@ def get_bank_profile(cert: int) -> dict:
         "cre_concentration_pct": g.get("concentration_ratio_cre"),
         "cet1_ratio": g.get("cet1_ratio"), "leverage_ratio": g.get("leverage_ratio"),
         "peer_cluster": g.get("peer_cluster_label"),
+        "concentration": {
+            "cre": pct("concentration_ratio_cre"),
+            "c_and_i": pct("concentration_ratio_c_and_i"),
+            "residential_mortgage": pct("concentration_ratio_residential_mortgage"),
+            "consumer": {"value": g.get("concentration_ratio_consumer"), "percentile": None},
+            "agricultural": {"value": g.get("concentration_ratio_agricultural"), "percentile": None},
+        },
+        "capital": {
+            "cet1": pct("cet1_ratio"),
+            "tier1_rbc": {"value": g.get("tier1_rbc_ratio"), "percentile": None},
+            "total_rbc": {"value": g.get("total_rbc_ratio"), "percentile": None},
+            "leverage": pct("leverage_ratio"),
+        },
+        "funding": {
+            "uninsured_deposit_pct": pct("uninsured_deposit_pct"),
+            "loan_to_deposit_pct": pct("loan_to_deposit_pct"),
+            "core_deposit_pct": pct("core_deposit_pct"),
+        },
     }
 
 

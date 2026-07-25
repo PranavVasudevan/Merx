@@ -5,6 +5,14 @@ All notable changes to this project are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Added — Phase 7 (Quant Terminal UI — reference)
+- `services/api-gateway/src/bridge_server.py`: dependency-free REST bridge (stdlib `http.server`) wrapping `banklens_mcp.tools` — the same logic the MCP server exposes, now callable from a browser. Extended `get_bank_profile` with full loan-composition + all capital ratios + peer percentiles (benefits both MCP and REST).
+- `frontend/apps/web`: React + TypeScript + Vite quant terminal. Charts via Recharts, styled with the validated dataviz skill palette (light/dark via `prefers-color-scheme`). Colors resolved in JS (`colors.ts`) since SVG fill attributes don't reliably read CSS `var()`.
+- Panels for all 6 features: KPI tiles, X-Ray (severity + peer percentile bars), loan-composition & capital-adequacy charts, Filing Diff, Peer Cluster card, Risk Score (gauge + diverging driver bars), M&A Fit (sequential-hue ranking), Stress Simulator (live sliders → waterfall + pass/fail), and a 1,000+ bank peer-position scatter (target vs population, avoiding the categorical color-cap problem).
+- Bank search combobox, calling the population search endpoint.
+- **Honest scope:** no market OHLC/candlesticks — that needs the not-yet-built market-data connector (Phase 2); every chart here reads real FDIC-derived data, nothing mocked.
+- `scripts/dev_web.ps1`, `scripts/api_bridge.ps1`. Verified end-to-end (accessibility-tree + network trace): all panels render correct real data, bank-switching refetches everything, sliders drive live recalculation, filing-diff degrades gracefully for banks without landed multi-quarter history.
+
 ### Added — Phase 1i (Feature 13 — Deposit-Flight ML, the showcase) — ALL 6 FEATURES DONE
 - `transforms/logreg.py`: pure-Python L2-regularized, class-weighted logistic regression + rank-AUC. Chosen over XGBoost on purpose (tiny labeled set → linear model is the honest choice; coefficients are the interpretability).
 - `transforms/deposit_flight.py`: features (uninsured %, HTM/equity, securities/assets, loan/deposit, 1yr deposit growth), training, model card I/O, per-bank scoring with coefficient-contribution drivers.

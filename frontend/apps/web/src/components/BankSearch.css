@@ -1,0 +1,43 @@
+.bank-search { position: relative; width: 320px; }
+.bank-search-input {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+}
+.bank-search-input:focus { border-color: var(--accent); }
+
+.bank-search-results {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  z-index: 20;
+}
+.bank-search-result {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 9px 12px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--gridline);
+  cursor: pointer;
+  text-align: left;
+  color: var(--text-primary);
+  font-size: 12.5px;
+}
+.bank-search-result:last-child { border-bottom: none; }
+.bank-search-result:hover { background: var(--surface-2); }
+.bsr-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bsr-meta { font-size: 11px; white-space: nowrap; margin-left: 10px; }

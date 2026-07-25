@@ -1,0 +1,36 @@
+.stress-controls {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 14px;
+}
+.stress-slider { display: flex; flex-direction: column; gap: 6px; font-size: 12px; }
+.stress-slider span { display: flex; justify-content: space-between; color: var(--text-secondary); }
+.stress-slider input[type="range"] {
+  accent-color: var(--accent);
+  width: 100%;
+}
+
+.stress-verdict {
+  font-size: 12.5px;
+  font-weight: 650;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+.stress-pass { background: color-mix(in srgb, var(--status-good) 14%, transparent); color: var(--status-good); }
+.stress-fail { background: color-mix(in srgb, var(--status-critical) 14%, transparent); color: var(--status-critical); }
+
+.stress-ratio-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.stress-ratio { background: var(--surface-2); border-radius: 6px; padding: 8px 10px; }
+.stress-ratio-label { font-size: 10.5px; letter-spacing: .05em; }
+.stress-ratio-nums { font-size: 13px; margin-top: 3px; }
+.stress-good-text { color: var(--status-good); font-weight: 650; }
+.stress-bad-text { color: var(--status-critical); font-weight: 650; }
+
+.stress-liq-note { font-size: 12px; margin: 10px 0 0; }

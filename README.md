@@ -58,6 +58,18 @@ powershell -File scripts/mcp_demo.ps1     # drive the server, see all tools call
 Open this repo in **Claude Code** and approve the `banklens` server (from
 [`.mcp.json`](.mcp.json)) to ask, e.g., *"stress-test cert 6976 under a 60% deposit run"*.
 
+### The quant terminal (Phase 7)
+
+A real-data React/TypeScript dashboard over all 6 features — X-Ray, Filing Diff, Peer
+Clusters, Deposit-Flight Risk, M&A Fit, and a live Stress Simulator with interactive
+sliders — plus a 1,000+ bank peer-position scatter. No mock data anywhere.
+
+```powershell
+powershell -File scripts/dev_web.ps1   # bridge (8791) + Vite dev server (5173)
+```
+
+See [`frontend/apps/web/README.md`](frontend/apps/web/README.md).
+
 ---
 
 ## Repository layout
@@ -101,6 +113,7 @@ banklens/
 | 3 | Deterministic features — X-Ray, Diff, Peers, M&A, Stress | ✅ (reference) |
 | 4 | Deposit-Flight ML model (showcase) | ✅ AUC 0.99, SVB flagged leave-one-out |
 | 5 | MCP server & tooling — 9 tools, all 6 features | ✅ reference done |
+| 7 | Quant-terminal UI (X-Ray, Diff, Clusters, Risk, M&A, Stress, peer scatter) | ✅ reference done |
 | 6 | Agentic AI layer | planned |
 | 7 | Quant-terminal visualization | planned |
 | 8 | Hardening, security, DR & GA | planned |

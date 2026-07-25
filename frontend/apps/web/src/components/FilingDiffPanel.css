@@ -1,0 +1,16 @@
+.fdiff-list { display: flex; flex-direction: column; gap: 8px; }
+.fdiff-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--gridline);
+}
+.fdiff-row:last-child { border-bottom: none; }
+.fdiff-arrow { font-size: 11px; width: 14px; }
+.fdiff-up { color: var(--cat-red); }
+.fdiff-down { color: var(--cat-blue); }
+.fdiff-item { flex: 1; }
+.fdiff-change { width: 60px; text-align: right; font-weight: 600; }
+.fdiff-z { width: 56px; text-align: right; font-size: 11px; }

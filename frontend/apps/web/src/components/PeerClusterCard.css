@@ -1,0 +1,6 @@
+.pcc-label { font-size: 17px; font-weight: 650; letter-spacing: -0.01em; }
+.pcc-size { font-size: 12px; margin-top: 3px; }
+.pcc-peers { margin-top: 12px; font-size: 12.5px; }
+.pcc-peers-label { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
+.pcc-peers ul { margin: 6px 0 0; padding-left: 18px; }
+.pcc-peers li { margin: 3px 0; color: var(--text-secondary); }

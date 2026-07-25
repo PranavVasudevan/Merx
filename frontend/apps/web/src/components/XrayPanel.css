@@ -1,0 +1,33 @@
+.xray-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 12.5px; }
+.xray-empty { margin: 0; font-size: 13px; }
+
+.xray-flags { display: flex; flex-direction: column; gap: 12px; }
+.xray-flag {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+}
+.xray-flag-top { display: flex; align-items: center; gap: 8px; }
+.xray-factor { font-weight: 600; font-size: 13px; flex: 1; }
+.xray-value { font-size: 13px; color: var(--text-secondary); }
+
+.xray-pctile-track {
+  position: relative;
+  height: 6px;
+  background: var(--gridline);
+  border-radius: 3px;
+  margin: 9px 0 4px;
+  overflow: visible;
+}
+.xray-pctile-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--cat-blue);
+}
+.xray-pctile-label {
+  display: block;
+  font-size: 10.5px;
+  margin-top: 4px;
+}
+.xray-note { margin: 6px 0 0; font-size: 12px; }

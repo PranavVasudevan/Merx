@@ -1,0 +1,146 @@
+/* BankLens quant-terminal theme — validated palette (see dataviz skill).
+   Light is the base; dark redefines the same roles under prefers-color-scheme. */
+
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --surface-2: #f3f2ee;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #898781;
+  --gridline: #e1e0d9;
+  --baseline: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.1);
+  --success-text: #006300;
+
+  /* categorical (fixed order, never cycled) */
+  --cat-blue: #2a78d6;
+  --cat-green: #008300;
+  --cat-magenta: #e87ba4;
+  --cat-yellow: #eda100;
+  --cat-aqua: #1baf7a;
+  --cat-orange: #eb6834;
+  --cat-violet: #4a3aa7;
+  --cat-red: #e34948;
+
+  /* sequential blue (magnitude) */
+  --seq-100: #cde2fb;
+  --seq-300: #6da7ec;
+  --seq-450: #2a78d6;
+  --seq-600: #184f95;
+
+  /* diverging blue <-> red, neutral midpoint */
+  --div-neg: #2a78d6;
+  --div-pos: #e34948;
+  --div-mid: #f0efec;
+
+  /* status (fixed, never themed) */
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-serious: #ec835a;
+  --status-critical: #d03b3b;
+
+  --accent: var(--cat-blue);
+  --radius: 8px;
+  --shadow: 0 1px 2px rgba(11, 11, 11, 0.06), 0 4px 16px rgba(11, 11, 11, 0.05);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --surface-2: #212120;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #898781;
+    --gridline: #2c2c2a;
+    --baseline: #383835;
+    --border: rgba(255, 255, 255, 0.1);
+    --success-text: #0ca30c;
+
+    --cat-blue: #3987e5;
+    --cat-green: #008300;
+    --cat-magenta: #d55181;
+    --cat-yellow: #c98500;
+    --cat-aqua: #199e70;
+    --cat-orange: #d95926;
+    --cat-violet: #9085e9;
+    --cat-red: #e66767;
+
+    --div-neg: #3987e5;
+    --div-pos: #e66767;
+    --div-mid: #383835;
+
+    --accent: var(--cat-blue);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.tabular { font-variant-numeric: tabular-nums; }
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px 18px;
+}
+
+.panel h2 {
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0 0 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.panel h2::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--gridline);
+}
+
+.muted { color: var(--text-muted); }
+.secondary { color: var(--text-secondary); }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 999px;
+  letter-spacing: .02em;
+}
+.chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+.chip-low { background: color-mix(in srgb, var(--status-good) 16%, transparent); color: var(--status-good); }
+.chip-elevated { background: color-mix(in srgb, var(--status-warning) 20%, transparent); color: color-mix(in srgb, var(--status-warning) 70%, black); }
+.chip-high { background: color-mix(in srgb, var(--status-critical) 16%, transparent); color: var(--status-critical); }
+
+@media (prefers-color-scheme: dark) {
+  .chip-elevated { color: var(--status-warning); }
+}
+
+a { color: var(--accent); }
