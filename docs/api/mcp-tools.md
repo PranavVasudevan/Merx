@@ -1,8 +1,13 @@
 # MCP tool contracts
 
-The MCP server (Phase 5) exposes one governed, audited surface shared by the UI,
-the CLI/SDK, and the AI agents. Tools are thin — heavy compute lives in the Rust
-engines, ClickHouse, DuckDB, and ML services behind them.
+The MCP server exposes one governed, audited surface shared by the UI, the CLI/SDK,
+and the AI agents. Tools are thin — heavy compute lives in the feature logic behind
+them (today `banklens_transforms`; later the Rust engines, ClickHouse, DuckDB, ML).
+
+**Status:** a dependency-free reference server is **implemented** in
+`services/mcp-server` (JSON-RPC 2.0 over stdio, per-call audit to `data/mcp_audit.jsonl`),
+exposing the 8 tools below for the 5 working features. Drive it with
+`scripts/mcp_demo.ps1`; use it in Claude Code via the repo's `.mcp.json`.
 
 ## Core tools (from the product spec)
 

@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "banklens": {
+      "command": "python",
+      "args": ["-m", "banklens_mcp.server"],
+      "env": {
+        "PYTHONPATH": "services/mcp-server/src;pipelines/transforms/src"
+      }
+    }
+  }
+}

@@ -33,7 +33,29 @@ powershell -File scripts/run_tests.ps1                        # run the metric t
 
 You'll see the balance sheet, the derived Gold features (uninsured-deposit %, loan-to-deposit, QoQ deltas), and the raw/normalised JSON written under `data/`.
 
-Some well-known FDIC certificate numbers: `628` JPMorgan Chase · `3510` Bank of America · `7213` Citibank · `3511` Wells Fargo · `6548` U.S. Bank.
+Some well-known FDIC certificate numbers: `628` JPMorgan Chase · `3510` Bank of America · `7213` Citibank · `3511` Wells Fargo · `6548` U.S. Bank · `6976` Dime Community.
+
+### The five working features
+
+```powershell
+powershell -File scripts/run_vertical_slice.ps1 -Cert 6976   # F11 Balance-Sheet X-Ray
+powershell -File scripts/filing_diff.ps1 -Cert 3511          # F12 Filing Diff
+powershell -File scripts/cluster_report.ps1                  # F14 Peer Clustering
+powershell -File scripts/ma_fit.ps1 -TargetCert 6976         # F15 M&A Fit
+powershell -File scripts/stress_test.ps1 -Cert 6976 -Outflow 60 -RateBps 400  # F16 Stress
+powershell -File scripts/population_report.ps1               # peer percentiles
+```
+
+### One backend, three consumers — the MCP surface
+
+The same feature logic is exposed as MCP tools (JSON-RPC over stdio, audited):
+
+```powershell
+powershell -File scripts/mcp_demo.ps1     # drive the server, see all tools called
+```
+
+Open this repo in **Claude Code** and approve the `banklens` server (from
+[`.mcp.json`](.mcp.json)) to ask, e.g., *"stress-test cert 6976 under a 60% deposit run"*.
 
 ---
 
@@ -73,11 +95,11 @@ banklens/
 | Phase | Focus | Status |
 |------:|-------|--------|
 | 0 | Foundations — arch, IaC, CI | scaffolded |
-| **1** | **Data platform — Bronze + Silver ingestion** | **in progress** |
-| 2 | Gold layer, time-series & market data | next |
-| 3 | Deterministic features (X-Ray, Diff, Peers, Stress) | planned |
-| 4 | Deposit-Flight ML model (showcase) | planned |
-| 5 | MCP server & tooling | planned |
+| 1 | Data platform — Bronze + Silver ingestion | reference done |
+| 2 | Gold layer + peer percentiles (market/time-series pending) | Gold done |
+| 3 | Deterministic features — X-Ray, Diff, Peers, M&A, Stress | ✅ 5/6 (reference) |
+| 4 | Deposit-Flight ML model (showcase) | next |
+| **5** | **MCP server & tooling** | **reference done** |
 | 6 | Agentic AI layer | planned |
 | 7 | Quant-terminal visualization | planned |
 | 8 | Hardening, security, DR & GA | planned |

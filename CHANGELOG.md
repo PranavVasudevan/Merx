@@ -5,6 +5,13 @@ All notable changes to this project are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Added — Phase 1h (MCP server — the tool surface)
+- `services/mcp-server`: dependency-free MCP server (JSON-RPC 2.0 over stdio) exposing the 5 working features as 8 tools (`list_banks`, `get_bank_profile`, `get_bank_xray`, `diff_filings`, `get_peer_cluster`, `find_ma_matches`, `run_stress_test`, `compare_banks`). Thin wrappers over `banklens_transforms` — same logic as the CLIs.
+- Per-call audit to `data/mcp_audit.jsonl`; population Gold + percentiles + clusters cached on startup.
+- `scripts/mcp_demo.py` drives the server over real stdio (handshake → tools/list → tool calls); `test_mcp.py` covers the protocol hermetically. Project-scoped `.mcp.json` makes the tools usable inside Claude Code.
+- Re-landed the 1,049-bank population with capital-dollar fields so `run_stress_test` works across the slice.
+- **Milestone: one backend, three consumers (CLI / SDK / agents) — the project thesis, working.**
+
 ### Added — Phase 1g (Feature 15 — M&A Fit Finder)
 - `transforms/ma_fit.py`: ranks acquirer/partner candidates by funding complementarity (deposit-rich fills loan-heavy), business similarity (cosine on loan mix), size compatibility, and geographic overlap. Pure functions over Gold; geography uses home-state as a proxy (FDIC Summary of Deposits branch footprints = Phase-2 upgrade).
 - `banklens_ingestion/ma_fit_cli.py` + `scripts/ma_fit.ps1`: ranked candidates with a per-match rationale.
