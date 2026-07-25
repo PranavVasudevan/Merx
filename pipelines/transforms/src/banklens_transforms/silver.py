@@ -48,6 +48,13 @@ _DOLLAR_FIELDS = {
     # securities
     "SC": "securities_total",
     "SCAF": "securities_afs",
+    "SCHA": "securities_htm_reported",   # HTM amortized cost (direct)
+    # balance-sheet dollars for the stress simulator (Feature 16)
+    "RBCT1J": "tier1_capital",
+    "RBC": "total_capital",
+    "RWAJT": "risk_weighted_assets",
+    "ASSET5": "average_assets",
+    "CHBAL": "cash_and_balances",
 }
 
 # raw FDIC code -> canonical column, for RATIO fields (already %, pass through)
@@ -101,9 +108,10 @@ def to_bank_financials(raw: dict) -> dict:
     for code, col in _RATIO_FIELDS.items():
         row[col] = _to_ratio(raw.get(code))
 
-    # Derived (still Silver): HTM securities = total - AFS (FDIC leaves HTM null for
-    # some banks; this transparent derivation keeps the AFS/HTM split — the SVB angle).
-    if row.get("securities_total") is not None and row.get("securities_afs") is not None:
+    # HTM securities: prefer FDIC's reported amortized cost (SCHA); else derive SC - AFS.
+    if row.get("securities_htm_reported") is not None:
+        row["securities_htm"] = row["securities_htm_reported"]
+    elif row.get("securities_total") is not None and row.get("securities_afs") is not None:
         row["securities_htm"] = row["securities_total"] - row["securities_afs"]
     else:
         row["securities_htm"] = None

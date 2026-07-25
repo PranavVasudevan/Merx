@@ -5,4 +5,10 @@ No ML — transparent Basel-style math, because stress-test logic must be audita
 Property-tested (zero shock ⇒ unchanged ratios; monotonic in loss severity).
 C++/QuantLib bridged in for duration/curve analytics.
 
-**Status:** skeleton (Phase 3). Reads starting numbers from the Gold layer.
+**Status:** the Python **reference is implemented** in
+[`pipelines/transforms/src/banklens_transforms/stress.py`](../../pipelines/transforms/src/banklens_transforms/stress.py)
+(loan losses, duration-based rate marks, the deposit-outflow → HTM-firesale SVB chain;
+baseline reproduces reported ratios exactly). This Rust crate will port that logic and
+bridge QuantLib for proper duration/curve analytics. Reads starting numbers from Gold.
+
+Run the reference: `powershell -File scripts/stress_test.ps1 -Cert 3511 -Outflow 70 -RateBps 450`

@@ -51,8 +51,14 @@ FINANCIAL_FIELDS = [
     # securities
     "SC",          # total securities
     "SCAF",        # available-for-sale (AFS), fair value
-    # capital
+    "SCHA",        # held-to-maturity (HTM), amortized cost
+    # capital & balance-sheet dollars (for the stress simulator, Feature 16)
     "EQ",          # total equity capital ($ thousands)
+    "RBCT1J",      # Tier 1 capital ($)
+    "RBC",         # Total risk-based capital ($)
+    "RWAJT",       # risk-weighted assets ($)
+    "ASSET5",      # average assets ($)
+    "CHBAL",       # cash & balances due ($)
     # capital & performance RATIOS (already percentages — do NOT rescale)
     "IDT1CER",     # Common Equity Tier 1 (CET1) ratio
     "IDT1RWAJR",   # Tier 1 risk-based capital ratio

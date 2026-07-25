@@ -73,6 +73,20 @@ Full reference: https://banks.data.fdic.gov/docs/
 We recompute loan-to-deposit and equity-to-assets from the dollar fields and
 **assert they match** `LNLSDEPR`/`EQV` in tests — proof the pipeline math is correct.
 
+## Capital & balance-sheet DOLLARS (for the stress simulator, Feature 16)
+| Code | Meaning | Canonical column | WF value ($k) |
+|---|---|---|---|
+| `RBCT1J` | Tier 1 capital | `tier1_capital` | 151,450,000 |
+| `RBC` | Total risk-based capital | `total_capital` | 169,159,000 |
+| `RWAJT` | Risk-weighted assets | `risk_weighted_assets` | 1,203,546,500 |
+| `ASSET5` | Average assets | `average_assets` | 1,837,466,000 |
+| `CHBAL` | Cash & balances due | `cash_and_balances` | 173,552,000 |
+| `SCHA` | HTM securities (amortized cost) | `securities_htm_reported` | 204,169,000 |
+
+Shortcut used: `RWA = RBCT1J ÷ (IDT1RWAJR/100)` reproduces `RWAJT` exactly, so the
+stress baseline recomputes the reported ratios precisely before any shock is applied.
+`SCHA` is the direct HTM figure (preferred over the earlier `SC − SCAF` derivation).
+
 ## Data-quality caveats (observed in the 1,049-bank MVP slice)
 - **Foreign-bank US branches/agencies** (e.g. Bank of China, State Bank of India, Standard Chartered) report **0/null CET1** — they are capitalized at the parent level and don't file the ratio the same way. They pollute "lowest CET1" rankings. Phase 2: treat 0/null CET1 as *missing* (exclude from capital percentiles) rather than as a real 0.
 - The cohort is **CRE-heavy by nature** (median ~48% CRE), so peer-relative percentiles — not absolute thresholds alone — should drive the X-Ray's concentration verdict.
