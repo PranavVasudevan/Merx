@@ -5,6 +5,12 @@ All notable changes to this project are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Added — Phase 1f (Feature 12 — Filing Diff)
+- `transforms/filing_diff.py`: quarter-over-quarter change detection that flags a move when it is a statistical outlier vs *that bank's own* history (z-score on same-span changes, excluding the evaluated transition), gated by a materiality floor. Falls back to an absolute threshold when there's no volatility baseline.
+- `banklens_ingestion/filing_diff_cli.py` + `scripts/filing_diff.ps1`: a structured "what changed and why it matters" report between two quarters.
+- Real results: WF C&I loans +7.3% (z=+3.0); Dime HTM securities +4.7% but z=+21 — a tiny absolute move that's a huge outlier for that bank (exactly what absolute cutoffs miss).
+- `test_filing_diff.py`: sudden jump flagged, smooth drift ignored, default compares two newest.
+
 ### Added — Phase 1e (Feature 16 — Capital Buffer Simulator)
 - Verified FDIC capital-dollar codes: `RBCT1J` (Tier 1 $), `RBC` (Total $), `RWAJT` (RWA $), `ASSET5` (avg assets), `CHBAL` (cash), `SCHA` (HTM amortized cost — direct, replaces the SC−SCAF derivation). Wired into the connector + Silver.
 - `transforms/stress.py`: deterministic Basel-style stress test — loan losses, rate shock (modified-duration AFS/HTM marks), and deposit outflow that forces HTM firesales (the SVB chain). Baseline reproduces reported ratios exactly; recomputes CET1/Tier1/Total/Leverage vs minimums with a capital waterfall + liquidity trace.
