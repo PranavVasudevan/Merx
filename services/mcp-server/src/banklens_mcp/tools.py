@@ -6,6 +6,7 @@ same functions power the CLI. See docs/api/mcp-tools.md.
 
 from __future__ import annotations
 
+from banklens_transforms.deposit_flight import features_from, load_card, score_vector
 from banklens_transforms.filing_diff import build_quarters, diff
 from banklens_transforms.gold import gold_features
 from banklens_transforms.ma_fit import rank_partners
@@ -102,6 +103,21 @@ def diff_filings(cert: int, quarter_a: str = None, quarter_b: str = None) -> dic
     return diff(build_quarters(rows), quarter_a, quarter_b)
 
 
+def get_risk_score(cert: int) -> dict:
+    card = load_card()
+    if card is None:
+        raise ValueError("Deposit-flight model not trained yet; run deposit_flight_cli.")
+    pop = data.population()
+    silver = pop["silver_by_cert"].get(cert)
+    g = pop["by_cert"].get(cert)
+    if silver is None:
+        raise ValueError(f"CERT {cert} not in the population slice.")
+    res = score_vector(card, features_from(silver, g, None))   # growth imputed (no prior-yr landed)
+    res.update({"cert": cert, "name": g["name"], "model_trained_on": card["trained_on"],
+                "note": "structural resemblance to 2023 failures; growth feature imputed for 2026Q1."})
+    return res
+
+
 def compare_banks(certs: list[int], metrics: list[str] = None) -> dict:
     metrics = metrics or ["uninsured_deposit_pct", "loan_to_deposit_pct",
                           "concentration_ratio_cre", "cet1_ratio"]
@@ -151,6 +167,10 @@ TOOLS = [
          "deposit_outflow_pct": {"type": "number"}, "rate_shock_bps": {"type": "number"}},
          "required": ["cert"]},
      "handler": run_stress},
+    {"name": "get_risk_score",
+     "description": "Feature 13 — deposit-flight risk score (model trained on real 2023 failures) with drivers.",
+     "inputSchema": {"type": "object", "properties": {"cert": _CERT}, "required": ["cert"]},
+     "handler": get_risk_score},
     {"name": "diff_filings",
      "description": "Feature 12 — flag line-item moves that are unusual vs the bank's own history.",
      "inputSchema": {"type": "object", "properties": {

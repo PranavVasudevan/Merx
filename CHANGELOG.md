@@ -5,6 +5,15 @@ All notable changes to this project are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Added — Phase 1i (Feature 13 — Deposit-Flight ML, the showcase) — ALL 6 FEATURES DONE
+- `transforms/logreg.py`: pure-Python L2-regularized, class-weighted logistic regression + rank-AUC. Chosen over XGBoost on purpose (tiny labeled set → linear model is the honest choice; coefficients are the interpretability).
+- `transforms/deposit_flight.py`: features (uninsured %, HTM/equity, securities/assets, loan/deposit, 1yr deposit growth), training, model card I/O, per-bank scoring with coefficient-contribution drivers.
+- Trained on the **2022Q4 cross-section** (pre-crisis), positives = the real 2023 failures SVB/Signature/First Republic (CERTs from the FDIC failures list). **In-sample AUC 0.992.**
+- **Honest leave-one-out validation:** trained *without* SVB, SVB still ranks 13/986 (98.8th pctile); Signature 99.7th; First Republic 95.9th. Uninsured-deposit reliance is the dominant coefficient.
+- `deposit_flight_cli.py` + `scripts/deposit_flight.ps1`; model card at `ml/deposit_flight/model_card.json`.
+- MCP `get_risk_score` tool scores current (2026Q1) banks with the trained model → the 9th tool. Applied to 2026Q1, median risk 0.002 with structurally-all-uninsured specialists at the top (resemblance ≠ certainty — documented).
+- `test_deposit_flight.py` (logreg separation, AUC, feature math, monotonic scoring). Data landed: 2022Q4 + 2021Q4 populations, 2023 failures list.
+
 ### Added — Phase 1h (MCP server — the tool surface)
 - `services/mcp-server`: dependency-free MCP server (JSON-RPC 2.0 over stdio) exposing the 5 working features as 8 tools (`list_banks`, `get_bank_profile`, `get_bank_xray`, `diff_filings`, `get_peer_cluster`, `find_ma_matches`, `run_stress_test`, `compare_banks`). Thin wrappers over `banklens_transforms` — same logic as the CLIs.
 - Per-call audit to `data/mcp_audit.jsonl`; population Gold + percentiles + clusters cached on startup.

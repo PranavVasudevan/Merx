@@ -43,6 +43,7 @@ powershell -File scripts/filing_diff.ps1 -Cert 3511          # F12 Filing Diff
 powershell -File scripts/cluster_report.ps1                  # F14 Peer Clustering
 powershell -File scripts/ma_fit.ps1 -TargetCert 6976         # F15 M&A Fit
 powershell -File scripts/stress_test.ps1 -Cert 6976 -Outflow 60 -RateBps 400  # F16 Stress
+powershell -File scripts/deposit_flight.ps1                  # F13 Deposit-Flight ML (showcase)
 powershell -File scripts/population_report.ps1               # peer percentiles
 ```
 
@@ -97,9 +98,9 @@ banklens/
 | 0 | Foundations — arch, IaC, CI | scaffolded |
 | 1 | Data platform — Bronze + Silver ingestion | reference done |
 | 2 | Gold layer + peer percentiles (market/time-series pending) | Gold done |
-| 3 | Deterministic features — X-Ray, Diff, Peers, M&A, Stress | ✅ 5/6 (reference) |
-| 4 | Deposit-Flight ML model (showcase) | next |
-| **5** | **MCP server & tooling** | **reference done** |
+| 3 | Deterministic features — X-Ray, Diff, Peers, M&A, Stress | ✅ (reference) |
+| 4 | Deposit-Flight ML model (showcase) | ✅ AUC 0.99, SVB flagged leave-one-out |
+| 5 | MCP server & tooling — 9 tools, all 6 features | ✅ reference done |
 | 6 | Agentic AI layer | planned |
 | 7 | Quant-terminal visualization | planned |
 | 8 | Hardening, security, DR & GA | planned |
