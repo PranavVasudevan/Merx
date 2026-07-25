@@ -5,6 +5,12 @@ All notable changes to this project are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Added — Phase 1g (Feature 15 — M&A Fit Finder)
+- `transforms/ma_fit.py`: ranks acquirer/partner candidates by funding complementarity (deposit-rich fills loan-heavy), business similarity (cosine on loan mix), size compatibility, and geographic overlap. Pure functions over Gold; geography uses home-state as a proxy (FDIC Summary of Deposits branch footprints = Phase-2 upgrade).
+- `banklens_ingestion/ma_fit_cli.py` + `scripts/ma_fit.ps1`: ranked candidates with a per-match rationale.
+- Real result: for Dime Community Bank (NY, CRE-heavy), the top fit is Flagstar (former NYCB) — a 5.8×-larger NY CRE lender — then other NY CRE banks. Textbook in-market consolidation, straight from the feature vectors.
+- `test_ma_fit.py`: complementarity/ similarity/ size/ geo components + ranking.
+
 ### Added — Phase 1f (Feature 12 — Filing Diff)
 - `transforms/filing_diff.py`: quarter-over-quarter change detection that flags a move when it is a statistical outlier vs *that bank's own* history (z-score on same-span changes, excluding the evaluated transition), gated by a materiality floor. Falls back to an absolute threshold when there's no volatility baseline.
 - `banklens_ingestion/filing_diff_cli.py` + `scripts/filing_diff.ps1`: a structured "what changed and why it matters" report between two quarters.
