@@ -5,6 +5,14 @@ All notable changes to this project are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Added — Phase 1j (CERT↔CIK↔RSSD crosswalk + SEC EDGAR connector)
+- `sources/sec.py`: SEC EDGAR connector — the ticker/CIK directory (single request, 10,432 filers) and per-filer XBRL company facts. Politeness enforced (identifying UA, 10 req/s cap) per SEC's requirements.
+- Added `NAMEHCR`/`RSSDHCR`/`RSSDID` (holding-company identity) to the FDIC connector + Silver — the join keys. Discovered some banks (Zions, Flagstar) have **no separate holding company** (eliminated their BHC structure) — the crosswalk falls back to the bank's own identity for those.
+- `transforms/crosswalk.py`: dependency-free fuzzy name matching (stdlib `difflib`), symmetric corporate/banking-suffix stripping, and **first-token blocking** before fuzzy scoring — added after a real false positive was caught (Dime Community Bancshares almost matched an unrelated Kentucky bank, "Community Trust Bancorp," purely on generic word overlap; blocking on the first distinguishing token fixed it and cut runtime 25s → 0.4s). Transparent confidence tiers (exact/high/low/none) — low-confidence matches are surfaced for review, never silently dropped.
+- Real result: 1,002 holding companies vs 8,017 SEC filers → 52.5% match rate (234 exact, 21 high-confidence, 271 low-confidence). A documented naming discrepancy survives correctly as low-confidence: FDIC says "Dime Community," SEC's registered title says "Dime Commercial" (same company, ticker DCOM).
+- Live cross-source validation (`scripts/crosswalk.ps1 -Verify`): Zions' FDIC bank-level assets ($87.96B) exactly match its SEC holding-company assets (no separate HC); Wells Fargo's SEC figure ($2.15T) correctly exceeds its FDIC bank-subsidiary figure ($1.85T, superset as expected).
+- 9 new tests including a regression test for the false-positive bug. Docs: `docs/data-contracts/crosswalk.md`.
+
 ### Added — Phase 6 (Agentic AI — supervisor + specialists over MCP)
 - `services/agents`: a supervisor (forced-tool-call routing on Haiku) dispatches to one of 4 specialists (Risk Analyst, Filings Analyst, M&A Scout, Macro/Stress), each with a focused MCP tool subset and system prompt, matching the master plan's roster.
 - `anthropic_client.py`: hand-rolled Messages API client over stdlib `urllib` — no `anthropic` pip package, same zero-install philosophy as the FDIC connector. Reads `ANTHROPIC_API_KEY` from env or `.env`, never hardcoded.

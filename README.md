@@ -45,6 +45,7 @@ powershell -File scripts/ma_fit.ps1 -TargetCert 6976         # F15 M&A Fit
 powershell -File scripts/stress_test.ps1 -Cert 6976 -Outflow 60 -RateBps 400  # F16 Stress
 powershell -File scripts/deposit_flight.ps1                  # F13 Deposit-Flight ML (showcase)
 powershell -File scripts/population_report.ps1               # peer percentiles
+powershell -File scripts/crosswalk.ps1 -Verify ZIONS          # CERT<->CIK<->RSSD, live cross-source check
 ```
 
 ### One backend, three consumers — the MCP surface

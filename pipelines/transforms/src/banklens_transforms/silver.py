@@ -102,6 +102,10 @@ def to_bank_financials(raw: dict) -> dict:
         "filing_date": iso_date,
         "restated_flag": False,
         "_source": "fdic.bankfind",
+        # holding-company identity — the crosswalk to SEC filers joins on these
+        "rssd_id": int(raw["RSSDID"]) if raw.get("RSSDID") not in (None, "") else None,
+        "holding_company_name": raw.get("NAMEHCR"),
+        "holding_company_rssd": int(raw["RSSDHCR"]) if raw.get("RSSDHCR") not in (None, "", 0) else None,
     }
     for code, col in _DOLLAR_FIELDS.items():
         row[col] = _to_usd(raw.get(code))

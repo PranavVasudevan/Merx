@@ -30,6 +30,8 @@ API_ROOT = "https://banks.data.fdic.gov/api"
 FINANCIAL_FIELDS = [
     # identity + headline
     "CERT", "REPDTE", "NAMEFULL", "STALP", "ASSET",
+    # holding-company identity (the crosswalk to SEC filers joins on NAMEHCR)
+    "NAMEHCR", "RSSDHCR", "RSSDID",
     # deposits: total / domestic / insured / UNINSURED (reported) / core
     "DEP", "DEPDOM", "DEPINS", "DEPUNINS", "COREDEP",
     # loans & leases: gross / net

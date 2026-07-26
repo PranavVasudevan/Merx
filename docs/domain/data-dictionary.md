@@ -91,7 +91,20 @@ stress baseline recomputes the reported ratios precisely before any shock is app
 - **Foreign-bank US branches/agencies** (e.g. Bank of China, State Bank of India, Standard Chartered) report **0/null CET1** — they are capitalized at the parent level and don't file the ratio the same way. They pollute "lowest CET1" rankings. Phase 2: treat 0/null CET1 as *missing* (exclude from capital percentiles) rather than as a real 0.
 - The cohort is **CRE-heavy by nature** (median ~48% CRE), so peer-relative percentiles — not absolute thresholds alone — should drive the X-Ray's concentration verdict.
 
+## Holding-company identity (for the CERT↔CIK↔RSSD crosswalk — DONE, see below)
+| Code | Meaning | Canonical column |
+|---|---|---|
+| `RSSDID` | Bank-level Fed RSSD ID | `rssd_id` |
+| `NAMEHCR` | Holding-company name (blank if none — see crosswalk.md) | `holding_company_name` |
+| `RSSDHCR` | Holding-company RSSD ID (blank if none) | `holding_company_rssd` |
+
+## SEC EDGAR (via the crosswalk)
+`company_tickers.json` → `{cik_str, ticker, title}` per filer (10,432 filers). XBRL
+company facts (`data.sec.gov/api/xbrl/companyfacts/CIK##########.json`) use concept
+`us-gaap:Assets` (units USD) for total assets — verified against Wells Fargo & Zions.
+Full contract: [`docs/data-contracts/crosswalk.md`](../data-contracts/crosswalk.md).
+
 ## Still to map (Phase 2)
 Brokered deposits, FHLB advances, short-term borrowings (funding-stability score);
-the CET1/RWA **dollar** amounts (for a precise CRE-to-capital ratio); the
-CERT↔CIK↔RSSD crosswalk (`RSSDID` is in the default record — join key to Fed/SEC).
+the CET1/RWA **dollar** amounts (for a precise CRE-to-capital ratio); FFIEC Call
+Report / UBPR and NIC FR Y-9C connectors.
