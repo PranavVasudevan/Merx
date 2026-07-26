@@ -5,6 +5,15 @@ All notable changes to this project are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Added — Phase 6 (Agentic AI — supervisor + specialists over MCP)
+- `services/agents`: a supervisor (forced-tool-call routing on Haiku) dispatches to one of 4 specialists (Risk Analyst, Filings Analyst, M&A Scout, Macro/Stress), each with a focused MCP tool subset and system prompt, matching the master plan's roster.
+- `anthropic_client.py`: hand-rolled Messages API client over stdlib `urllib` — no `anthropic` pip package, same zero-install philosophy as the FDIC connector. Reads `ANTHROPIC_API_KEY` from env or `.env`, never hardcoded.
+- `mcp_client.py`: reusable MCP stdio JSON-RPC client (refactored out of `scripts/mcp_demo.py`) — agents reach BankLens **only** through the same MCP surface the UI and CLI use.
+- `agent.py`: the tool-calling loop (bounded to 6 turns), with every tool call recorded to a transcript saved at `data/agent_runs/<ts>.json` — a second, agent-side audit trail alongside the MCP server's own.
+- `scripts/agent_ask.ps1` — `powershell -File scripts/agent_ask.ps1 "..."`.
+- Tests runnable **without** an API key: real MCP round-trip, persona/tool-registry consistency, key-resolution, and the full tool-calling loop against the real MCP server with only the LLM call mocked (9 + 2 = 11 new tests, all passing). A routing-quality eval harness (`run_eval.py` + `eval_questions.json`) is included but needs a live key to run.
+- **Honest limitation:** the live LLM-in-the-loop path (an actual Claude call) was not exercised in this environment — no Anthropic API key was available to this session. The user runs it with their own key.
+
 ### Added — Phase 7 (Quant Terminal UI — reference)
 - `services/api-gateway/src/bridge_server.py`: dependency-free REST bridge (stdlib `http.server`) wrapping `banklens_mcp.tools` — the same logic the MCP server exposes, now callable from a browser. Extended `get_bank_profile` with full loan-composition + all capital ratios + peer percentiles (benefits both MCP and REST).
 - `frontend/apps/web`: React + TypeScript + Vite quant terminal. Charts via Recharts, styled with the validated dataviz skill palette (light/dark via `prefers-color-scheme`). Colors resolved in JS (`colors.ts`) since SVG fill attributes don't reliably read CSS `var()`.

@@ -1,0 +1,8 @@
+[
+  {"question": "Which banks look most exposed to a deposit run right now?", "expected_persona": "risk_analyst"},
+  {"question": "What materially changed in Wells Fargo's balance sheet this quarter?", "expected_persona": "filings_analyst"},
+  {"question": "Who would be the best acquirer for Dime Community Bank?", "expected_persona": "ma_scout"},
+  {"question": "If rates rise another 300bps and 40% of deposits leave, does Zions stay above its capital minimums?", "expected_persona": "macro_stress"},
+  {"question": "Show me Dime's deposit-flight risk score and what's driving it.", "expected_persona": "risk_analyst"},
+  {"question": "Find banks similar to Dime by loan mix and funding, not just by asset size.", "expected_persona": "ma_scout"}
+]

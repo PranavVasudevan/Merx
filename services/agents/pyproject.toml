@@ -1,0 +1,16 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "banklens-agents"
+version = "0.1.0"
+description = "BankLens agentic AI — supervisor + specialists over the MCP tool surface"
+requires-python = ">=3.11"
+dependencies = []  # hand-rolled Anthropic client (urllib) — zero-install, like the rest of Phase 1
+
+[project.scripts]
+banklens-agent = "banklens_agents.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/banklens_agents"]

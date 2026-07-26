@@ -70,6 +70,16 @@ powershell -File scripts/dev_web.ps1   # bridge (8791) + Vite dev server (5173)
 
 See [`frontend/apps/web/README.md`](frontend/apps/web/README.md).
 
+### The agent fleet (Phase 6)
+
+A supervisor routes your question to a specialist (Risk / Filings / M&A / Macro),
+which chains the MCP tools — nothing but MCP — to build an answer:
+
+```powershell
+# needs your own ANTHROPIC_API_KEY (env var or .env) — see services/agents/README.md
+powershell -File scripts/agent_ask.ps1 "which banks look most exposed to a deposit run right now?"
+```
+
 ---
 
 ## Repository layout
@@ -113,6 +123,7 @@ banklens/
 | 3 | Deterministic features — X-Ray, Diff, Peers, M&A, Stress | ✅ (reference) |
 | 4 | Deposit-Flight ML model (showcase) | ✅ AUC 0.99, SVB flagged leave-one-out |
 | 5 | MCP server & tooling — 9 tools, all 6 features | ✅ reference done |
+| 6 | Agentic AI layer — supervisor + 4 specialists over MCP | ✅ reference done |
 | 7 | Quant-terminal UI (X-Ray, Diff, Clusters, Risk, M&A, Stress, peer scatter) | ✅ reference done |
 | 6 | Agentic AI layer | planned |
 | 7 | Quant-terminal visualization | planned |

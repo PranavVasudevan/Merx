@@ -3,6 +3,7 @@
 /data/silver/
 /data/gold/
 /data/mcp_audit.jsonl
+/data/agent_runs/
 !/data/samples/
 *.parquet
 *.duckdb
