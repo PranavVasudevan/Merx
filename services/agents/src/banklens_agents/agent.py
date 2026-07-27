@@ -61,15 +61,27 @@ def _to_tool_schemas(mcp_tools: list[dict], allowed: tuple[str, ...]) -> list[di
     ]
 
 
-def _call_signature(name: str, arguments: dict) -> tuple:
-    return (name, tuple(sorted((k, str(v)) for k, v in arguments.items())))
+def _call_signature(name: str, arguments) -> tuple:
+    """A hashable fingerprint for a (tool, arguments) pair, used to detect and
+    dedup repeat calls. Defensively tolerant of non-dict `arguments` — a weak
+    model's malformed tool-call JSON can put a string or list there instead of an
+    object (each provider client should already guard against this before
+    constructing a tool_use block, but this is the last line of defense so a
+    client-layer gap never crashes the loop with an AttributeError)."""
+    if isinstance(arguments, dict):
+        items = tuple(sorted((k, str(v)) for k, v in arguments.items()))
+    else:
+        items = (("_raw", str(arguments)),)
+    return (name, items)
 
 
 def _looks_like_stray_tool_call(text: str, tool_names: set[str]) -> bool:
     """A weak model's 'final answer' can itself be a malformed, hallucinated tool-call
-    fragment (caught live: llama3.2:1b, after a SUCCESSFUL tool call with real data,
-    emitted `{"get_bank_xray": {...}}` as its supposed answer instead of prose). Never
-    show that raw artifact to the user as if it were a real analysis."""
+    fragment instead of prose. Caught live in two distinct shapes from the SAME
+    model (llama3.2:1b) on different runs: `{"get_bank_xray": {...}}` (tool name as
+    the key) and `{"tool": "list_banks", "query": ..., ...}` (tool name as a "tool"
+    field's value, arguments flattened to the top level instead of nested) — check
+    both. Never show either raw artifact to the user as if it were a real analysis."""
     stripped = text.strip()
     if not stripped.startswith("{"):
         return False
@@ -77,7 +89,9 @@ def _looks_like_stray_tool_call(text: str, tool_names: set[str]) -> bool:
         parsed = json.loads(stripped)
     except json.JSONDecodeError:
         return False
-    return isinstance(parsed, dict) and any(k in tool_names for k in parsed)
+    if not isinstance(parsed, dict):
+        return False
+    return any(k in tool_names for k in parsed) or parsed.get("tool") in tool_names
 
 
 def run_agent(persona: Persona, question: str, *, model: str | None = None,
@@ -99,14 +113,20 @@ def run_agent(persona: Persona, question: str, *, model: str | None = None,
 
         def _finalize(text: str) -> str:
             """Never surface a stray tool-call artifact as if it were a real answer —
-            fall back to the last real tool result instead (see _looks_like_stray_tool_call)."""
+            fall back to the last real tool result instead (see _looks_like_stray_tool_call).
+            If there's no real tool result to fall back on either, say so honestly
+            rather than showing the raw artifact OR a bare '(no answer produced)'."""
             if text and not _looks_like_stray_tool_call(text, tool_names):
                 return text
             if seen_calls:
                 last = next(reversed(seen_calls.values()))
                 return ("The model could not produce a clean written summary, but here is "
                        f"the underlying data it retrieved: {last[:500]}")
-            return text or "(no answer produced)"
+            if text:  # it WAS a stray tool-call artifact, and no data was ever retrieved
+                return ("The model attempted a tool call but produced it in an unrecognized "
+                       "format, and no data was retrieved. Try rephrasing the question, or "
+                       "retry — small local models are inconsistent at this.")
+            return "(no answer produced)"
 
         for turn in range(1, MAX_TURNS + 1):
             result.turns = turn

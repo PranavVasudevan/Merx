@@ -38,6 +38,18 @@ def test_extract_json_returns_none_not_raise_on_garbage():
     assert oc._extract_json("@@@@@@@@@@@@") is None
 
 
+def test_extract_json_rejects_valid_but_non_dict_json():
+    """Regression test for a REAL bug found live: the model's whole raw response was
+    sometimes a bare quoted string like '"CERT1234"' — perfectly VALID json.loads()
+    output, but not a dict. Every caller in this module does parsed.get(...), which
+    crashes with 'str' object has no attribute 'get' if a bare string leaks through.
+    _extract_json must reject non-dict JSON at the source, not just invalid JSON."""
+    assert oc._extract_json('"CERT1234"') is None       # bare string
+    assert oc._extract_json("42") is None                # bare number
+    assert oc._extract_json("[1, 2, 3]") is None          # bare array
+    assert oc._extract_json("true") is None              # bare boolean
+
+
 def test_messages_create_valid_tool_call(monkeypatch):
     monkeypatch.setattr(oc, "_generate", lambda prompt, model, host:
                         '{"tool": "get_bank_xray", "arguments": {"cert": 6976}}')
@@ -65,6 +77,27 @@ def test_messages_create_no_tools_is_plain_completion(monkeypatch):
     resp = oc.messages_create(model="llama3.2:1b", system="sys",
                               messages=[{"role": "user", "content": "hi"}])
     assert resp == {"content": [{"type": "text", "text": "plain answer"}], "stop_reason": "end_turn"}
+
+
+def test_non_dict_arguments_falls_back_to_text_not_a_crash(monkeypatch):
+    """Regression test for a REAL bug found live: the model emitted
+    {"tool": "get_bank_xray", "arguments": "cert 6976"} — a STRING, not an object —
+    which used to flow through as tool_use input and crash agent.py's
+    _call_signature (.items() on a str). Must degrade to the text fallback instead."""
+    monkeypatch.setattr(oc, "_generate", lambda prompt, model, host:
+                        '{"tool": "get_bank_xray", "arguments": "cert 6976"}')
+    resp = oc.messages_create(model="llama3.2:1b", system="sys",
+                              messages=[{"role": "user", "content": "q"}], tools=_TOOLS)
+    assert resp["stop_reason"] == "end_turn"   # NOT tool_use — treated as unparseable
+
+
+def test_bare_string_response_falls_back_to_text_not_a_crash(monkeypatch):
+    """The exact live failure: the model's entire raw output was just a bare quoted
+    string with no braces at all, so the balanced-brace scan never even ran."""
+    monkeypatch.setattr(oc, "_generate", lambda prompt, model, host: '"CERT1234"')
+    resp = oc.messages_create(model="llama3.2:1b", system="sys",
+                              messages=[{"role": "user", "content": "q"}], tools=_TOOLS)
+    assert resp["stop_reason"] == "end_turn"
 
 
 def test_forced_tool_choice_valid_json(monkeypatch):

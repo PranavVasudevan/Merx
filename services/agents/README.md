@@ -48,6 +48,10 @@ try `qwen2.5-coder:3b` again after `ollama pull qwen2.5-coder:3b` if you want a
 sharper (if slower) model.
 
 ### Real bugs found (and fixed) by actually running this live
+
+Five genuine **code** bugs, each caught by an actual live run and each fixed with a
+regression test (not just patched and hoped):
+
 1. **Type coercion at the MCP boundary.** The local model sent `{"cert": "6976"}`
    (string) for an integer-typed parameter, which failed a dict lookup keyed by real
    ints with a misleading "not found" error. Fixed in `services/mcp-server`'s
@@ -59,22 +63,44 @@ sharper (if slower) model.
    `(name, arguments)` pair is answered from cache (no wasted MCP round-trip) with an
    explicit nudge; two repeats in a row force one final `tools=None` call, which
    *guarantees* termination with a real answer.
-3. **Stray tool-call artifacts as "final answers."** Even after getting real data,
-   the model's "final answer" turn was sometimes itself a malformed JSON fragment
-   (`{"get_bank_xray": {...}}`) rather than prose. `agent.py`'s `_finalize()` detects
-   this shape and substitutes the real underlying tool data instead of showing the
-   user a confusing artifact.
+3. **Stray tool-call artifacts as "final answers"** — in **two different shapes**
+   caught on different runs: `{"get_bank_xray": {...}}` (tool name as the dict key)
+   and `{"tool": "list_banks", "query": ..., ...}` (tool name as a `"tool"` field's
+   *value*, arguments flattened to the top level). `agent.py`'s
+   `_looks_like_stray_tool_call` / `_finalize()` catch both and substitute the real
+   underlying tool data — or an honest "couldn't parse, try again" message if no
+   real data was ever retrieved either.
+4. **Non-dict JSON crashing `.items()`/`.get()`.** The model's raw output sometimes
+   parsed as perfectly *valid* JSON that wasn't an object — a bare quoted string
+   (`"CERT1234"`), for instance — and every caller assumed dict semantics. Fixed at
+   the source: `ollama_client._extract_json` now only ever returns a dict or `None`.
+5. **PowerShell parameter binding** (`agent_ask.ps1`): without explicit `Position`
+   attributes, a single bare argument bound to `-Persona` (declared first) instead
+   of the question text. Fixed with `[CmdletBinding(PositionalBinding = $false)]`.
 
-After all three fixes, a real live run (`llama3.2:1b`, fully local, $0) produced:
+After all five fixes, a real live run (`llama3.2:1b`, fully local, $0) produced:
 > "Dime Community Bank appears to be of high concentration risk due to a
 > single-sector loan concentration with 73.8% of its book concentrated in one
 > sector. Additionally, its CRE-to-equity ratio is above 300% [...] the uninsured
 > deposit reliance is also elevated [...]"
 
 — correct, coherent, and grounded entirely in the real `get_bank_xray` tool result.
-**Honest limitation:** a 1B local model needed all three fixes above to get there
-reliably; expect noticeably rougher edges than Gemini/Claude would give, especially
-on harder multi-tool questions.
+
+### Where code fixes stop and model capability begins
+
+A harder, open-ended question ("which banks look most exposed to a deposit run
+*right now*?" — no cert given) surfaced something no amount of defensive parsing
+fixes: the model **hallucinated** a fake certificate number and confabulated a
+plausible-sounding answer citing "Wells Fargo" and "Bank of America" with numbers
+that didn't correspond to any real tool result (every actual tool call it made
+errored out). It skipped the necessary first step — look up real candidate banks —
+and fabricated instead. This is a genuine reasoning-capability ceiling of a
+1B-parameter model, not a bug; no amount of code-side robustness fixes the model
+choosing not to gather real data before answering. This is exactly the tradeoff
+flagged from the start: **single-step, cert-specific questions work well and are
+verifiably grounded in real data; open-ended multi-step questions are where a free
+local model's limits show.** For better quality at the same $0 cost, configure
+Gemini; for the best quality, Anthropic (costs money).
 
 ## Gemini — genuinely free, multi-key rotation (untested live, no key available)
 

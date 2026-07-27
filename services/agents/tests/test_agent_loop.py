@@ -115,6 +115,25 @@ def test_stray_tool_call_artifact_is_replaced_with_real_data(monkeypatch):
     assert "underlying data it retrieved" in result.answer  # the honest fallback kicked in
 
 
+def test_stray_flattened_tool_call_with_no_data_gets_honest_message(monkeypatch):
+    """Regression test for a REAL failure found live: the model's very FIRST turn
+    produced `{"tool": "list_banks", "query": ..., ...}` (tool name as a "tool"
+    field VALUE, arguments flattened to top level — a different malformed shape
+    than the {"tool_name": {...}} case) with NO successful tool call ever having
+    happened. Must give an honest message, not the raw artifact and not a bare
+    '(no answer produced)'."""
+    def fake(**kwargs):
+        return {"content": [{"type": "text", "text":
+                            '{"tool": "list_banks", "query": "x", "state": "", "limit": 100}'}],
+                "stop_reason": "end_turn"}
+    monkeypatch.setattr(ollama_client, "messages_create", fake)
+
+    result = agent_mod.run_agent(PERSONAS["generalist"], "which banks are risky?", provider="ollama")
+    assert result.tool_calls == []                        # no real tool call ever happened
+    assert '"tool":' not in result.answer                  # never show the raw artifact
+    assert "unrecognized format" in result.answer          # the honest fallback message
+
+
 def test_normal_prose_answer_passes_through_unchanged(monkeypatch):
     def fake(**kwargs):
         return {"content": [{"type": "text", "text": "Dime is high risk due to CRE concentration."}],
@@ -122,6 +141,18 @@ def test_normal_prose_answer_passes_through_unchanged(monkeypatch):
     monkeypatch.setattr(ollama_client, "messages_create", fake)
     result = agent_mod.run_agent(PERSONAS["generalist"], "how risky is Dime?", provider="ollama")
     assert result.answer == "Dime is high risk due to CRE concentration."
+
+
+def test_call_signature_tolerates_non_dict_input():
+    """Belt-and-suspenders: even if a provider client-layer bug ever let a non-dict
+    `arguments` value through to the loop, _call_signature must not crash — the
+    client-layer fix (ollama_client validating isinstance(...,dict)) is the primary
+    defense; this is the last line of defense so a gap there degrades, not crashes."""
+    sig = agent_mod._call_signature("get_bank_xray", "cert 6976")
+    assert sig == ("get_bank_xray", (("_raw", "cert 6976"),))
+    # a normal dict still produces the original stable signature
+    assert agent_mod._call_signature("get_bank_xray", {"cert": 6976}) == \
+        ("get_bank_xray", (("cert", "6976"),))
 
 
 def test_unknown_provider_raises():

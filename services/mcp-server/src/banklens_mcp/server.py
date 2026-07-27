@@ -112,11 +112,16 @@ def handle(msg: dict):
         tool = TOOL_BY_NAME.get(name)
         if tool is None:
             return _error(mid, -32602, f"unknown tool: {name}")
-        args = _coerce_arguments(args, tool["inputSchema"])
         start = time.time()
         try:
-            out = tool["handler"](**args)
-            _audit(name, args, True, (time.time() - start) * 1000)
+            # Coercion lives INSIDE the try: a malformed, non-dict `arguments` value
+            # (e.g. a client sending a bare string instead of an object — not valid
+            # per the protocol, but a client shouldn't be able to crash the whole
+            # server subprocess over it) must become an in-band tool error, not an
+            # uncaught exception that kills the process for every other in-flight call.
+            coerced = _coerce_arguments(args, tool["inputSchema"])
+            out = tool["handler"](**coerced)
+            _audit(name, coerced, True, (time.time() - start) * 1000)
             return _result(mid, {"content": [
                 {"type": "text", "text": json.dumps(out, indent=2, default=str)}]})
         except Exception as exc:  # tool errors are returned in-band per MCP

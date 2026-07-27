@@ -9,11 +9,12 @@
     powershell -File scripts/agent_ask.ps1 -Persona macro_stress "stress-test Dime Community Bank under a severe deposit run"
     powershell -File scripts/agent_ask.ps1 -Provider gemini "..."   # once GEMINI_API_KEY* is set
 #>
+[CmdletBinding(PositionalBinding = $false)]
 param(
     [string]$Persona = "",
     [string]$Provider = "",
     [string]$Model = "",
-    [Parameter(ValueFromRemainingArguments = $true)]
+    [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
     [string[]]$Question
 )
 $ErrorActionPreference = "Stop"

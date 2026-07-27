@@ -75,6 +75,18 @@ def test_tools_call_actually_coerces_end_to_end():
     assert "DIME COMMUNITY BANK" in text.upper()
 
 
+def test_non_dict_arguments_is_an_in_band_error_not_a_crash():
+    """Regression test for a REAL bug found live: coercion used to run OUTSIDE the
+    try/except, so a malformed non-dict `arguments` value (a client sending a bare
+    string instead of an object) crashed the whole server subprocess instead of
+    producing a clean in-band tool error."""
+    r = server.handle({"jsonrpc": "2.0", "id": 6, "method": "tools/call",
+                       "params": {"name": "get_bank_xray", "arguments": "not-a-dict"}})
+    assert r is not None                 # handle() must return, not raise
+    assert r["result"].get("isError")
+    assert "error" in r["result"]["content"][0]["text"].lower()
+
+
 def test_unknown_tool_is_an_error():
     r = server.handle({"jsonrpc": "2.0", "id": 3, "method": "tools/call",
                        "params": {"name": "does_not_exist", "arguments": {}}})

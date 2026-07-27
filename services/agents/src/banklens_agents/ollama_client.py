@@ -51,9 +51,16 @@ _FENCE_RE = re.compile(r"```(?:json)?\s*(.*?)\s*```", re.DOTALL)
 
 
 def _extract_json(raw: str) -> dict | None:
-    """Best-effort extraction of a JSON object from raw model text. Returns None
-    (never raises) if nothing parses — callers must have a safe fallback, since a
-    weak local model failing to produce valid JSON is an expected, common case."""
+    """Best-effort extraction of a JSON *object* from raw model text. Returns None
+    (never raises) if nothing parses to a dict — callers must have a safe fallback,
+    since a weak local model failing to produce valid JSON is an expected, common
+    case. Deliberately dict-only: caught live, a model's raw response sometimes
+    parses as perfectly valid JSON that ISN'T an object (a bare quoted string, a
+    number, a list) — e.g. the whole response was just `"CERT1234"`. Every caller in
+    this module treats the result as a tool-call object (`.get("tool")`, etc.), so
+    returning a non-dict here would just move the same crash one level up instead
+    of fixing it — reject it at the source instead.
+    """
     candidates = [raw.strip()]
 
     fence_match = _FENCE_RE.search(raw)
@@ -74,15 +81,19 @@ def _extract_json(raw: str) -> dict | None:
 
     for candidate in candidates:
         try:
-            return json.loads(candidate)
+            parsed = json.loads(candidate)
         except json.JSONDecodeError:
             continue
+        if isinstance(parsed, dict):
+            return parsed
     for candidate in candidates:
         fixed = re.sub(r",\s*([}\]])", r"\1", candidate).replace("'", '"')
         try:
-            return json.loads(fixed)
+            parsed = json.loads(fixed)
         except json.JSONDecodeError:
             continue
+        if isinstance(parsed, dict):
+            return parsed
     return None
 
 
@@ -187,9 +198,15 @@ def messages_create(
         raw = _generate(prompt, resolve_model(model), host)
         parsed = _extract_json(raw)
         valid_names = {t["name"] for t in tools}
-        if parsed and parsed.get("tool") in valid_names:
+        # `arguments` must actually be a dict — caught live: the model sometimes
+        # emits {"tool": "get_bank_xray", "arguments": "cert 6976"} (a STRING) for
+        # the arguments value. Treating that as real input crashes downstream
+        # (agent.py calls .items() on it to build a call signature); anything else
+        # is the same "bad JSON" case the no-tool-call fallback below already handles.
+        if (parsed and parsed.get("tool") in valid_names
+                and isinstance(parsed.get("arguments"), dict)):
             return {"content": [{"type": "tool_use", "id": "ollama_call_0",
-                                 "name": parsed["tool"], "input": parsed.get("arguments", {})}],
+                                 "name": parsed["tool"], "input": parsed["arguments"]}],
                     "stop_reason": "tool_use"}
         # No valid tool call parsed -> treat the whole response as the final answer.
         return {"content": [{"type": "text", "text": raw}], "stop_reason": "end_turn"}
