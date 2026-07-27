@@ -5,6 +5,18 @@ All notable changes to this project are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Added — Phase 6b (multi-provider agents: Ollama default, Gemini multi-key, real bugs fixed)
+- **Provider abstraction** (`providers.py`): `anthropic_client.py`, `gemini_client.py`, `ollama_client.py` all implement the identical `messages_create(...) -> {"content": [...], "stop_reason": ...}` shape, so `agent.py`/`supervisor.py` are fully provider-agnostic. Default is **`ollama`** (`BANKLENS_LLM_PROVIDER` env var overrides) — this project has a hard $0 spending rule.
+- **`gemini_client.py`**: native Gemini function-calling, translating Anthropic-shaped messages/tools/tool_choice to/from Gemini's wire format (system_instruction/contents/function_declarations/tool_config). `gemini_keys.py` is a near-verbatim port of project-matcher's own key-rotation module — "1 main + 4 backups" via `GEMINI_API_KEY` + `GEMINI_API_KEY_1..4` (or `GEMINI_API_KEYS` comma list), rotating past 401/403/429.
+- **`ollama_client.py`**: a plain-text tool-call protocol (describe tools in-prompt, extract JSON robustly) rather than Ollama's native `/api/chat` tool-calling — that native path returned corrupted output when tested live against `qwen2.5-coder:3b` on this machine (even a plain "say hello" came back garbled). Default model `llama3.2:1b`, confirmed working cleanly.
+- **Three real bugs found and fixed by actually running the agent live** (Ollama, $0, no mocks):
+  1. MCP server (`server.py`): a local model sent `{"cert": "6976"}` (string) for an integer param, failing a dict lookup with a misleading error. Added `_coerce_arguments()` against each tool's declared schema — benefits every MCP client, not just weak local models.
+  2. `agent.py`: the model reliably got correct tool results but kept re-issuing the identical call instead of answering. Added duplicate-call detection (answered from cache, not re-invoked) + a nudge, escalating to a forced `tools=None` synthesis call after two repeats — guarantees loop termination with a real answer.
+  3. `agent.py`: even with real data in hand, the model's "final answer" was sometimes itself a malformed tool-call-shaped JSON fragment. Added `_looks_like_stray_tool_call` detection with a fallback that surfaces the real underlying tool data instead of a confusing artifact.
+  - After all three fixes: a real, live, fully-local run produced a coherent, factually-correct risk summary for Dime Community Bank, grounded in the real `get_bank_xray` result.
+- 34 new tests, all hermetic (no API key, no live network) — `test_gemini_keys.py`, `test_gemini_client.py`, `test_ollama_client.py`, `test_providers.py` (incl. asserting the default IS the free provider), regression tests for all three bugs in `test_agent_loop.py`, coercion tests in `test_mcp.py`.
+- `.env.example` documents the full provider setup; `cli.py`/`agent_ask.ps1`/`run_eval.py` gained `--provider`.
+
 ### Added — Phase 1j (CERT↔CIK↔RSSD crosswalk + SEC EDGAR connector)
 - `sources/sec.py`: SEC EDGAR connector — the ticker/CIK directory (single request, 10,432 filers) and per-filer XBRL company facts. Politeness enforced (identifying UA, 10 req/s cap) per SEC's requirements.
 - Added `NAMEHCR`/`RSSDHCR`/`RSSDID` (holding-company identity) to the FDIC connector + Silver — the join keys. Discovered some banks (Zions, Flagstar) have **no separate holding company** (eliminated their BHC structure) — the crosswalk falls back to the bank's own identity for those.

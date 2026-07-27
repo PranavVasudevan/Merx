@@ -1,9 +1,14 @@
 """BankLens agent CLI — the "ask it anything" analyst copilot.
 
     python -m banklens_agents.cli "which banks look most exposed to a deposit run?"
-    python -m banklens_agents.cli --persona macro_stress "stress Dime under a 60% run" --cert-hint 6976
+    python -m banklens_agents.cli --persona macro_stress "stress Dime under a 60% run"
+    python -m banklens_agents.cli --provider gemini "..."     # once GEMINI_API_KEY* is set
+    python -m banklens_agents.cli --provider anthropic "..."  # costs money — off by default
 
-Requires ANTHROPIC_API_KEY (env var or .env at the repo root) — see anthropic_client.py.
+Default provider is **ollama** (BANKLENS_LLM_PROVIDER env var overrides) — this
+project has a hard $0 spending rule, and Ollama is the only backend that costs
+nothing to actually run. See providers.py / services/agents/README.md.
+
 Every run is saved to data/agent_runs/<timestamp>.json for audit, mirroring the MCP
 server's own per-tool-call audit log.
 """
@@ -16,8 +21,8 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+from . import providers
 from .agent import run_agent, to_json
-from .anthropic_client import MissingApiKey
 from .personas import PERSONAS
 from .supervisor import route
 
@@ -39,21 +44,26 @@ def main() -> None:
     p.add_argument("question", nargs="+", help="your question, in plain English")
     p.add_argument("--persona", choices=list(PERSONAS), default=None,
                    help="skip the supervisor and force a specialist")
-    p.add_argument("--model", default="sonnet", choices=["opus", "sonnet", "haiku"])
+    p.add_argument("--provider", choices=list(providers.PROVIDERS), default=None,
+                   help=f"LLM backend (default: {providers.DEFAULT_PROVIDER}, or $BANKLENS_LLM_PROVIDER)")
+    p.add_argument("--model", default=None,
+                   help="model name/alias for the chosen provider (default: provider's own default)")
     args = p.parse_args()
     question = " ".join(args.question)
+    provider_name, _ = providers.get_client(args.provider)
 
     try:
         if args.persona:
             persona_key, reason = args.persona, "user-forced"
         else:
-            print("[supervisor] routing question to a specialist...")
-            persona_key, reason = route(question)
+            print(f"[supervisor:{provider_name}] routing question to a specialist...")
+            persona_key, reason = route(question, model=args.model, provider=args.provider)
         persona = PERSONAS[persona_key]
         print(f"[supervisor] -> {persona.label}  ({reason})\n")
 
-        print(f"[{persona.label}] working...")
-        result = run_agent(persona, question, model=args.model, on_event=_on_event)
+        print(f"[{persona.label}:{provider_name}] working...")
+        result = run_agent(persona, question, model=args.model, provider=args.provider,
+                           on_event=_on_event)
 
         print(f"\n{'=' * 70}")
         print(result.answer)
@@ -65,7 +75,7 @@ def main() -> None:
         out.write_text(json.dumps(to_json(result), indent=2), encoding="utf-8")
         print(f"\n(transcript saved to {out.relative_to(REPO)})")
 
-    except MissingApiKey as e:
+    except Exception as e:  # MissingApiKey (anthropic/gemini) or OllamaError
         print(f"\n{e}\n", file=sys.stderr)
         sys.exit(1)
 

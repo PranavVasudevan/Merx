@@ -34,6 +34,47 @@ def _error(mid, code, message):
     return {"jsonrpc": "2.0", "id": mid, "error": {"code": code, "message": message}}
 
 
+def _coerce_arguments(args: dict, schema: dict) -> dict:
+    """Coerce loosely-typed JSON-RPC arguments (e.g. '"6976"' where the schema
+    says integer) to match the declared inputSchema. Real clients send this —
+    caught live from a local Ollama model that emitted {"cert": "6976"} for an
+    integer-typed param, which then failed a dict lookup keyed by real ints with
+    a misleading "not found" error instead of an obvious type error. Best-effort:
+    a value that can't be coerced is passed through unchanged (the handler's own
+    validation/lookup will raise a clear error rather than this coercion masking one).
+    """
+    props = (schema or {}).get("properties", {})
+    out = dict(args)
+    for key, value in args.items():
+        prop = props.get(key)
+        if not prop or value is None:
+            continue
+        want = prop.get("type")
+        if want == "integer" and not isinstance(value, int):
+            try:
+                out[key] = int(value)
+            except (TypeError, ValueError):
+                pass
+        elif want == "number" and not isinstance(value, (int, float)):
+            try:
+                out[key] = float(value)
+            except (TypeError, ValueError):
+                pass
+        elif want == "array":
+            items = value if isinstance(value, list) else [value]  # lone scalar -> singleton list
+            item_type = prop.get("items", {}).get("type")
+            if item_type == "integer":
+                coerced = []
+                for v in items:
+                    try:
+                        coerced.append(v if isinstance(v, int) else int(v))
+                    except (TypeError, ValueError):
+                        coerced.append(v)
+                items = coerced
+            out[key] = items
+    return out
+
+
 def _audit(tool, args, ok, ms):
     try:
         _AUDIT.parent.mkdir(parents=True, exist_ok=True)
@@ -71,6 +112,7 @@ def handle(msg: dict):
         tool = TOOL_BY_NAME.get(name)
         if tool is None:
             return _error(mid, -32602, f"unknown tool: {name}")
+        args = _coerce_arguments(args, tool["inputSchema"])
         start = time.time()
         try:
             out = tool["handler"](**args)

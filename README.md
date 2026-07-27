@@ -71,15 +71,25 @@ powershell -File scripts/dev_web.ps1   # bridge (8791) + Vite dev server (5173)
 
 See [`frontend/apps/web/README.md`](frontend/apps/web/README.md).
 
-### The agent fleet (Phase 6)
+### The agent fleet (Phase 6) — $0 by default, real bugs found running it live
 
 A supervisor routes your question to a specialist (Risk / Filings / M&A / Macro),
-which chains the MCP tools — nothing but MCP — to build an answer:
+which chains the MCP tools — nothing but MCP — to build an answer. **Default
+provider is Ollama** (free, local, works with no setup) — this project has a hard
+$0 spending rule. Gemini (also free, multi-key rotation like project-matcher's
+`gemini_keys.py`) and Anthropic (costs money) are fully built and swappable via
+`--provider`, but weren't run live in this environment.
 
 ```powershell
-# needs your own ANTHROPIC_API_KEY (env var or .env) — see services/agents/README.md
 powershell -File scripts/agent_ask.ps1 "which banks look most exposed to a deposit run right now?"
 ```
+
+Running this for real (`llama3.2:1b`) surfaced and fixed three genuine bugs — a
+string-vs-integer type mismatch at the MCP boundary, a small model looping on
+duplicate tool calls instead of answering, and a stray tool-call artifact standing
+in for a final answer. See [`services/agents/README.md`](services/agents/README.md)
+for the full story; the fixed loop now produces coherent, correct, fully-local
+answers grounded in real tool data.
 
 ---
 
