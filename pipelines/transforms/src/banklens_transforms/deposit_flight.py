@@ -1,9 +1,11 @@
 """Feature 13 — Deposit-Flight Early-Warning (the showcase).
 
-Classifies banks by structural resemblance to real bank-run cases. Trained on the
-2022Q4 cross-section (the quarter before the March-2023 failures), labeling the banks
-that actually failed as positives, then validated against history: "trained WITHOUT
-SVB, would it still have flagged SVB?" (leave-one-out).
+Classifies banks by structural resemblance to real bank-run cases. Trained on a
+POOLED cross-section spanning two real financial crises 15 years apart — 2022Q4
+(the quarter before the March-2023 failures: SVB, Signature, First Republic) and
+2008Q1 (the quarter before IndyMac's July-2008 failure) — labeling the banks that
+actually failed as positives, then validated against history: "trained WITHOUT
+this bank, would it still have flagged it?" (leave-one-out), across BOTH crises.
 
 Features (all computable from FDIC call-report fields):
   uninsured_deposit_pct   — depositors who run first (SVB ~86%)
@@ -13,6 +15,31 @@ Features (all computable from FDIC call-report fields):
   deposit_growth_1yr      — hot-money growth / early outflow
 
 Interpretability by coefficient contribution (value_z x weight), not a black box.
+
+Pooling two eras is a deliberate, documented modeling choice: features are all
+RATIOS (not absolute dollar levels), which is what makes a 2008 balance sheet and a
+2022 one comparable at all — but the two eras still had different rate/macro
+environments, and this is a hand-picked (not randomly sampled) universe. Treat this
+as a real but limited-n showcase, not a rigorously cross-validated production model.
+
+IndyMac is a genuinely DIFFERENT failure archetype from the 2023 cohort — worth
+knowing before reading its leave-one-out result. Its 2008Q1 profile: uninsured
+deposits ~13% (vs SVB's ~86%), HTM/equity ~0% (vs SVB's ~591%). IndyMac's failure was
+driven primarily by subprime-mortgage credit losses, with a late-stage RETAIL
+depositor panic (triggered by a public letter) as the proximate trigger — not the
+uninsured-institutional-deposit-flight structural pattern the other three positives
+share and the feature set is tuned to catch. Its most anomalous feature is instead
+its deposit_growth_1yr (~+63% in the year before failure — rapid, hot-money-style
+funding growth). Whether the model flags it well or poorly is an honest empirical
+question, not something to assume either way — see the CLI's leave-one-out output.
+
+Washington Mutual (also a real, famous 2008 depositor run — a ~$16.7B outflow in the
+10 days before failure) is deliberately EXCLUDED, not forgotten: at ~$307B in assets
+it exceeds this platform's $1B-$250B population band by a wide margin, and pooling
+in a bank 10-60x larger than every other training example risks the model learning
+size-correlated confounds that don't generalize back down to the population it will
+actually score. A production build would either special-case a widened band for
+historical-training data only, or source a separate large-bank cohort/model.
 """
 
 from __future__ import annotations
@@ -27,9 +54,19 @@ from .silver import to_bank_financials
 FEATURES = ["uninsured_deposit_pct", "htm_to_equity", "securities_to_assets",
             "loan_to_deposit_pct", "deposit_growth_1yr"]
 
-# 2023 deposit-run failures in the $1B-$250B band (from the FDIC failures list)
+# Real deposit-run failures within the $1B-$250B population band, pooled across two
+# crises (FDIC failures list, verified live): 2023 (trained on 2022Q4) + 2008 (trained
+# on 2008Q1).
 POSITIVE_CERTS = {24735: "Silicon Valley Bank", 57053: "Signature Bank",
-                  59017: "First Republic Bank"}
+                  59017: "First Republic Bank", 29730: "IndyMac Bank"}
+
+# Documented, not silently dropped — see the module docstring for why each is excluded.
+EXCLUDED_CANDIDATES = {
+    32633: {"name": "Washington Mutual Bank", "reason":
+            "assets ~$307B at failure (2008) — exceeds the $1B-$250B population band "
+            "by 10-60x every other training example; would risk the model learning "
+            "size confounds rather than structural risk signal."},
+}
 
 MODEL_CARD = Path(__file__).resolve().parents[4] / "ml" / "deposit_flight" / "model_card.json"
 
@@ -86,14 +123,14 @@ def _standardize(X):
     return Xs, mu, sd
 
 
-def train(rows: list[dict]) -> tuple[dict, dict]:
+def train(rows: list[dict], *, trained_on: str = "2022Q4") -> tuple[dict, dict]:
     means = _impute_means(rows)
     X, y, certs, names = _matrix(rows, means)
     Xs, mu, sd = _standardize(X)
     model = LogisticRegression(lr=0.2, epochs=2000, l2=1.0).fit(Xs, y)
     scores = model.predict_proba(Xs)
     card = {"features": FEATURES, "impute_means": means, "std_mu": mu, "std_sd": sd,
-            "weights": model.w, "bias": model.b, "trained_on": "2022Q4",
+            "weights": model.w, "bias": model.b, "trained_on": trained_on,
             "positives": sorted(POSITIVE_CERTS), "auc": auc(y, scores)}
     return card, {"y": y, "certs": certs, "names": names, "scores": scores}
 

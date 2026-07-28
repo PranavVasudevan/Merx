@@ -71,7 +71,15 @@ _RATIO_FIELDS = {
 def _to_usd(value) -> float | None:
     if value is None or value == "":
         return None
-    return float(value) * _THOUSANDS
+    v = float(value)
+    # FDIC uses -1 as a "not reported" sentinel in some older dollar fields (found
+    # live in pre-2008 SCHA/HTM-securities data for IndyMac) — NOT a real -$1,000.
+    # Only -1 exactly is treated this way; a genuinely negative EQ (insolvent bank)
+    # is real data and must NOT be discarded — this platform's whole point is
+    # catching failing banks, so a legitimately negative equity value matters.
+    if v == -1:
+        return None
+    return v * _THOUSANDS
 
 
 def _to_ratio(value) -> float | None:

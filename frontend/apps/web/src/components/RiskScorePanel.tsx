@@ -29,7 +29,7 @@ export function RiskScorePanel({ result }: { result: RiskScoreResult }) {
 
   return (
     <div className="panel">
-      <h2>Feature 13 · Deposit-Flight Risk (model: 2022Q4, validated vs SVB/Signature/FRC)</h2>
+      <h2>Feature 13 · Deposit-Flight Risk (model trained on {result.model_trained_on}, validated vs real bank failures)</h2>
       <div className="risk-gauge-row">
         <div className="risk-score-value tabular" style={{ color: zone.color }}>
           {(result.risk_score * 100).toFixed(1)}%

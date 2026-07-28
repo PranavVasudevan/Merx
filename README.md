@@ -140,7 +140,7 @@ banklens/
 | 2 | Gold layer + peer percentiles | ✅ Gold done |
 | 2a | Market EOD prices (Tiingo) + real candlestick charts | ✅ built, needs user's own free key to land data |
 | 3 | Deterministic features — X-Ray, Diff, Peers, M&A, Stress | ✅ reference done |
-| 4 | Deposit-Flight ML model (showcase) | ✅ AUC 0.99, SVB flagged leave-one-out |
+| 4 | Deposit-Flight ML model (showcase) | ✅ AUC 0.94, pooled across 2023 + 2008 crises — SVB/Signature/First Republic flagged, IndyMac honestly not (different failure archetype) |
 | 5 | MCP server & tooling — 11 tools, all 6 features + market data | ✅ reference done |
 | 6 | Agentic AI layer — supervisor + 4 specialists, 3 providers (Ollama/Gemini/Anthropic) | ✅ reference done, live-tested on Ollama |
 | 7 | Quant-terminal UI (X-Ray, Diff, Clusters, Risk, M&A, Stress, peer scatter, candles) | ✅ reference done |

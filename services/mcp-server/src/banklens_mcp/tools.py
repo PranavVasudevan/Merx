@@ -135,7 +135,10 @@ def get_risk_score(cert: int) -> dict:
         raise ValueError(f"CERT {cert} not in the population slice.")
     res = score_vector(card, features_from(silver, g, None))   # growth imputed (no prior-yr landed)
     res.update({"cert": cert, "name": g["name"], "model_trained_on": card["trained_on"],
-                "note": "structural resemblance to 2023 failures; growth feature imputed for 2026Q1."})
+                "note": "structural resemblance to real bank failures (2023: SVB/Signature/First "
+                       "Republic; 2008: IndyMac — though IndyMac's own archetype, subprime-credit-"
+                       "driven with a late retail run, is NOT reliably caught by this feature set, "
+                       "see risk-score README); growth feature imputed for 2026Q1."})
     return res
 
 
@@ -224,7 +227,7 @@ TOOLS = [
          "required": ["cert"]},
      "handler": run_stress},
     {"name": "get_risk_score",
-     "description": "Feature 13 — deposit-flight risk score (model trained on real 2023 failures) with drivers.",
+     "description": "Feature 13 — deposit-flight risk score (model trained on real 2023 + 2008 failures) with drivers.",
      "inputSchema": {"type": "object", "properties": {"cert": _CERT}, "required": ["cert"]},
      "handler": get_risk_score},
     {"name": "diff_filings",

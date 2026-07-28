@@ -95,6 +95,23 @@ def test_qoq_delta_direction():
     assert gold[1]["qoq_total_deposits"] is None        # no older quarter
 
 
+def test_minus_one_sentinel_treated_as_missing_not_minus_1000():
+    """Regression test for a REAL data-quality quirk found live in pre-2008 FDIC
+    data (IndyMac Bank, CERT 29730): SCHA (HTM securities) reported as -1 in some
+    quarters — FDIC's 'not reported' sentinel for this older field, not a real
+    -$1,000. Must become None, not -1000."""
+    raw = dict(WF_2026Q1)
+    raw["SCHA"] = -1
+    row = to_bank_financials(raw)
+    assert row["securities_htm_reported"] is None
+    # a genuinely negative equity (an insolvent bank) must NOT be discarded —
+    # this platform's whole point is catching failing banks
+    raw2 = dict(WF_2026Q1)
+    raw2["EQ"] = -500
+    row2 = to_bank_financials(raw2)
+    assert row2["total_equity"] == -500_000
+
+
 if __name__ == "__main__":
     failures = 0
     for name, fn in sorted(globals().items()):

@@ -5,6 +5,15 @@ All notable changes to this project are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Changed — Phase 1n (Feature 13 pooled across two real crises — 2023 + 2008)
+- Verified real 2008 FDIC failure data before assuming anything fit: **Washington Mutual ($307.02B assets) exceeds the $1B-$250B population band by 10-60x** every other training example — documented as a deliberate `EXCLUDED_CANDIDATES` exclusion (size-confound risk), not silently dropped. **IndyMac Bank ($30.70B, CERT 29730)** fits cleanly and is thematically apt (a real, famous depositor run).
+- Landed the 2008Q1 population (669 banks, the quarter before IndyMac's July-2008 failure) and 2007Q1 deposits (for the growth feature) to Bronze.
+- Found and fixed a real data-quality bug live: FDIC uses **-1 as a "not reported" sentinel** in some pre-2008 dollar fields (found in IndyMac's historical `SCHA`/HTM data) — previously would've been silently misread as -$1,000. Fixed in `silver.py`'s `_to_usd`, with a test that also confirms a genuinely negative equity (an insolvent bank) is correctly preserved, not discarded.
+- `deposit_flight.py`: `POSITIVE_CERTS` now pools 4 real failures across 2 crises; `train()` retrains on 2022Q4 + 2008Q1 combined (n=1,655).
+- **Honest empirical result, not assumed:** IndyMac's 2008Q1 profile (13% uninsured, 0% HTM/equity) is a genuinely different failure archetype from the 2023 cohort (subprime-credit-driven, late retail panic vs. institutional deposit flight) — leave-one-out **does not flag it** (rank 1499/1655, 9.5th percentile), while SVB/Signature/First Republic still rank 93.9-98.5th percentile. In-sample AUC dropped from 0.992 to 0.938 — an expected, informative consequence of a harder, differently-shaped positive, not a regression to hide.
+- Documentation updated to state this plainly rather than only report favorable numbers: `services/feature-services/risk-score/README.md`, the MCP tool's response `note`, and the frontend's Feature-13 heading (now reads the model's actual `model_trained_on` field dynamically instead of a hardcoded "2022Q4").
+- 1 new test (`test_minus_one_sentinel_treated_as_missing_not_minus_1000`). 127 tests total.
+
 ### Added — Phase 2a (real market data — the last piece of the original "quant terminal" vision)
 - `sources/tiingo.py`: EOD OHLCV connector, verified against Tiingo's own docs (endpoint, field names, `Authorization: Token` auth). Free tier (250 calls/day, 50 symbols/hour) but genuinely requires a key — the one BankLens source that isn't keyless, unlike FDIC/SEC/Fed/FRED.
 - `transforms/market.py`: Silver OHLCV mapping + Gold derivations (realized volatility annualized, 52-week range, a single-row price snapshot). 9 hermetic tests.
