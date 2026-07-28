@@ -78,28 +78,39 @@ regression test (not just patched and hoped):
    attributes, a single bare argument bound to `-Persona` (declared first) instead
    of the question text. Fixed with `[CmdletBinding(PositionalBinding = $false)]`.
 
-After all five fixes, a real live run (`llama3.2:1b`, fully local, $0) produced:
-> "Dime Community Bank appears to be of high concentration risk due to a
-> single-sector loan concentration with 73.8% of its book concentrated in one
-> sector. Additionally, its CRE-to-equity ratio is above 300% [...] the uninsured
-> deposit reliance is also elevated [...]"
+After all five fixes, a real live run (`llama3.2:1b`, fully local, $0) reliably
+retrieves the correct tool data and produces a coherent, mostly-accurate summary —
+e.g. correctly citing Dime's real `overall_risk: "high"`, its 73.8% loan
+concentration, and its CRE-to-capital ratio above 300%, all lifted straight from
+the real `get_bank_xray` result.
 
-— correct, coherent, and grounded entirely in the real `get_bank_xray` tool result.
+### Where code fixes stop and model capability begins — two distinct failure modes, not one
 
-### Where code fixes stop and model capability begins
+**1. Orchestration failures (fixed by the 5 bugs above).** Whether the loop calls
+the right tool, with valid arguments, and terminates — this is now solid.
 
-A harder, open-ended question ("which banks look most exposed to a deposit run
-*right now*?" — no cert given) surfaced something no amount of defensive parsing
-fixes: the model **hallucinated** a fake certificate number and confabulated a
-plausible-sounding answer citing "Wells Fargo" and "Bank of America" with numbers
-that didn't correspond to any real tool result (every actual tool call it made
-errored out). It skipped the necessary first step — look up real candidate banks —
-and fabricated instead. This is a genuine reasoning-capability ceiling of a
-1B-parameter model, not a bug; no amount of code-side robustness fixes the model
-choosing not to gather real data before answering. This is exactly the tradeoff
-flagged from the start: **single-step, cert-specific questions work well and are
-verifiably grounded in real data; open-ended multi-step questions are where a free
-local model's limits show.** For better quality at the same $0 cost, configure
+**2. Synthesis inaccuracy (not fixable by more code).** Even when the *tool-calling*
+is fully correct, the model's *prose summary* of a correct result can still contain
+a specific, confidently-stated wrong claim. Caught live on the very same "how risky
+is Dime" question that worked well above: on a separate run, the model additionally
+claimed "the CET1 ratio is relatively low, indicating a relatively leveraged bank" —
+which is **wrong**; Dime's real CET1 is 14.6%, a strong position, and CET1 wasn't
+even one of the 3 flags the X-Ray raised. No amount of JSON-parsing robustness
+touches this — it's the model's language-generation step misstating a number it had
+correct access to, not a broken tool call.
+
+**3. Full hallucination on harder questions.** An open-ended question ("which banks
+look most exposed to a deposit run *right now*?" — no cert given) went further: the
+model invented a fake certificate number and fabricated an answer citing "Wells
+Fargo"/"Bank of America" with numbers matching no real tool result at all (every
+actual tool call it made errored). It skipped the necessary first step — look up
+real candidates — and confabulated instead.
+
+**Net assessment:** treat Ollama's output as "a decent first-pass narrative that
+usually gets tool-calling and the big picture right, but verify any specific number
+against the saved tool-result JSON (`data/agent_runs/*.json`) before trusting it" —
+not as a fully reliable analyst. This is the honest ceiling of a free, local,
+1B-parameter model. For better synthesis quality at the same $0 cost, configure
 Gemini; for the best quality, Anthropic (costs money).
 
 ## Gemini — genuinely free, multi-key rotation (untested live, no key available)

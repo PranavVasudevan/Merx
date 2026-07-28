@@ -10,6 +10,7 @@ from banklens_transforms.deposit_flight import features_from, load_card, score_v
 from banklens_transforms.filing_diff import build_quarters, diff
 from banklens_transforms.gold import gold_features
 from banklens_transforms.ma_fit import rank_partners
+from banklens_transforms.market import price_snapshot
 from banklens_transforms.stress import Shock, run_stress_test, starting_position
 from banklens_transforms.xray import evaluate_xray
 
@@ -138,6 +139,41 @@ def get_risk_score(cert: int) -> dict:
     return res
 
 
+def get_price_candles(cert: int, limit_days: int = 180) -> dict:
+    """Real EOD OHLCV candles for a bank's crosswalk-matched ticker (never a
+    low-confidence guess). Needs `scripts/land_market_data.ps1` to have been run
+    (requires the user's own free Tiingo key — the one BankLens source that isn't
+    keyless)."""
+    g = _need_bank(cert)
+    ticker = data.ticker_for_cert(cert)
+    if not ticker:
+        raise ValueError(f"CERT {cert} ({g['name']}) has no exact/high-confidence "
+                         f"ticker match in the crosswalk.")
+    bars = data.price_bars(ticker)
+    if bars is None:
+        raise ValueError(f"No price data landed for {ticker} yet. Run "
+                         f"scripts/land_market_data.ps1 (needs a free TIINGO_API_KEY).")
+    return {"cert": cert, "name": g["name"], "ticker": ticker,
+            "bars": bars[-limit_days:] if limit_days else bars}
+
+
+def get_market_snapshot(cert: int) -> dict:
+    """Latest price, 1-day change, 30-day realized volatility, 52-week range —
+    same data source/caveats as get_price_candles."""
+    g = _need_bank(cert)
+    ticker = data.ticker_for_cert(cert)
+    if not ticker:
+        raise ValueError(f"CERT {cert} ({g['name']}) has no exact/high-confidence "
+                         f"ticker match in the crosswalk.")
+    bars = data.price_bars(ticker)
+    if bars is None:
+        raise ValueError(f"No price data landed for {ticker} yet. Run "
+                         f"scripts/land_market_data.ps1 (needs a free TIINGO_API_KEY).")
+    snap = price_snapshot(bars)
+    snap.update({"cert": cert, "name": g["name"]})
+    return snap
+
+
 def compare_banks(certs: list[int], metrics: list[str] = None) -> dict:
     metrics = metrics or ["uninsured_deposit_pct", "loan_to_deposit_pct",
                           "concentration_ratio_cre", "cet1_ratio"]
@@ -203,6 +239,16 @@ TOOLS = [
          "certs": {"type": "array", "items": {"type": "integer"}},
          "metrics": {"type": "array", "items": {"type": "string"}}}, "required": ["certs"]},
      "handler": compare_banks},
+    {"name": "get_price_candles",
+     "description": "Real EOD OHLCV candlestick data for a bank's crosswalk-matched ticker "
+                    "(needs scripts/land_market_data.ps1 to have landed it first).",
+     "inputSchema": {"type": "object", "properties": {
+         "cert": _CERT, "limit_days": {"type": "integer"}}, "required": ["cert"]},
+     "handler": get_price_candles},
+    {"name": "get_market_snapshot",
+     "description": "Latest price, 1-day change, 30-day realized volatility, 52-week range.",
+     "inputSchema": {"type": "object", "properties": {"cert": _CERT}, "required": ["cert"]},
+     "handler": get_market_snapshot},
 ]
 
 TOOL_BY_NAME = {t["name"]: t for t in TOOLS}

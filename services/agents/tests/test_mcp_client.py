@@ -13,12 +13,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from banklens_agents.mcp_client import MCPStdioClient  # noqa: E402
 
 
-def test_list_tools_returns_all_nine():
+def test_list_tools_returns_all_features():
     with MCPStdioClient() as client:
         tools = client.list_tools()
     names = {t["name"] for t in tools}
-    assert len(tools) == 9
+    assert len(tools) == 11   # 9 feature tools + get_price_candles + get_market_snapshot
     assert "get_bank_xray" in names and "get_risk_score" in names
+    assert "get_price_candles" in names and "get_market_snapshot" in names
 
 
 def test_call_tool_returns_real_data():

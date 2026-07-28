@@ -1,12 +1,16 @@
 # BankLens Quant Terminal (Phase 7 reference)
 
 A real-data dashboard over all 6 BankLens features — React + TypeScript + Vite,
-charts via Recharts, styled with the validated dataviz palette (light/dark).
+charts via Recharts, styled with the validated dataviz palette (light/dark), plus
+real candlesticks via TradingView's `lightweight-charts` (Phase 2a).
 
-**Honest scope note:** this is the analytical/regulatory-data terminal, not a market-
-data terminal — real candlestick/market-cap panels need the OHLC connector (Phase 2,
-not yet built), so no fake candles are shown here. Every chart in this app reads real
-FDIC-derived Gold/feature data.
+**Honest scope note on the candlestick chart:** it renders **real** Tiingo EOD data,
+never mock candles — but that data needs the user's own free `TIINGO_API_KEY`
+(`scripts/land_market_data.ps1`), the one BankLens source that isn't keyless. Until
+that's run, the chart shows an honest "no data landed yet" message instead of a
+placeholder or fake series. Rendering itself was verified with a temporary mocked
+fetch response (see `docs/data-contracts/market_prices.md`) — the component code
+path is proven; only the live data pull needs the user's key.
 
 ## Run it
 
@@ -28,6 +32,7 @@ cd frontend/apps/web && npm run dev          # http://localhost:5173
 Search any bank (or start with the default, Dime Community Bank) to see:
 
 - **KPI tiles** — assets, uninsured deposits, CRE concentration, CET1, behavioral cluster
+- **Price chart** — real EOD candlesticks + 1d change / 30d volatility / 52-week range, for banks with an exact/high-confidence crosswalk ticker match and landed Tiingo data
 - **F11 X-Ray** — severity-flagged structural risks with peer-percentile bars
 - **Loan composition** & **capital adequacy** charts (real concentration ratios / regulatory ratios)
 - **F12 Filing Diff** — bank-relative z-scored quarter-over-quarter flags (only for banks with landed multi-quarter history: WF 3511, Dime 6976)
@@ -44,6 +49,7 @@ Search any bank (or start with the default, Dime Community Bank) to see:
 the MCP tools, and the CLIs all call identical feature logic; nothing is duplicated.
 
 ## Next (beyond this reference)
-Real market OHLC/candles once the market-data connector lands (Phase 2); move shared
-primitives into `frontend/packages/ui` and `frontend/packages/charts` if a second app
-is added; swap the REST bridge for a proper gRPC/REST gateway (Phase 5+ hardening).
+Land real Tiingo data (needs the user's key) to see the candlestick chart with
+actual bars; move shared primitives into `frontend/packages/ui` and
+`frontend/packages/charts` if a second app is added; swap the REST bridge for a
+proper gRPC/REST gateway (Phase 5+ hardening).

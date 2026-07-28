@@ -29,14 +29,14 @@ sources:
     status: planned
 
   sec_edgar:
-    name: "SEC EDGAR (XBRL + filings text)"
+    name: "SEC EDGAR (ticker/CIK directory + XBRL company facts)"
     kind: rest_api + nightly_bulk
     base_url: "https://data.sec.gov"
     auth: identifying_user_agent
     rate_limit_rps: 10
     cadence: continuous
     license: { tag: public-domain-us-gov, redistributable: true }
-    status: planned
+    status: active           # implemented in Phase 1j (feeds the CERT<->CIK<->RSSD crosswalk)
 
   fed_nic:
     name: "Federal Reserve NIC (FR Y-9C holding-company data)"
@@ -57,15 +57,17 @@ sources:
     status: planned
 
   market_ohlc:
-    name: "Market OHLC / candles (vendor TBD)"
-    kind: rest_api + websocket
-    candidates: [polygon, tiingo, alpha_vantage, financial_modeling_prep]
-    auth: api_key
-    cadence: eod_or_intraday
+    name: "Tiingo (EOD OHLCV)"
+    kind: rest_api
+    base_url: "https://api.tiingo.com/tiingo/daily"
+    auth: api_key            # TIINGO_API_KEY — free tier, no card, but NOT keyless (unlike FDIC/SEC/Fed)
+    rate_limit: "250 calls/day, 50 symbols/hour (free tier)"
+    cadence: eod
+    docs: "https://www.tiingo.com/documentation/end-of-day"
     license:
       tag: commercial-licensed
       redistributable: false     # <-- enforced: display-only, no bulk export via public tools
-    status: planned
+    status: active           # implemented in Phase 2a; landing requires the user's own free key
 
   eba_transparency:
     name: "EBA EU-wide Transparency Exercise / EUCLID"

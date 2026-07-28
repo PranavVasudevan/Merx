@@ -54,6 +54,9 @@ ROUTES = [
     ("GET", "/api/banks/filing-diff", lambda q: tools.diff_filings(
         _cap(q["cert"]), quarter_a=q.get("quarter_a"), quarter_b=q.get("quarter_b"))),
     ("GET", "/api/banks/risk-score", lambda q: tools.get_risk_score(_cap(q["cert"]))),
+    ("GET", "/api/banks/candles", lambda q: tools.get_price_candles(
+        _cap(q["cert"]), limit_days=int(q.get("limit_days", 180)))),
+    ("GET", "/api/banks/market-snapshot", lambda q: tools.get_market_snapshot(_cap(q["cert"]))),
 ]
 
 

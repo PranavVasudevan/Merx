@@ -173,3 +173,36 @@ export interface PopulationBank {
   cluster_id: number;
   cluster_label: string;
 }
+
+export interface PriceBar {
+  ticker: string;
+  date: string; // "YYYY-MM-DD"
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+  adj_close: number;
+  adj_volume: number;
+  div_cash: number;
+  split_factor: number;
+}
+
+export interface CandlesResult {
+  cert: number;
+  name: string;
+  ticker: string;
+  bars: PriceBar[];
+}
+
+export interface MarketSnapshot {
+  cert: number;
+  name: string;
+  ticker: string | null;
+  as_of: string | null;
+  close: number | null;
+  change_1d_pct: number | null;
+  volatility_30d_pct: number | null;
+  week52_high: number | null;
+  week52_low: number | null;
+}

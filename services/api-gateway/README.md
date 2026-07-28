@@ -17,6 +17,7 @@ powershell -File scripts/api_bridge.ps1     # http://localhost:8791
 
 Endpoints: `/api/health`, `/api/population`, `/api/banks`, `/api/banks/profile`,
 `/api/banks/xray`, `/api/banks/peer-cluster`, `/api/banks/ma-fit`,
-`/api/banks/stress-test`, `/api/banks/filing-diff`, `/api/banks/risk-score`.
+`/api/banks/stress-test`, `/api/banks/filing-diff`, `/api/banks/risk-score`,
+`/api/banks/candles`, `/api/banks/market-snapshot`.
 
 Replace with the real gateway (auth, rate limiting, gRPC) once Phase 5 hardening begins.

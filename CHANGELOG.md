@@ -5,6 +5,16 @@ All notable changes to this project are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Added — Phase 2a (real market data — the last piece of the original "quant terminal" vision)
+- `sources/tiingo.py`: EOD OHLCV connector, verified against Tiingo's own docs (endpoint, field names, `Authorization: Token` auth). Free tier (250 calls/day, 50 symbols/hour) but genuinely requires a key — the one BankLens source that isn't keyless, unlike FDIC/SEC/Fed/FRED.
+- `transforms/market.py`: Silver OHLCV mapping + Gold derivations (realized volatility annualized, 52-week range, a single-row price snapshot). 9 hermetic tests.
+- MCP tools `get_price_candles` / `get_market_snapshot` (11 tools total now) — reads a bank's ticker via the crosswalk, restricted to `exact`/`high_confidence` matches only (a `low_confidence` match, like Dime's real Community/Commercial discrepancy, is deliberately never used here — showing the wrong company's stock would be worse than no chart).
+- `scripts/land_market_data.ps1` + `market_cli.py`: reads real tickers straight from the crosswalk built in Phase 1j (255 exact/high-confidence matches available), lands EOD history respecting the free-tier limits, skips already-fresh tickers on re-run.
+- REST bridge endpoints `/api/banks/candles`, `/api/banks/market-snapshot`.
+- Frontend: real candlestick chart (`CandlestickChart.tsx`, TradingView's `lightweight-charts`) plus a price/volatility/52-week snapshot bar. Verified in-browser: the honest empty-state renders correctly for both "no ticker match" (Dime) and "ticker matched, no data landed" (Zions) cases; the actual chart-rendering code path was verified separately with a temporarily mocked fetch response (realistic synthetic OHLC) — 7 canvas layers rendered, zero console errors. Real data was never pulled in this environment (no Tiingo key available).
+- Docs: `docs/data-contracts/market_prices.md`; `config/sources.yaml` updated (Tiingo now the named vendor, SEC EDGAR corrected from "planned" to "active").
+- 14 new tests (market.py + tiingo.py), total 126 (was 112).
+
 ### Fixed — Phase 6c (5 real bugs found running the agent live, plus an honest capability ceiling)
 - `agent_ask.ps1`: PowerShell parameter binding sent a bare question string to `-Persona` instead of `-Question` (no explicit `Position` attributes → implicit positional binding in declaration order). Fixed with `[CmdletBinding(PositionalBinding = $false)]` + explicit `Position = 0` on `-Question`.
 - `ollama_client.py`: the non-forced tool-call branch built a `tool_use` block from `parsed.get("arguments", {})` without checking it was actually a dict — a model emitting `{"tool": "x", "arguments": "cert 6976"}` (string, not object) crashed `agent.py`'s `_call_signature` (`.items()` on a str). Now validated with `isinstance(..., dict)` before use.

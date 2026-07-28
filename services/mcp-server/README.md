@@ -11,12 +11,16 @@ so it runs with **zero installs**. Production swaps in the official `mcp` SDK; t
 contracts in `tools.py` stay identical. Handles `initialize`, `tools/list`, `tools/call`,
 `ping`, and notifications. Every call is appended to `data/mcp_audit.jsonl`.
 
-## Tools (8)
+## Tools (11)
 `list_banks` · `get_bank_profile` · `get_bank_xray` (F11) · `diff_filings` (F12) ·
-`get_peer_cluster` (F14) · `find_ma_matches` (F15) · `run_stress_test` (F16) · `compare_banks`
+`get_risk_score` (F13) · `get_peer_cluster` (F14) · `find_ma_matches` (F15) ·
+`run_stress_test` (F16) · `compare_banks` · `get_price_candles` · `get_market_snapshot`
 
 Cross-sectional tools read the 1,049-bank population (2026Q1); `diff_filings` needs
-per-bank multi-quarter Bronze (WF 3511, Dime 6976 landed).
+per-bank multi-quarter Bronze (WF 3511, Dime 6976 landed). `get_price_candles` /
+`get_market_snapshot` need (a) an exact/high-confidence crosswalk ticker match and
+(b) landed Tiingo price data (`scripts/land_market_data.ps1`, needs the user's own
+free `TIINGO_API_KEY` — see [`docs/data-contracts/market_prices.md`](../../docs/data-contracts/market_prices.md)).
 
 ## Try it
 ```powershell

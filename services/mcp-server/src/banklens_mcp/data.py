@@ -13,12 +13,14 @@ from pathlib import Path
 
 from banklens_transforms import clustering
 from banklens_transforms.gold import gold_features
+from banklens_transforms.market import to_price_bar
 from banklens_transforms.peers import add_percentile_ranks
 from banklens_transforms.silver import to_bank_financials
 
 REPO = Path(__file__).resolve().parents[4]
 DATA = REPO / "data"
 _POP = DATA / "bronze" / "source=fdic" / "population" / "repdte=20260331" / "records.json"
+_CROSSWALK = DATA / "silver" / "crosswalk.json"
 
 _CLUSTER_METRICS = ["concentration_ratio_cre", "concentration_ratio_c_and_i",
                     "concentration_ratio_residential_mortgage", "uninsured_deposit_pct",
@@ -82,6 +84,41 @@ def bank_quarters(cert: int) -> list[dict] | None:
 def landed_bank_certs() -> list[int]:
     d = DATA / "bronze" / "source=fdic"
     return sorted(int(p.name.split("=")[1]) for p in d.glob("cert=*") if p.is_dir())
+
+
+def ticker_for_cert(cert: int) -> str | None:
+    """The real, crosswalk-matched ticker for a bank's holding company (or its own
+    ticker, for the banks with no separate holding company — see crosswalk.md),
+    restricted to exact/high_confidence matches only (never a low-confidence guess)."""
+    if "crosswalk_by_rssd" not in _cache:
+        if not _CROSSWALK.exists():
+            _cache["crosswalk_by_rssd"] = {}
+        else:
+            rows = json.loads(_CROSSWALK.read_text(encoding="utf-8"))
+            _cache["crosswalk_by_rssd"] = {
+                r["rssd"]: r for r in rows if r["match_type"] in ("exact", "high_confidence")
+            }
+    silver = population()["silver_by_cert"].get(cert)
+    if not silver:
+        return None
+    rssd = silver.get("holding_company_rssd") or silver.get("rssd_id")
+    row = _cache["crosswalk_by_rssd"].get(rssd)
+    return row["ticker"] if row else None
+
+
+def price_bars(ticker: str) -> list[dict] | None:
+    """Landed EOD price bars for a ticker (ascending by date), or None if not landed
+    (see scripts/land_market_data.ps1 — needs the user's own free Tiingo key)."""
+    cache_key = f"bars:{ticker}"
+    if cache_key in _cache:
+        return _cache[cache_key]
+    p = DATA / "bronze" / "source=tiingo" / "daily" / f"ticker={ticker}" / "records.json"
+    if not p.exists():
+        return None
+    raw = json.loads(p.read_text(encoding="utf-8"))
+    bars = sorted((to_price_bar(r) for r in raw), key=lambda b: b["date"])
+    _cache[cache_key] = bars
+    return bars
 
 
 def _avg(rows, key):

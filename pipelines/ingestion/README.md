@@ -7,10 +7,12 @@ records, attach provenance, land immutably in Bronze.
 - **FDIC BankFind** (`sources/fdic.py`) — institution profile + quarterly financials. Public REST, no auth. Verified field codes: `ASSET, DEP, DEPINS, LNLSGR, LNLSNET, EQ, REPDTE`, plus loan composition, capital dollars/ratios, and holding-company identity (`NAMEHCR`/`RSSDHCR`/`RSSDID`).
 - **SEC EDGAR** (`sources/sec.py`) — the ticker/CIK directory (`company_tickers.json`) and per-filer XBRL company facts (`companyfacts/CIK##########.json`). Public REST, identifying User-Agent + 10 req/s cap enforced. Feeds the [CERT↔CIK↔RSSD crosswalk](../../docs/data-contracts/crosswalk.md) (`banklens_transforms.crosswalk`, run via `scripts/crosswalk.ps1`).
 
+- **Tiingo** (`sources/tiingo.py`) — real EOD OHLCV prices. Public REST, but genuinely requires a free API key (unlike FDIC/SEC) — `TIINGO_API_KEY`. Feeds `get_price_candles`/`get_market_snapshot` via the crosswalk. Land it with `scripts/land_market_data.ps1`.
+
 ## Planned (Phase 2)
 - FFIEC CDR (Call Reports / UBPR via the Public Web Service)
 - Fed NIC (FR Y-9C holding-company data)
-- FRED (macro series), market OHLC (Phase 2)
+- FRED (macro series)
 
 ## Run
 ```powershell

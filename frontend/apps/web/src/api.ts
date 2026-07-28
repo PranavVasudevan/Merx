@@ -1,5 +1,5 @@
 import type {
-  BankProfile, FilingDiffResult, MaFitResult, PeerClusterResult,
+  BankProfile, CandlesResult, FilingDiffResult, MaFitResult, MarketSnapshot, PeerClusterResult,
   PopulationBank, RiskScoreResult, StressResult, XrayResult,
 } from './types';
 
@@ -33,4 +33,6 @@ export const api = {
     get<StressResult>('/banks/stress-test', { cert, loan_loss_pct, deposit_outflow_pct, rate_shock_bps }),
   filingDiff: (cert: number) => get<FilingDiffResult>('/banks/filing-diff', { cert }),
   riskScore: (cert: number) => get<RiskScoreResult>('/banks/risk-score', { cert }),
+  candles: (cert: number, limit_days = 180) => get<CandlesResult>('/banks/candles', { cert, limit_days }),
+  marketSnapshot: (cert: number) => get<MarketSnapshot>('/banks/market-snapshot', { cert }),
 };

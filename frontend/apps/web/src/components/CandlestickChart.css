@@ -1,0 +1,21 @@
+.candle-container { width: 100%; }
+
+.candle-snapshot {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+.candle-price { font-size: 22px; font-weight: 700; }
+.candle-up { color: var(--status-good); font-weight: 600; }
+.candle-down { color: var(--status-critical); font-weight: 600; }
+
+.candle-empty { font-size: 13px; line-height: 1.6; }
+.candle-empty code {
+  background: var(--surface-2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from './api';
 import './App.css';
 import { BankSearch } from './components/BankSearch';
+import { CandlestickChart } from './components/CandlestickChart';
 import { CapitalChart } from './components/CapitalChart';
 import { ConcentrationChart } from './components/ConcentrationChart';
 import { FilingDiffPanel } from './components/FilingDiffPanel';
@@ -72,6 +73,7 @@ export default function App() {
       {profile && (
         <>
           <KpiTiles profile={profile} />
+          <CandlestickChart cert={cert} key={`candles-${cert}`} />
 
           <div className="app-grid">
             <div className="app-col">

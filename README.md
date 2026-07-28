@@ -46,6 +46,7 @@ powershell -File scripts/stress_test.ps1 -Cert 6976 -Outflow 60 -RateBps 400  # 
 powershell -File scripts/deposit_flight.ps1                  # F13 Deposit-Flight ML (showcase)
 powershell -File scripts/population_report.ps1               # peer percentiles
 powershell -File scripts/crosswalk.ps1 -Verify ZIONS          # CERT<->CIK<->RSSD, live cross-source check
+powershell -File scripts/land_market_data.ps1                 # real EOD candles (needs your own free TIINGO_API_KEY)
 ```
 
 ### One backend, three consumers — the MCP surface
@@ -59,15 +60,21 @@ powershell -File scripts/mcp_demo.ps1     # drive the server, see all tools call
 Open this repo in **Claude Code** and approve the `banklens` server (from
 [`.mcp.json`](.mcp.json)) to ask, e.g., *"stress-test cert 6976 under a 60% deposit run"*.
 
-### The quant terminal (Phase 7)
+### The quant terminal (Phase 7 + 2a)
 
 A real-data React/TypeScript dashboard over all 6 features — X-Ray, Filing Diff, Peer
 Clusters, Deposit-Flight Risk, M&A Fit, and a live Stress Simulator with interactive
-sliders — plus a 1,000+ bank peer-position scatter. No mock data anywhere.
+sliders — plus a 1,000+ bank peer-position scatter and **real candlestick charts**
+(TradingView's `lightweight-charts`, real Tiingo EOD data). No mock data anywhere.
 
 ```powershell
 powershell -File scripts/dev_web.ps1   # bridge (8791) + Vite dev server (5173)
 ```
+
+Real candles need `scripts/land_market_data.ps1` first, which needs your own free
+`TIINGO_API_KEY` (get one at https://api.tiingo.com/account/api/token — the one
+BankLens source that isn't keyless). Without it, the chart shows an honest
+"no data landed yet" message rather than a placeholder or fake series.
 
 See [`frontend/apps/web/README.md`](frontend/apps/web/README.md).
 
@@ -129,15 +136,14 @@ banklens/
 | Phase | Focus | Status |
 |------:|-------|--------|
 | 0 | Foundations — arch, IaC, CI | scaffolded |
-| 1 | Data platform — Bronze + Silver ingestion | reference done |
-| 2 | Gold layer + peer percentiles (market/time-series pending) | Gold done |
-| 3 | Deterministic features — X-Ray, Diff, Peers, M&A, Stress | ✅ (reference) |
+| 1 | Data platform — Bronze + Silver ingestion (FDIC, SEC, CERT↔CIK↔RSSD crosswalk) | ✅ reference done |
+| 2 | Gold layer + peer percentiles | ✅ Gold done |
+| 2a | Market EOD prices (Tiingo) + real candlestick charts | ✅ built, needs user's own free key to land data |
+| 3 | Deterministic features — X-Ray, Diff, Peers, M&A, Stress | ✅ reference done |
 | 4 | Deposit-Flight ML model (showcase) | ✅ AUC 0.99, SVB flagged leave-one-out |
-| 5 | MCP server & tooling — 9 tools, all 6 features | ✅ reference done |
-| 6 | Agentic AI layer — supervisor + 4 specialists over MCP | ✅ reference done |
-| 7 | Quant-terminal UI (X-Ray, Diff, Clusters, Risk, M&A, Stress, peer scatter) | ✅ reference done |
-| 6 | Agentic AI layer | planned |
-| 7 | Quant-terminal visualization | planned |
+| 5 | MCP server & tooling — 11 tools, all 6 features + market data | ✅ reference done |
+| 6 | Agentic AI layer — supervisor + 4 specialists, 3 providers (Ollama/Gemini/Anthropic) | ✅ reference done, live-tested on Ollama |
+| 7 | Quant-terminal UI (X-Ray, Diff, Clusters, Risk, M&A, Stress, peer scatter, candles) | ✅ reference done |
 | 8 | Hardening, security, DR & GA | planned |
 
 ## Tooling as phases arrive

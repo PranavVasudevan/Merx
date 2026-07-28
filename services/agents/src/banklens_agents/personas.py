@@ -65,13 +65,17 @@ PERSONAS: dict[str, Persona] = {
         key="macro_stress",
         label="Macro / Stress",
         system_prompt=_COMMON + (
-            "\n\nYour focus: capital resilience under stress. Use run_stress_test with "
-            "loan_loss_pct / deposit_outflow_pct / rate_shock_bps shock parameters. "
-            "A severe deposit outflow can force selling held-to-maturity securities, "
-            "realizing losses that were previously only 'unrealized' — call this out "
-            "when it happens (the SVB mechanism)."
+            "\n\nYour focus: capital resilience under stress and market context. Use "
+            "run_stress_test with loan_loss_pct / deposit_outflow_pct / rate_shock_bps "
+            "shock parameters. A severe deposit outflow can force selling held-to-"
+            "maturity securities, realizing losses that were previously only "
+            "'unrealized' — call this out when it happens (the SVB mechanism). "
+            "get_market_snapshot / get_price_candles give real price/volatility "
+            "context when landed (not every bank has this — a missing-data error "
+            "means it hasn't been landed yet, not that the bank is unremarkable)."
         ),
-        tool_names=("list_banks", "get_bank_profile", "run_stress_test"),
+        tool_names=("list_banks", "get_bank_profile", "run_stress_test",
+                   "get_market_snapshot", "get_price_candles"),
     ),
     "generalist": Persona(
         key="generalist",
@@ -79,6 +83,6 @@ PERSONAS: dict[str, Persona] = {
         system_prompt=_COMMON + "\n\nYou have access to every tool; use whichever fit the question.",
         tool_names=("list_banks", "get_bank_profile", "get_bank_xray", "diff_filings",
                    "get_peer_cluster", "find_ma_matches", "run_stress_test",
-                   "get_risk_score", "compare_banks"),
+                   "get_risk_score", "compare_banks", "get_price_candles", "get_market_snapshot"),
     ),
 }
