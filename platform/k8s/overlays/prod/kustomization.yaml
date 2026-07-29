@@ -1,0 +1,9 @@
+# STUB — not built out. See overlays/staging/kustomization.yaml for why.
+# Prod would add, on top of staging's list: PodDisruptionBudgets, a HorizontalPod
+# Autoscaler, NetworkPolicies (per the master plan's security posture, §11), and
+# real secrets management (Vault, not plain env vars) for anything beyond public
+# FDIC/SEC data. None of this can be honestly authored without a real target
+# environment to validate against.
+#
+# resources:
+#   - ../../base

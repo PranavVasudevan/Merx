@@ -1,0 +1,26 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: banklens-dev
+
+resources:
+  - ../../base
+  - namespace.yaml
+
+patches:
+  - path: bridge-hostpath-patch.yaml
+    target:
+      kind: Deployment
+      name: banklens-bridge
+  # Local dev only: NodePort so the services are reachable at a fixed local port
+  # without needing `kubectl port-forward` running in a separate terminal.
+  - target:
+      kind: Service
+      name: banklens-web
+    patch: |
+      - op: replace
+        path: /spec/type
+        value: NodePort
+      - op: add
+        path: /spec/ports/0/nodePort
+        value: 30080

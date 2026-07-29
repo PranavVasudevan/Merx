@@ -1,0 +1,21 @@
+# Patches the bridge Deployment's "banklens-data" volume from the base's emptyDir
+# to a hostPath pointing at your real local data/ directory — so the container
+# sees the SAME landed Bronze/Silver/crosswalk files as your local scripts do.
+#
+# hostPath is fine for a single-node local dev cluster (Docker Desktop's built-in
+# Kubernetes) and appropriate NOWHERE ELSE — staging/prod overlays would use a
+# real PVC instead. This is exactly the kind of local-vs-production distinction
+# the master plan calls out (§5.6).
+#
+# EDIT THE PATH BELOW to your machine's absolute path. On Docker Desktop for
+# Windows, the host's C:\ drive is typically visible inside the Kubernetes node
+# at /run/desktop/mnt/host/c/... — this varies by Docker Desktop version, so
+# verify with `kubectl exec` into any pod and `ls` the path before trusting it.
+- op: replace
+  path: /spec/template/spec/volumes/0
+  value:
+    name: banklens-data
+    hostPath:
+      # CHANGE THIS to your real path as the Kubernetes node sees it:
+      path: /run/desktop/mnt/host/c/Users/gouri/OneDrive/Desktop/banklens/data
+      type: Directory

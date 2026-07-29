@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: banklens-web
+  labels:
+    app: banklens-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: banklens-web
+  template:
+    metadata:
+      labels:
+        app: banklens-web
+    spec:
+      containers:
+        - name: web
+          image: banklens-web:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          resources:
+            requests: { cpu: "20m", memory: "32Mi" }
+            limits: { cpu: "150m", memory: "96Mi" }
+          readinessProbe:
+            httpGet: { path: /health, port: 80 }
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /health, port: 80 }
+            initialDelaySeconds: 5
+            periodSeconds: 20

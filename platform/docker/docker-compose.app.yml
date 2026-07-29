@@ -1,0 +1,38 @@
+# BankLens application services (bridge + quant terminal), containerized.
+# Separate from docker-compose.dev.yml (that one is the DATA infra tier —
+# Postgres/ClickHouse/MinIO/Redis — which is scaffolded but not yet wired into
+# any real code; this file is the actual app tier that's genuinely running today).
+#
+# Run from the repo root:
+#   docker compose -f platform/docker/docker-compose.app.yml up --build
+#   open http://localhost:8080
+#
+# Requires: scripts/run_vertical_slice.ps1 / cluster_report.ps1 / crosswalk.ps1
+# etc. already run at least once, so data/ has real landed Bronze/Silver files —
+# this compose file mounts your LOCAL data/ directory read-only into the bridge
+# container, it doesn't land any data itself.
+
+services:
+  bridge:
+    build:
+      context: ../..                          # repo root — see Dockerfile comments
+      dockerfile: services/api-gateway/Dockerfile
+    ports:
+      - "8791:8791"
+    volumes:
+      - ../../data:/app/data:ro
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8791/api/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+
+  web:
+    build:
+      context: ../../frontend/apps/web
+    ports:
+      - "8080:80"
+    depends_on:
+      bridge:
+        condition: service_healthy

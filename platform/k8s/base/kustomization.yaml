@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+labels:
+  - pairs:
+      part-of: banklens
+    includeSelectors: true
+
+resources:
+  - bridge-deployment.yaml
+  - bridge-service.yaml
+  - web-deployment.yaml
+  - web-service.yaml

@@ -14,6 +14,7 @@ Run:
 from __future__ import annotations
 
 import json
+import os
 import sys
 import traceback
 import urllib.parse
@@ -113,10 +114,15 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main() -> None:
+    # Default to localhost (safe for bare local dev — doesn't expose the port to
+    # the LAN). Containers set BANKLENS_BRIDGE_HOST=0.0.0.0 — a container's own
+    # network namespace makes that safe; Docker's `-p`/K8s Service control real
+    # external exposure, not this bind address.
+    host = os.environ.get("BANKLENS_BRIDGE_HOST", "localhost")
     print("Warming population cache...")
     data.population()
-    print(f"BankLens REST bridge on http://localhost:{PORT}  (Ctrl+C to stop)")
-    ThreadingHTTPServer(("localhost", PORT), Handler).serve_forever()
+    print(f"BankLens REST bridge on http://{host}:{PORT}  (Ctrl+C to stop)")
+    ThreadingHTTPServer((host, PORT), Handler).serve_forever()
 
 
 if __name__ == "__main__":

@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: banklens-bridge
+  labels:
+    app: banklens-bridge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: banklens-bridge
+  template:
+    metadata:
+      labels:
+        app: banklens-bridge
+    spec:
+      containers:
+        - name: bridge
+          image: banklens-bridge:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8791
+          env:
+            - name: BANKLENS_BRIDGE_HOST
+              value: "0.0.0.0"
+          resources:
+            # Deliberately modest — this is a stdlib http.server process serving
+            # flat JSON reads, not a heavy service. Per the master plan's "small
+            # blast radius" principle: scale by sizing, not node sprawl.
+            requests: { cpu: "50m", memory: "128Mi" }
+            limits: { cpu: "250m", memory: "256Mi" }
+          readinessProbe:
+            httpGet: { path: /api/health, port: 8791 }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /api/health, port: 8791 }
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          volumeMounts:
+            - name: banklens-data
+              mountPath: /app/data
+              readOnly: true
+      volumes:
+        - name: banklens-data
+          # Base defines the volume NAME only — overlays supply the real source
+          # (dev: hostPath to the local data/ dir; staging/prod: a real PVC).
+          # See overlays/dev/kustomization.yaml for the local patch.
+          emptyDir: {}

@@ -99,6 +99,22 @@ in for a final answer. See [`services/agents/README.md`](services/agents/README.
 for the full story; the fixed loop now produces coherent, correct, fully-local
 answers grounded in real tool data.
 
+### Containerized (Phase 8, started)
+
+Real Dockerfiles for the bridge and quant terminal, plus a Kustomize `dev` overlay
+validated with `kubectl kustomize` (genuinely produces correct manifests — checked,
+not assumed):
+
+```powershell
+powershell -File scripts/docker_up.ps1              # docker compose, needs Docker Desktop running
+kubectl apply -k platform/k8s/overlays/dev           # or: deploy to local K8s
+```
+
+**Honest status:** manifest generation was verified for real; the actual
+`docker build`/`kubectl apply` steps were not run in the environment this was built
+in (Docker Desktop needed interactive first-run setup this session couldn't drive
+headlessly) — see [`platform/k8s/README.md`](platform/k8s/README.md).
+
 ---
 
 ## Repository layout
@@ -145,7 +161,7 @@ banklens/
 | 5 | MCP server & tooling — 11 tools, all 6 features + market data | ✅ reference done |
 | 6 | Agentic AI layer — supervisor + 4 specialists, 3 providers (Ollama/Gemini/Anthropic) | ✅ reference done, live-tested on Ollama |
 | 7 | Quant-terminal UI (X-Ray, Diff, Clusters, Risk, M&A, Stress, peer scatter, candles) | ✅ reference done |
-| 8 | Hardening, security, DR & GA | planned |
+| 8 | Hardening, security, DR & GA | 🟡 containerization + K8s manifests started (real Dockerfiles + a validated Kustomize `dev` overlay); security/DR/GA not started |
 
 ## Tooling as phases arrive
 

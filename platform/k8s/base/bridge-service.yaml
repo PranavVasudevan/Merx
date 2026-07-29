@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: banklens-bridge
+  labels:
+    app: banklens-bridge
+spec:
+  selector:
+    app: banklens-bridge
+  ports:
+    - port: 8791
+      targetPort: 8791
+  type: ClusterIP

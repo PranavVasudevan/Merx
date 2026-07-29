@@ -1,0 +1,14 @@
+# STUB — not built out. Unlike overlays/dev (real, tested against `kubectl kustomize`
+# and designed for Docker Desktop's local Kubernetes), a genuine staging overlay
+# needs a real cluster/cloud target to design against — writing one now would be
+# speculative config nobody has run. What it WOULD add, when there's an actual
+# staging cluster to target:
+#   - namespace: banklens-staging
+#   - a real PersistentVolumeClaim instead of dev's hostPath (see the master plan
+#     §5.6 — this is exactly the "local dev vs eventual cloud" seam it calls out)
+#   - 2+ replicas per Deployment (dev intentionally runs 1)
+#   - an Ingress with TLS instead of dev's NodePort
+#   - resource requests/limits sized from real staging load, not dev's guesses
+#
+# resources:
+#   - ../../base

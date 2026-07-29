@@ -1,0 +1,12 @@
+# Repo-root .dockerignore — used when building services/api-gateway/Dockerfile
+# with the repo root as build context. Keep this in sync with .gitignore's spirit:
+# don't ship data, node_modules, or version control into any image.
+.git
+data/
+frontend/node_modules
+frontend/**/dist
+frontend/**/node_modules
+*.pyc
+__pycache__
+.venv
+node_modules
