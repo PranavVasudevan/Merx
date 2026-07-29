@@ -4,16 +4,20 @@ Given a target bank, ranks best-fit acquirers/partners from the peer population 
   * funding complementarity  — a deposit-rich bank fills a loan-heavy bank's funding gap
   * business similarity       — cosine similarity of loan-mix (integration/strategic fit)
   * size compatibility        — a plausible acquirer is meaningfully larger than the target
-  * geographic overlap        — shared markets (branch footprint; home-state proxy for now)
+  * geographic overlap        — REAL branch-footprint overlap (FDIC Summary of Deposits,
+                                 grid-cell based — see banklens_transforms.footprint for why
+                                 not states/counties: FDIC's own STALP/CITY fields are
+                                 unreliable at branch level, verified live)
 
 Output: a ranked candidate list with a short, human rationale per match. Pure functions
-over Gold features — no new heavy data for the financial fit; geography can be upgraded
-from the FDIC Summary of Deposits (branch-level) later.
+over Gold features + real branch footprints.
 """
 
 from __future__ import annotations
 
 import math
+
+from .footprint import cell_overlap, deposit_weighted_overlap
 
 # loan-mix vector used for business-similarity (cosine)
 LOAN_MIX = [
@@ -72,16 +76,13 @@ def size_fit(target: dict, cand: dict) -> float:
     return round(max(0.2, 6.0 / ratio), 4)     # so large the target is a rounding error
 
 
-def geo_overlap(target_states: set | None, cand_states: set | None) -> float | None:
-    """Jaccard overlap of footprints (None if unknown)."""
-    if not target_states or not cand_states:
-        return None
-    inter = target_states & cand_states
-    union = target_states | cand_states
-    return round(len(inter) / len(union), 4) if union else 0.0
+def geo_overlap(target_fp: dict | None, cand_fp: dict | None) -> float | None:
+    """Real branch-network overlap (grid-cell Jaccard; None if either footprint unknown).
+    See banklens_transforms.footprint for why cells, not states/counties."""
+    return cell_overlap(target_fp, cand_fp)
 
 
-def _rationale(target, cand, comp, sim, szf, geo, shared) -> str:
+def _rationale(target, cand, comp, sim, szf, geo, shared_cells) -> str:
     bits = []
     tg, cg = _funding_gap(target), _funding_gap(cand)
     if comp > 0.6 and tg * cg < 0:
@@ -94,17 +95,18 @@ def _rationale(target, cand, comp, sim, szf, geo, shared) -> str:
         bits.append("diversifying loan mix")
     ratio = (cand.get("total_assets") or 0) / (target.get("total_assets") or 1)
     bits.append(f"{ratio:.1f}x the target's size")
-    if shared:
-        bits.append(f"{len(shared)} shared state(s)")
+    if shared_cells:
+        bits.append(f"branch networks overlap in {shared_cells} local market(s)")
     return "; ".join(bits)
 
 
-def fit_score(target: dict, cand: dict, *, target_states=None, cand_states=None,
-              weights=DEFAULT_WEIGHTS) -> dict:
+def fit_score(target: dict, cand: dict, *, target_footprint: dict | None = None,
+              cand_footprint: dict | None = None, weights=DEFAULT_WEIGHTS) -> dict:
     comp = funding_complementarity(target, cand)
     sim = business_similarity(target, cand)
     szf = size_fit(target, cand)
-    geo = geo_overlap(target_states, cand_states)
+    geo = geo_overlap(target_footprint, cand_footprint)
+    dep_geo = deposit_weighted_overlap(target_footprint, cand_footprint)
 
     w = dict(weights)
     if geo is None:                              # renormalize without geo
@@ -118,25 +120,28 @@ def fit_score(target: dict, cand: dict, *, target_states=None, cand_states=None,
         score = (comp * w["funding"] + sim * w["business"]
                  + szf * w["size"] + geo * w["geo"])
 
-    shared = (target_states & cand_states) if (target_states and cand_states) else set()
+    shared_cells = 0
+    if target_footprint and cand_footprint:
+        shared_cells = len((target_footprint.get("cells") or set())
+                           & (cand_footprint.get("cells") or set()))
     return {
         "cert_number": cand.get("cert_number"), "name": cand.get("name"),
         "fit_score": round(score, 4),
         "funding_complementarity": comp, "business_similarity": sim,
-        "size_fit": szf, "geo_overlap": geo,
-        "rationale": _rationale(target, cand, comp, sim, szf, geo, shared),
+        "size_fit": szf, "geo_overlap": geo, "geo_overlap_deposit_weighted": dep_geo,
+        "rationale": _rationale(target, cand, comp, sim, szf, geo, shared_cells),
     }
 
 
 def rank_partners(target: dict, population: list[dict], *, top_n: int = 10,
-                  states: dict | None = None) -> list[dict]:
+                  footprints: dict | None = None) -> list[dict]:
     """Rank all other banks as acquirers/partners for the target."""
-    t_states = (states or {}).get(target.get("cert_number"))
+    t_fp = (footprints or {}).get(target.get("cert_number"))
     out = []
     for cand in population:
         if cand.get("cert_number") == target.get("cert_number"):
             continue
-        c_states = (states or {}).get(cand.get("cert_number"))
-        out.append(fit_score(target, cand, target_states=t_states, cand_states=c_states))
+        c_fp = (footprints or {}).get(cand.get("cert_number"))
+        out.append(fit_score(target, cand, target_footprint=t_fp, cand_footprint=c_fp))
     out.sort(key=lambda r: r["fit_score"], reverse=True)
     return out[:top_n]

@@ -12,6 +12,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from banklens_transforms import clustering
+from banklens_transforms.footprint import build_footprints
 from banklens_transforms.gold import gold_features
 from banklens_transforms.market import to_price_bar
 from banklens_transforms.peers import add_percentile_ranks
@@ -21,6 +22,7 @@ REPO = Path(__file__).resolve().parents[4]
 DATA = REPO / "data"
 _POP = DATA / "bronze" / "source=fdic" / "population" / "repdte=20260331" / "records.json"
 _CROSSWALK = DATA / "silver" / "crosswalk.json"
+_SOD = DATA / "bronze" / "source=fdic" / "sod" / "year=2025" / "records.json"
 
 _CLUSTER_METRICS = ["concentration_ratio_cre", "concentration_ratio_c_and_i",
                     "concentration_ratio_residential_mortgage", "uninsured_deposit_pct",
@@ -29,7 +31,9 @@ _cache: dict = {}
 
 
 def population() -> dict:
-    """Return {gold, by_cert, silver_by_cert, states, cluster_members, cluster_labels}."""
+    """Return {gold, by_cert, silver_by_cert, cluster_members, cluster_labels}.
+    Real branch footprints (for Feature 15's geo-overlap) are a separate cached
+    accessor — see footprints() below."""
     if "pop" in _cache:
         return _cache["pop"]
 
@@ -38,14 +42,12 @@ def population() -> dict:
     gold = [gold_features(s) for s in silver]
     add_percentile_ranks(gold)
 
-    states, silver_by_cert = {}, {}
+    silver_by_cert = {}
     for s, g in zip(silver, gold):
         g["state"] = s.get("state")
         cert = s.get("cert_number")
         if cert is not None:
             silver_by_cert[cert] = s
-            if s.get("state"):
-                states[cert] = {s["state"]}
 
     # behavioral clusters (k=7, deterministic seed)
     kept, X = clustering.build_matrix(gold)
@@ -65,11 +67,24 @@ def population() -> dict:
         "gold": gold,
         "by_cert": {g["cert_number"]: g for g in gold},
         "silver_by_cert": silver_by_cert,
-        "states": states,
         "cluster_members": {lab: [g["cert_number"] for g in ms] for lab, ms in members.items()},
         "cluster_labels": cluster_labels,
     }
     return _cache["pop"]
+
+
+def footprints() -> dict[int, dict]:
+    """Real branch-level footprints keyed by CERT (bank-level, not holding-company —
+    SOD branch data is per FDIC-insured bank, so no crosswalk needed here). Empty
+    dict if SOD hasn't been landed (see scripts/land_sod.ps1)."""
+    if "footprints" in _cache:
+        return _cache["footprints"]
+    if not _SOD.exists():
+        _cache["footprints"] = {}
+    else:
+        raw = json.loads(_SOD.read_text(encoding="utf-8-sig"))
+        _cache["footprints"] = build_footprints(raw)
+    return _cache["footprints"]
 
 
 def bank_quarters(cert: int) -> list[dict] | None:

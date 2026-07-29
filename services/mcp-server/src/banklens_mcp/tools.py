@@ -99,7 +99,7 @@ def get_peer_cluster(cert: int) -> dict:
 def find_ma_matches(cert: int, top_n: int = 8) -> dict:
     pop = data.population()
     target = _need_bank(cert)
-    ranked = rank_partners(target, pop["gold"], top_n=top_n, states=pop["states"])
+    ranked = rank_partners(target, pop["gold"], top_n=top_n, footprints=data.footprints())
     return {"target": target["name"], "candidates": ranked}
 
 

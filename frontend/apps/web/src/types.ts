@@ -88,6 +88,7 @@ export interface MaCandidate {
   business_similarity: number;
   size_fit: number;
   geo_overlap: number | null;
+  geo_overlap_deposit_weighted: number | null;
   rationale: string;
 }
 

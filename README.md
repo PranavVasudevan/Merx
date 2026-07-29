@@ -41,7 +41,8 @@ Some well-known FDIC certificate numbers: `628` JPMorgan Chase · `3510` Bank of
 powershell -File scripts/run_vertical_slice.ps1 -Cert 6976   # F11 Balance-Sheet X-Ray
 powershell -File scripts/filing_diff.ps1 -Cert 3511          # F12 Filing Diff
 powershell -File scripts/cluster_report.ps1                  # F14 Peer Clustering
-powershell -File scripts/ma_fit.ps1 -TargetCert 6976         # F15 M&A Fit
+powershell -File scripts/land_sod.ps1                         # land real branch footprint (keyless, one-time)
+powershell -File scripts/ma_fit.ps1 -TargetCert 6976         # F15 M&A Fit (real branch-overlap geography)
 powershell -File scripts/stress_test.ps1 -Cert 6976 -Outflow 60 -RateBps 400  # F16 Stress
 powershell -File scripts/deposit_flight.ps1                  # F13 Deposit-Flight ML (showcase)
 powershell -File scripts/population_report.ps1               # peer percentiles
@@ -139,7 +140,7 @@ banklens/
 | 1 | Data platform — Bronze + Silver ingestion (FDIC, SEC, CERT↔CIK↔RSSD crosswalk) | ✅ reference done |
 | 2 | Gold layer + peer percentiles | ✅ Gold done |
 | 2a | Market EOD prices (Tiingo) + real candlestick charts | ✅ built, needs user's own free key to land data |
-| 3 | Deterministic features — X-Ray, Diff, Peers, M&A, Stress | ✅ reference done |
+| 3 | Deterministic features — X-Ray, Diff, Peers, M&A, Stress | ✅ reference done — M&A's geo-overlap now real FDIC branch data (found & worked around a real FDIC data-quality bug, see ma-fit README) |
 | 4 | Deposit-Flight ML model (showcase) | ✅ AUC 0.94, pooled across 2023 + 2008 crises — SVB/Signature/First Republic flagged, IndyMac honestly not (different failure archetype) |
 | 5 | MCP server & tooling — 11 tools, all 6 features + market data | ✅ reference done |
 | 6 | Agentic AI layer — supervisor + 4 specialists, 3 providers (Ollama/Gemini/Anthropic) | ✅ reference done, live-tested on Ollama |

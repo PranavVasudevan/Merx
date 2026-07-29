@@ -36,9 +36,14 @@ def test_size_fit_prefers_larger_acquirer():
 
 
 def test_geo_overlap_jaccard():
-    assert geo_overlap({"NY", "NJ"}, {"NY", "NJ"}) == 1.0
-    assert geo_overlap({"NY"}, {"CA"}) == 0.0
-    assert geo_overlap({"NY"}, None) is None
+    # geo_overlap now takes real branch-footprint dicts (grid cells), not state sets —
+    # see banklens_transforms.footprint for why (FDIC's STALP/CITY are unreliable
+    # at branch level, verified live).
+    fp_same = {"cells": {(1, 1), (2, 2)}}
+    fp_disjoint = {"cells": {(9, 9)}}
+    assert geo_overlap(fp_same, fp_same) == 1.0
+    assert geo_overlap(fp_same, fp_disjoint) == 0.0
+    assert geo_overlap(fp_same, None) is None
 
 
 def test_rank_excludes_self_and_sorts():

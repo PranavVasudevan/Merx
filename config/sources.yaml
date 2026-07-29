@@ -38,6 +38,21 @@ sources:
     license: { tag: public-domain-us-gov, redistributable: true }
     status: active           # implemented in Phase 1j (feeds the CERT<->CIK<->RSSD crosswalk)
 
+  fdic_sod:
+    name: "FDIC Summary of Deposits (branch-level footprint)"
+    kind: rest_api_bulk
+    base_url: "https://banks.data.fdic.gov/api/sod"
+    auth: none
+    cadence: annual
+    entities: ~76000          # branches/year, all FDIC-insured banks
+    docs: "https://banks.data.fdic.gov/docs/"
+    license: { tag: public-domain-us-gov, redistributable: true }
+    status: active           # implemented in Phase 1o (feeds Feature 15's real geo-overlap)
+    data_quality_note: >
+      STALP/CITY/ADDRESS fields are unreliable at branch level (frozen at the bank's
+      HQ address for every branch, verified live) — only SIMS_LATITUDE/SIMS_LONGITUDE
+      are trustworthy. See docs/data-contracts/branch_footprint.md.
+
   fed_nic:
     name: "Federal Reserve NIC (FR Y-9C holding-company data)"
     kind: bulk_zip
