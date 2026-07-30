@@ -99,21 +99,27 @@ in for a final answer. See [`services/agents/README.md`](services/agents/README.
 for the full story; the fixed loop now produces coherent, correct, fully-local
 answers grounded in real tool data.
 
-### Containerized (Phase 8, started)
-
-Real Dockerfiles for the bridge and quant terminal, plus a Kustomize `dev` overlay
-validated with `kubectl kustomize` (genuinely produces correct manifests — checked,
-not assumed):
+### Containerized (Phase 8, started) — real build, real run, verified end-to-end
 
 ```powershell
-powershell -File scripts/docker_up.ps1              # docker compose, needs Docker Desktop running
-kubectl apply -k platform/k8s/overlays/dev           # or: deploy to local K8s
+powershell -File scripts/docker_up.ps1
+# open http://localhost:8080
 ```
 
-**Honest status:** manifest generation was verified for real; the actual
-`docker build`/`kubectl apply` steps were not run in the environment this was built
-in (Docker Desktop needed interactive first-run setup this session couldn't drive
-headlessly) — see [`platform/k8s/README.md`](platform/k8s/README.md).
+**Actually built and run, not just written:** both images build cleanly and the
+full app tier — bridge + quant terminal — was confirmed working end-to-end in a
+browser against the real containers (zero console errors, real Silver/Gold/X-Ray/
+clustering/stress/M&A/risk-score data). A real bug was found and fixed this way:
+the bridge image was missing `ml/` (the trained deposit-flight model card), which
+surfaced as an honest "model not trained yet" error rather than silently serving
+wrong data — fixed by adding it to the Dockerfile like source, not runtime data.
+
+Kubernetes manifests (`platform/k8s/overlays/dev`) are validated with `kubectl
+kustomize` (genuinely correct YAML, zero warnings) but not yet applied to a live
+cluster — Docker Desktop's Kubernetes is a separate GUI settings toggle that needs
+enabling by hand (Settings → Kubernetes → Enable). See
+[`platform/k8s/README.md`](platform/k8s/README.md) for exactly what's verified vs.
+what still needs that one manual step.
 
 ---
 

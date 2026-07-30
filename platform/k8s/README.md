@@ -42,11 +42,21 @@ kubectl -n banklens-dev get pods
 # then open http://localhost:30080
 ```
 
-**Honest note on what was verified vs. not, while building this:** `kubectl
-kustomize` was run for real and produces the exact manifests shown above (zero
-warnings, valid YAML) — that part is proven. The actual `docker build` /
-`kubectl apply` / running-pod steps were **not** run in the environment this was
-built in — Docker Desktop's daemon needed interactive first-run setup that
-couldn't be driven headlessly. Try the steps above yourself; if something doesn't
-work exactly as written, it's this last-mile gap, not an untested guess elsewhere
-in the manifests.
+**Status of what's actually been verified:** `kubectl kustomize` was run for real
+(zero warnings, valid YAML — proven). Both Docker images were **built and run for
+real** via `docker compose -f platform/docker/docker-compose.app.yml up` — a real
+bug was found and fixed this way (the bridge image was missing `ml/`, the trained
+model card, causing a genuine "Deposit-flight model not trained yet" error in an
+otherwise-working container; see the Dockerfile's `COPY ml /app/ml` comment). With
+that fix, the full containerized app tier was confirmed working end-to-end: real
+Silver/Gold/X-Ray/clustering/stress/M&A/risk-score data served from inside the
+bridge container to the containerized frontend, verified in-browser (zero console
+errors, `curl` against every endpoint).
+
+**What's still unverified:** the actual `kubectl apply -k overlays/dev` /
+running-pod step. Docker Desktop's Kubernetes is a separate opt-in toggle
+(Settings → Kubernetes → Enable Kubernetes → Apply & Restart, downloads more images)
+that wasn't enabled in this environment — and it's a GUI settings toggle in a
+desktop app, not something drivable from a terminal, so this needs the user to
+enable it once. The manifests themselves are validated as far as static tooling
+goes; only the live-cluster deploy step is unverified.

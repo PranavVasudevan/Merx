@@ -18,6 +18,11 @@ WORKDIR /app
 COPY services/mcp-server/src /app/services/mcp-server/src
 COPY pipelines/transforms/src /app/pipelines/transforms/src
 COPY services/api-gateway/src /app/services/api-gateway/src
+# Small, VERSIONED model artifacts (e.g. ml/deposit_flight/model_card.json) — these
+# are checked into git, unlike data/, so they're baked into the image like source,
+# not runtime-mounted. Found live: omitting this made get_risk_score fail with
+# "Deposit-flight model not trained yet" in an otherwise-working container.
+COPY ml /app/ml
 
 ENV PYTHONPATH=/app/services/mcp-server/src:/app/pipelines/transforms/src
 ENV PYTHONUNBUFFERED=1
