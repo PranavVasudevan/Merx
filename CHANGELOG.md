@@ -5,6 +5,14 @@ All notable changes to this project are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Fixed — Phase 8 (security pass: a real, verified path-traversal + CORS finding)
+- **Path traversal in `bank_quarters(cert)`, network-reachable via the `diff_filings` MCP tool.** Not a theoretical concern — verified live by planting a sentinel file outside `data/` and confirming a `cert` of `"../../../../.."` read it back. Fixed by coercing `cert` to a real `int` before path construction (a genuine FDIC cert is always numeric). `price_bars(ticker)` hardened the same way (path-containment check) as defense in depth, since it has the identical shape even though today's only caller passes a trusted value.
+- **`Access-Control-Allow-Origin: *` on the REST bridge** — this is what made the traversal bug reachable from *any webpage the user had open*, not just a deliberate client. Replaced with an explicit allowlist of the real local frontend origins, echoed back only on match; verified live with curl against an allowed origin (header present), a fake origin (header absent), and a bare request (still 200 — direct/server-to-server callers unaffected).
+- New `services/mcp-server/tests/test_data.py` (5 tests, fully hermetic) — includes the exact live-confirmed exploit shape as a permanent regression test.
+- Audited (found clean): no secrets ever committed (working tree or history), no `shell=True`/`eval`/`os.system` anywhere in the codebase, no `dangerouslySetInnerHTML`/`eval` in the frontend.
+- New `docs/runbooks/disaster-recovery.md` — an honest DR runbook scoped to what this reference architecture actually has (a fully re-fetchable data layer, git-tracked model artifacts, no real database yet), not generic enterprise DR boilerplate for infrastructure that doesn't exist here.
+- 24 test files, 140 tests (was 135), lint clean.
+
 ### Verified — Phase 8: deployed to a real Kubernetes cluster (and three real gotchas fixed)
 Docker Desktop's Kubernetes was enabled, and the dev overlay now **actually runs** — both Deployments rolled out, the full UI verified in a browser against the cluster with every feature rendering real FDIC-derived data and zero console errors. Deploying for real invalidated three assumptions that static validation (`kubectl kustomize`) could never have caught, because Docker Desktop's k8s is **kind-based** (node = a container, `desktop-control-plane`):
 - **`hostPath` cannot reach the host filesystem at all** — not a wrong path, an unavailable mechanism. Probed the node live: no `/mnt/c`, no `/run/desktop/mnt/host`, no 9p/virtiofs/drvfs in `/proc/mounts`. The previous overlay's hostPath (a documented guess) was replaced with a **PVC** populated via `kubectl cp` from a short-lived loader pod — the bridge warms its cache at startup, so data must land before it runs. This also matches what the staging/prod stubs already said they'd do.

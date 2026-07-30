@@ -80,6 +80,18 @@ def _population_summary() -> dict:
        and g.get("uninsured_deposit_pct") is not None]}
 
 
+# Origins the real quant-terminal frontend runs on in this reference setup: the
+# Vite dev server, the Docker Compose container, and the K8s dev overlay's
+# NodePort. `Access-Control-Allow-Origin: *` would let ANY webpage a user has open
+# in their browser query this service while it's running (a real local attack
+# surface, not theoretical — it's what made the path-traversal bug found in
+# banklens_mcp.data browser-reachable rather than merely local-process-reachable).
+# An explicit allowlist, echoed back only on match, closes that off.
+_ALLOWED_ORIGINS = {
+    "http://localhost:5173", "http://localhost:8080", "http://localhost:30080",
+}
+
+
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         sys.stderr.write("%s - %s\n" % (self.address_string(), fmt % args))
@@ -89,7 +101,9 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Access-Control-Allow-Origin", "*")
+        origin = self.headers.get("Origin")
+        if origin in _ALLOWED_ORIGINS:
+            self.send_header("Access-Control-Allow-Origin", origin)
         self.send_header("Access-Control-Allow-Headers", "*")
         self.end_headers()
         self.wfile.write(body)

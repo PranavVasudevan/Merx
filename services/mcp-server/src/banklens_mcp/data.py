@@ -88,7 +88,20 @@ def footprints() -> dict[int, dict]:
 
 
 def bank_quarters(cert: int) -> list[dict] | None:
-    """Per-bank multi-quarter Silver rows (newest-first), or None if not landed."""
+    """Per-bank multi-quarter Silver rows (newest-first), or None if not landed.
+
+    SECURITY: `cert` reaches here as a raw MCP tool argument (via diff_filings) —
+    the type hint says `int`, but nothing upstream actually enforces that, and the
+    value is interpolated straight into a filesystem path. Verified live: a `cert`
+    of "../../../../../.." reads records.json from OUTSIDE data/ entirely (a real,
+    reachable path-traversal read). Coercing to a real int here closes it — a
+    genuine FDIC CERT is always numeric, so anything else is rejected outright
+    rather than silently path-joined.
+    """
+    try:
+        cert = int(cert)
+    except (TypeError, ValueError):
+        return None
     p = DATA / "bronze" / "source=fdic" / f"cert={cert}" / "records.json"
     if not p.exists():
         return None
@@ -123,11 +136,24 @@ def ticker_for_cert(cert: int) -> str | None:
 
 def price_bars(ticker: str) -> list[dict] | None:
     """Landed EOD price bars for a ticker (ascending by date), or None if not landed
-    (see scripts/land_market_data.ps1 — needs the user's own free Tiingo key)."""
+    (see scripts/land_market_data.ps1 — needs the user's own free Tiingo key).
+
+    SECURITY (defense in depth): today `ticker` only ever arrives here via
+    ticker_for_cert()'s trusted, crosswalk-derived value — never raw user input.
+    But this function interpolates its argument into a filesystem path, exactly
+    the shape that was a real, exploitable traversal in bank_quarters() (see that
+    function's docstring). Rather than trust that no future call site changes,
+    verify the resolved path is still inside the expected directory before
+    reading — a check that holds regardless of what "valid ticker" turns out to
+    mean, instead of guessing an allowed character set.
+    """
     cache_key = f"bars:{ticker}"
     if cache_key in _cache:
         return _cache[cache_key]
-    p = DATA / "bronze" / "source=tiingo" / "daily" / f"ticker={ticker}" / "records.json"
+    base = DATA / "bronze" / "source=tiingo" / "daily"
+    p = base / f"ticker={ticker}" / "records.json"
+    if base.resolve() not in p.resolve().parents:
+        return None
     if not p.exists():
         return None
     raw = json.loads(p.read_text(encoding="utf-8"))
