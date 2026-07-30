@@ -1,62 +1,80 @@
 # k8s
 
-Kustomize base + per-env overlays (dev/staging/prod) — Phase 8.
+Kustomize base + per-env overlays — Phase 8. **The dev overlay is deployed and
+verified end-to-end on a real cluster** (Docker Desktop Kubernetes, v1.36.1).
 
-## Status: base + dev overlay real and validated; staging/prod are documented stubs
-
-`base/` deploys the two services that fit the classic Deployment+Service model:
-`banklens-bridge` (the REST API, port 8791) and `banklens-web` (the quant terminal,
-port 80). The MCP server itself is **not** deployed here — it speaks JSON-RPC over
-stdio for a launching client (Claude Code, an agent runtime), not a network `Service`;
-containerizing it the same way would force a mismatched deployment pattern.
-
-`overlays/dev/` is real and tested: a `banklens-dev` namespace, a `hostPath` volume
-mount for local `data/` (fine for a single-node local cluster; **not** appropriate
-for anything beyond that), and a NodePort so the web UI is reachable at a fixed
-local port. Validated with `kubectl kustomize` (see below) — genuinely produces
-correct manifests, not just written and hoped.
-
-`overlays/staging/` and `overlays/prod/` are deliberately **stubs, not built out** —
-writing real staging/prod config without an actual target cluster to validate
-against would be speculative, untestable YAML. Each stub documents exactly what it
-would add (real PVC instead of hostPath, replicas, Ingress+TLS, NetworkPolicies,
-Vault-backed secrets) — see the comments in each file.
-
-## Try it
+## Quick start
 
 ```powershell
-# 1. Build the images (needs Docker Desktop running)
-docker build -f services/api-gateway/Dockerfile -t banklens-bridge:local .
-docker build -t banklens-web:local frontend/apps/web
-
-# 2. Validate the manifests (no cluster needed)
-kubectl kustomize platform/k8s/overlays/dev
-
-# 3. Edit platform/k8s/overlays/dev/bridge-hostpath-patch.yaml — set the hostPath
-#    to YOUR machine's real data/ path as the Kubernetes node sees it (Docker
-#    Desktop for Windows: check via `kubectl exec` + `ls`, this varies by version)
-
-# 4. Deploy to Docker Desktop's local Kubernetes (Settings -> Kubernetes -> Enable)
-kubectl apply -k platform/k8s/overlays/dev
-kubectl -n banklens-dev get pods
-# then open http://localhost:30080
+powershell -File scripts/k8s_dev_up.ps1        # build, load data, deploy, wait
 ```
 
-**Status of what's actually been verified:** `kubectl kustomize` was run for real
-(zero warnings, valid YAML — proven). Both Docker images were **built and run for
-real** via `docker compose -f platform/docker/docker-compose.app.yml up` — a real
-bug was found and fixed this way (the bridge image was missing `ml/`, the trained
-model card, causing a genuine "Deposit-flight model not trained yet" error in an
-otherwise-working container; see the Dockerfile's `COPY ml /app/ml` comment). With
-that fix, the full containerized app tier was confirmed working end-to-end: real
-Silver/Gold/X-Ray/clustering/stress/M&A/risk-score data served from inside the
-bridge container to the containerized frontend, verified in-browser (zero console
-errors, `curl` against every endpoint).
+Then, in a second terminal (see "the localhost:8791 caveat" below):
 
-**What's still unverified:** the actual `kubectl apply -k overlays/dev` /
-running-pod step. Docker Desktop's Kubernetes is a separate opt-in toggle
-(Settings → Kubernetes → Enable Kubernetes → Apply & Restart, downloads more images)
-that wasn't enabled in this environment — and it's a GUI settings toggle in a
-desktop app, not something drivable from a terminal, so this needs the user to
-enable it once. The manifests themselves are validated as far as static tooling
-goes; only the live-cluster deploy step is unverified.
+```powershell
+kubectl port-forward -n banklens-dev svc/banklens-bridge 8791:8791
+kubectl port-forward -n banklens-dev svc/banklens-web 8080:80
+```
+
+…and open <http://localhost:8080>.
+
+## What's deployed
+
+`base/` has the two services that fit the Deployment+Service model: `banklens-bridge`
+(REST API, 8791) and `banklens-web` (quant terminal, 80). The MCP server is **not**
+here — it speaks JSON-RPC over stdio to a launching client, not over the network, so
+a Service would be the wrong shape for it.
+
+`overlays/dev/` adds a `banklens-dev` namespace, a data PVC, and NodePorts.
+`overlays/staging|prod/` remain deliberate stubs — real config needs a real target
+cluster to validate against, and each stub documents what it would add.
+
+## Three real gotchas this hit, and why the config looks the way it does
+
+Docker Desktop's Kubernetes is **kind-based** (the node is a container named
+`desktop-control-plane`), which invalidates several things that work on the classic
+Docker Desktop k8s. All three were found by actually deploying, not by reading docs:
+
+**1. `hostPath` cannot reach your files — at all.** The node is a container with its
+own overlay filesystem and the Windows host is not mounted into it anywhere
+(verified: no `/mnt/c`, no `/run/desktop/mnt/host`, no 9p/virtiofs/drvfs in
+`/proc/mounts`). An earlier version of this overlay used a `hostPath` path that was
+a documented guess — deploying proved the whole *mechanism* unavailable, not just
+the path wrong. Hence the **PVC**, populated by `kubectl cp` from a short-lived
+loader pod (the bridge warms its cache at startup, so data must land first). This
+also happens to match what staging/prod would really do.
+
+**2. Mutable image tags are silently stale.** The cluster runs its own containerd.
+With `imagePullPolicy: IfNotPresent` and a fixed tag like `:local`, rebuilding that
+tag in Docker does **not** refresh what the cluster runs — a rebuilt bridge image
+containing a newly-required file was silently ignored by the pod. `k8s_dev_up.ps1`
+therefore builds a **unique tag per deploy** (`dev-<timestamp>`) and `kubectl set
+image`s the Deployments onto it. (Locally-built images *are* otherwise visible to
+the cluster — verified — so no `kind load` step is needed.)
+
+**3. NodePort is not reachable from Windows.** NodePorts live on the kind node
+container's network and aren't published to the host, so `http://localhost:30080`
+does **not** work here (it would on classic Docker Desktop k8s). The NodePorts are
+kept because they're valid in-cluster and for other environments, but on this setup
+use `kubectl port-forward`.
+
+### The localhost:8791 caveat
+The frontend calls the bridge at a hardcoded `http://localhost:8791/api`
+(`frontend/apps/web/src/api.ts`). Since NodePorts must be in 30000–32767, the port
+the browser needs can only be produced by `port-forward`. Making that URL
+configurable is Phase 5+ hardening.
+
+## Verified
+
+- `kubectl kustomize` on base and the dev overlay: clean, zero warnings.
+- Deployed for real: both Deployments roll out, pods `1/1 Running`.
+- Real data served from the PVC: `get_bank_xray`, `find_ma_matches` (with real
+  branch-overlap geo), `get_risk_score` (needs the baked-in `ml/` model card).
+- Full UI loaded in a browser against the cluster — every feature rendering real
+  FDIC-derived data, zero console errors.
+
+## Teardown
+
+```powershell
+kubectl delete namespace banklens-dev
+```

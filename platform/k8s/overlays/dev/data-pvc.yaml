@@ -1,0 +1,19 @@
+# Holds the landed Bronze/Silver data the bridge reads.
+#
+# Why a PVC and not hostPath: Docker Desktop's Kubernetes is kind-based — the node
+# is a container with its own overlay filesystem, and the Windows host filesystem
+# is NOT mounted into it anywhere (verified live: no /mnt/c, no
+# /run/desktop/mnt/host, no 9p/virtiofs/drvfs entries in /proc/mounts). So hostPath
+# architecturally cannot reach your local `data/` directory here, regardless of the
+# path string. A PVC populated by `scripts/k8s_dev_up.ps1` works, and has the side
+# benefit of matching what staging/prod would actually do.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: banklens-data
+spec:
+  accessModes:
+    - ReadWriteOnce          # single-node local cluster; fine here
+  resources:
+    requests:
+      storage: 1Gi           # landed data is ~31MB today; 1Gi leaves room to grow

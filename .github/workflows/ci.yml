@@ -7,24 +7,66 @@ on:
     branches: [main]
 
 jobs:
-  python-pipelines:
-    name: Pipelines (lint + hermetic tests)
+  python:
+    name: Python — lint + full test suite
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-      - name: Install dev tooling
-        run: pip install ruff
-      - name: Lint
-        run: ruff check pipelines || true   # non-blocking until the style baseline lands
-      - name: Gold metric tests (hermetic)
-        run: python pipelines/transforms/tests/test_gold_metrics.py
-      - name: FDIC connector tests (hermetic)
-        run: python pipelines/ingestion/tests/test_fdic.py
+          python-version: "3.13"
 
-  # Placeholder jobs — enabled as those stacks land.
-  # rust-engines:   cargo test  (services/ingestion, services/stress-engine)
-  # frontend:       vitest      (frontend/)
-  # data-quality:   great_expectations / soda checks on sample data
+      - name: Install lint tooling
+        run: pip install ruff==0.16.0
+
+      # BLOCKING, not `|| true`. The rule set is an explicit, minimal contract
+      # (see /ruff.toml) chosen so it catches real defects without retroactively
+      # rewriting working code — the repo passes it cleanly today.
+      - name: Lint
+        run: ruff check .
+
+      # Runs ALL 23 test files (135 tests). Tests needing landed Bronze data —
+      # `data/` is git-ignored and reproducible from the landing scripts — SKIP
+      # rather than fail here, so CI is honest about coverage instead of either
+      # lying (green on 2 files) or failing on absent data.
+      - name: Tests
+        run: python scripts/run_all_tests.py
+
+  frontend:
+    name: Frontend — typecheck + build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend/apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/apps/web/package-lock.json
+      - name: Install
+        run: npm ci
+      - name: Typecheck
+        run: npx tsc --noEmit -p tsconfig.app.json
+      - name: Build
+        run: npm run build
+
+  manifests:
+    name: Infra — Docker builds + Kustomize
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Catches the class of bug found live while containerizing: a Dockerfile
+      # that's syntactically fine but omits something the app needs at runtime
+      # only shows up when you actually build it.
+      - name: Build bridge image
+        run: docker build -f services/api-gateway/Dockerfile -t banklens-bridge:ci .
+      - name: Build web image
+        run: docker build -t banklens-web:ci frontend/apps/web
+
+      - name: Validate Kubernetes manifests
+        run: |
+          kubectl kustomize platform/k8s/base > /dev/null
+          kubectl kustomize platform/k8s/overlays/dev > /dev/null

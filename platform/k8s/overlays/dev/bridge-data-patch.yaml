@@ -1,0 +1,15 @@
+# Points the bridge Deployment's "banklens-data" volume at the dev PVC.
+#
+# This REPLACED an earlier hostPath patch that could never have worked: Docker
+# Desktop's Kubernetes is kind-based, and the Windows host filesystem is not
+# mounted into the node at all (verified live — see data-pvc.yaml). The original
+# hostPath path was a documented guess; deploying for real proved the whole
+# mechanism unavailable, not just the path wrong.
+#
+# Populate the PVC with `scripts/k8s_dev_up.ps1` before/with deploying.
+- op: replace
+  path: /spec/template/spec/volumes/0
+  value:
+    name: banklens-data
+    persistentVolumeClaim:
+      claimName: banklens-data

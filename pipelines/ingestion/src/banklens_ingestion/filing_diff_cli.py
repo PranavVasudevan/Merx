@@ -25,7 +25,7 @@ def run(cert: int, data_dir: Path, quarter_a: str | None, quarter_b: str | None,
 
     W = 74
     print("=" * W)
-    print(f"  FEATURE 12 — FILING DIFF")
+    print("  FEATURE 12 — FILING DIFF")
     print(f"  {res['name']}   {res['from_quarter']} -> {res['to_quarter']} "
           f"({res['span_quarters']}Q)")
     print("=" * W)

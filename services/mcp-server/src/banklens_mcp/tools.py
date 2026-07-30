@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from banklens_transforms.deposit_flight import features_from, load_card, score_vector
 from banklens_transforms.filing_diff import build_quarters, diff
-from banklens_transforms.gold import gold_features
 from banklens_transforms.ma_fit import rank_partners
 from banklens_transforms.market import price_snapshot
 from banklens_transforms.stress import Shock, run_stress_test, starting_position

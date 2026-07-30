@@ -42,7 +42,7 @@ def run(data_dir: Path) -> None:
 
     W = 84
     print("=" * W)
-    print(f"  FEATURE 13 — DEPOSIT-FLIGHT EARLY-WARNING")
+    print("  FEATURE 13 — DEPOSIT-FLIGHT EARLY-WARNING")
     print(f"  Pooled training: 2022Q4 (n={len(rows_2022)}) + 2008Q1 (n={len(rows_2008)}) = {len(rows)}")
     print("=" * W)
     print(f"  Positives (real failures, both crises): {', '.join(POSITIVE_CERTS.values())}")
@@ -50,7 +50,7 @@ def run(data_dir: Path) -> None:
         print(f"  Excluded: {info['name']} (CERT {cert}) — {info['reason']}")
     print(f"\n  In-sample ROC-AUC: {card['auc']}")
     print("\n  Coefficients (standardized; + raises modeled run-risk):")
-    for f, w in sorted(zip(card["features"], card["weights"]), key=lambda t: abs(t[1]), reverse=True):
+    for f, w in sorted(zip(card["features"], card["weights"], strict=True), key=lambda t: abs(t[1]), reverse=True):
         print(f"    {f:<24} {w:+.3f}")
 
     # rank everyone; where do the actual failures land?
@@ -76,7 +76,7 @@ def run(data_dir: Path) -> None:
             for drv in d["drivers"][:3]:
                 print(f"    {drv['feature']:<24} = {drv['value']:>8}  (log-odds {drv['contribution']:+.2f})")
     print("=" * W)
-    print(f"  Model card saved. In-sample AUC and leave-one-out are the honest checks.")
+    print("  Model card saved. In-sample AUC and leave-one-out are the honest checks.")
 
 
 def main() -> None:

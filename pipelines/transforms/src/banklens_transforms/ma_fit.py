@@ -55,7 +55,7 @@ def _vec(bank: dict) -> list[float]:
 def business_similarity(target: dict, cand: dict) -> float:
     """Cosine similarity of loan-mix vectors (0..1)."""
     a, b = _vec(target), _vec(cand)
-    dot = sum(x * y for x, y in zip(a, b))
+    dot = sum(x * y for x, y in zip(a, b, strict=True))
     na = math.sqrt(sum(x * x for x in a))
     nb = math.sqrt(sum(y * y for y in b))
     return round(dot / (na * nb), 4) if na > 0 and nb > 0 else 0.0

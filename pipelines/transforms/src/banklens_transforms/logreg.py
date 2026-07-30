@@ -61,8 +61,8 @@ class LogisticRegression:
 
 def auc(y: list[int], scores: list[float]) -> float:
     """Rank-based ROC-AUC: P(random positive scores above random negative)."""
-    pos = [s for s, t in zip(scores, y) if t == 1]
-    neg = [s for s, t in zip(scores, y) if t == 0]
+    pos = [s for s, t in zip(scores, y, strict=True) if t == 1]
+    neg = [s for s, t in zip(scores, y, strict=True) if t == 0]
     if not pos or not neg:
         return float("nan")
     wins = sum((1.0 if p > n else 0.5 if p == n else 0.0) for p in pos for n in neg)

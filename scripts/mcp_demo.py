@@ -89,7 +89,7 @@ def main() -> None:
 
     proc.stdin.close()
     proc.wait(timeout=5)
-    print(f"\nAudit log: data/mcp_audit.jsonl")
+    print("\nAudit log: data/mcp_audit.jsonl")
 
 
 if __name__ == "__main__":

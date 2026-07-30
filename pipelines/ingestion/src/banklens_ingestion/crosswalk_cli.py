@@ -66,7 +66,7 @@ def run(repdte: str, data_dir: Path, verify: str | None) -> None:
     fdic_path = data_dir / "bronze" / "source=fdic" / "population" / f"repdte={repdte}" / "records.json"
     sec_path = data_dir / "bronze" / "source=sec" / "tickers" / "records.json"
 
-    print(f"[1/3] LOAD  — FDIC population + SEC ticker directory")
+    print("[1/3] LOAD  — FDIC population + SEC ticker directory")
     fdic_raw = _load(fdic_path)
     sec_raw = _load(sec_path)
     silver = [to_bank_financials(r) for r in fdic_raw]
@@ -93,7 +93,7 @@ def run(repdte: str, data_dir: Path, verify: str | None) -> None:
     rows = build_crosswalk(holding_companies, sec_tickers)
     stats = crosswalk_stats(rows)
 
-    print(f"[3/3] SAVE  — writing crosswalk to Silver\n")
+    print("[3/3] SAVE  — writing crosswalk to Silver\n")
     out_dir = data_dir / "silver"
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "crosswalk.json").write_text(json.dumps(rows, indent=2), encoding="utf-8")

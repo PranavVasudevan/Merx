@@ -10,10 +10,24 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "mcp-server" / "src"))
 
 import banklens_agents.agent as agent_mod  # noqa: E402
 import banklens_agents.ollama_client as ollama_client  # noqa: E402
 from banklens_agents.personas import PERSONAS  # noqa: E402
+
+
+class SkipTest(Exception):
+    """Landed Bronze data isn't present — a legitimate SKIP, not a failure. Tests
+    that call run_agent() spawn the real MCP server, which warms a population cache
+    on startup; `data/` is git-ignored and reproducible from the landing scripts."""
+
+
+def require_landed_data():
+    from banklens_mcp import data
+    if not data._POP.exists():
+        raise SkipTest(f"no landed population at {data._POP} "
+                       f"(run scripts/run_vertical_slice.ps1 / the landing scripts)")
 
 
 def _tool_use_then_final(tool_name: str, tool_input: dict, final_text: str):
@@ -31,6 +45,7 @@ def _tool_use_then_final(tool_name: str, tool_input: dict, final_text: str):
 
 
 def test_agent_calls_real_tool_and_finalizes(monkeypatch):
+    require_landed_data()
     monkeypatch.setattr(ollama_client, "messages_create",
                         _tool_use_then_final("get_bank_xray", {"cert": 6976},
                                              "Dime Community Bank is HIGH risk due to CRE concentration."))
@@ -46,6 +61,7 @@ def test_agent_calls_real_tool_and_finalizes(monkeypatch):
 
 
 def test_agent_with_no_tool_calls_returns_immediately(monkeypatch):
+    require_landed_data()
     def fake(**kwargs):
         return {"content": [{"type": "text", "text": "No tool needed."}], "stop_reason": "end_turn"}
     monkeypatch.setattr(ollama_client, "messages_create", fake)
@@ -62,6 +78,7 @@ def test_duplicate_tool_calls_terminate_with_a_real_answer(monkeypatch):
     instead of answering. The loop must (a) not waste a real MCP round-trip on the
     repeat and (b) still terminate with an actual answer, not the generic
     '(stopped: exceeded max turns)' message."""
+    require_landed_data()
     import banklens_agents.mcp_client as mcp_client_mod
 
     real_calls = {"n": 0}
@@ -96,6 +113,7 @@ def test_stray_tool_call_artifact_is_replaced_with_real_data(monkeypatch):
     SUCCESSFUL tool call with real data, its 'final answer' turn was itself a
     malformed JSON tool-call fragment, e.g. '{"get_bank_xray": {...}}' — never show
     that raw artifact to the user as if it were a real analysis."""
+    require_landed_data()
     calls = {"n": 0}
 
     def fake(*, model, system, messages, tools=None, tool_choice=None, max_tokens=1536, api_key=None):
@@ -122,6 +140,7 @@ def test_stray_flattened_tool_call_with_no_data_gets_honest_message(monkeypatch)
     than the {"tool_name": {...}} case) with NO successful tool call ever having
     happened. Must give an honest message, not the raw artifact and not a bare
     '(no answer produced)'."""
+    require_landed_data()
     def fake(**kwargs):
         return {"content": [{"type": "text", "text":
                             '{"tool": "list_banks", "query": "x", "state": "", "limit": 100}'}],
@@ -135,6 +154,7 @@ def test_stray_flattened_tool_call_with_no_data_gets_honest_message(monkeypatch)
 
 
 def test_normal_prose_answer_passes_through_unchanged(monkeypatch):
+    require_landed_data()
     def fake(**kwargs):
         return {"content": [{"type": "text", "text": "Dime is high risk due to CRE concentration."}],
                 "stop_reason": "end_turn"}
@@ -166,20 +186,42 @@ def test_unknown_provider_raises():
 
 
 if __name__ == "__main__":
-    failures = 0
+    failures = skipped = 0
     for name, fn in sorted(globals().items()):
-        if name.startswith("test_") and callable(fn):
+        if name.startswith("test_") and callable(fn) and name != "require_landed_data":
             try:
                 import inspect
                 if "monkeypatch" in inspect.signature(fn).parameters:
                     class _MP:
+                        def __init__(self):
+                            self._undo = []
+
                         def setattr(self, obj, attr, val):
+                            # Record the original so monkeypatching is UNDONE between
+                            # tests — without this, a patch from one test leaks into
+                            # every later test in the same run (these tests patch the
+                            # same shared module attrs, so leakage is a real hazard).
+                            self._undo.append((obj, attr, getattr(obj, attr)))
                             setattr(obj, attr, val)
-                    fn(_MP())
+
+                        def undo(self):
+                            for obj, attr, orig in reversed(self._undo):
+                                setattr(obj, attr, orig)
+                    mp = _MP()
+                    try:
+                        fn(mp)
+                    finally:
+                        mp.undo()
                 else:
                     fn()
                 print(f"PASS  {name}")
+            except SkipTest as e:
+                skipped += 1; print(f"SKIP  {name}: {e}")
             except AssertionError as e:
                 failures += 1; print(f"FAIL  {name}: {e}")
-    print("\n" + ("OK - all tests passed" if not failures else f"{failures} test(s) failed"))
+            except Exception as e:  # noqa: BLE001 — a crash must not abort the rest
+                failures += 1; print(f"ERROR {name}: {type(e).__name__}: {e}")
+    tail = f" ({skipped} skipped)" if skipped else ""
+    print("\n" + (f"OK - all tests passed{tail}" if not failures
+                  else f"{failures} test(s) failed{tail}"))
     sys.exit(1 if failures else 0)

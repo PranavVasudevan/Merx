@@ -43,7 +43,7 @@ def population() -> dict:
     add_percentile_ranks(gold)
 
     silver_by_cert = {}
-    for s, g in zip(silver, gold):
+    for s, g in zip(silver, gold, strict=True):
         g["state"] = s.get("state")
         cert = s.get("cert_number")
         if cert is not None:
@@ -53,7 +53,7 @@ def population() -> dict:
     kept, X = clustering.build_matrix(gold)
     labels, _, _ = clustering.kmeans(X, 7)
     members = defaultdict(list)
-    for g, lab in zip(kept, labels):
+    for g, lab in zip(kept, labels, strict=True):
         g["peer_cluster_id"] = lab
         members[lab].append(g)
     cluster_labels = {}

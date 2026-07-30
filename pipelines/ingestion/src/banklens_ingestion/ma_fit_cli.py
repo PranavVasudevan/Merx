@@ -53,7 +53,7 @@ def run(repdte: str, data_dir: Path, sod_year: int, target_cert: int, top_n: int
 
     W = 88
     print("=" * W)
-    print(f"  FEATURE 15 — M&A FIT FINDER")
+    print("  FEATURE 15 — M&A FIT FINDER")
     print(f"  Target: {target['name']}  (CERT {target_cert})")
     print("=" * W)
     branch_note = f"{t_fp['branch_count']} branches, {len(t_fp['cells'])} local market(s)" if t_fp else "no SOD data"

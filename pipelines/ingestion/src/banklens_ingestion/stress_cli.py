@@ -40,7 +40,7 @@ def run(cert: int, data_dir: Path, loan_loss: float, outflow: float, rate_bps: f
 
     W = 72
     print("=" * W)
-    print(f"  FEATURE 16 — CAPITAL BUFFER SIMULATOR")
+    print("  FEATURE 16 — CAPITAL BUFFER SIMULATOR")
     print(f"  {pos['name']}  —  {pos['quarter']}")
     print("=" * W)
     print(f"  Starting balance sheet:  Tier1 {_b(pos['tier1_capital'])}   RWA {_b(pos['rwa'])}")

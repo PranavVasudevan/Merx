@@ -1,0 +1,25 @@
+# A short-lived pod whose only job is to hold the data PVC mounted so
+# `kubectl cp` can copy landed data into it before the bridge starts.
+#
+# Needed because the bridge warms its population cache at startup — it can't come
+# up first and be populated afterwards. `scripts/k8s_dev_up.ps1` runs this, copies,
+# then deletes it. Not part of the running application.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: banklens-data-loader
+  labels:
+    app: banklens-data-loader
+spec:
+  restartPolicy: Never
+  containers:
+    - name: loader
+      image: busybox:1.36
+      command: ["sh", "-c", "mkdir -p /data && sleep 3600"]
+      volumeMounts:
+        - name: banklens-data
+          mountPath: /data
+  volumes:
+    - name: banklens-data
+      persistentVolumeClaim:
+        claimName: banklens-data

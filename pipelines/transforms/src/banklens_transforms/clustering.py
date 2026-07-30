@@ -47,7 +47,7 @@ def build_matrix(gold_rows: list[dict], features: list[str] = FEATURES):
 
     # standardize (z-score) per column
     n = len(raw)
-    cols = list(zip(*raw)) if raw else []
+    cols = list(zip(*raw, strict=True)) if raw else []
     mu = [sum(c) / n for c in cols]
     sd = [math.sqrt(sum((v - mu[j]) ** 2 for v in c) / n) or 1.0 for j, c in enumerate(cols)]
     X = [[(raw[i][j] - mu[j]) / sd[j] for j in range(len(features))] for i in range(n)]
@@ -92,7 +92,7 @@ def kmeans(X, k, *, seed=42, restarts=6, max_iter=100):
             for c in range(k):
                 members = [X[i] for i in range(len(X)) if labels[i] == c]
                 if members:
-                    centroids[c] = [sum(col) / len(members) for col in zip(*members)]
+                    centroids[c] = [sum(col) / len(members) for col in zip(*members, strict=True)]
             if not changed:
                 break
         inertia = sum(_sqdist(X[i], centroids[labels[i]]) for i in range(len(X)))

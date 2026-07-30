@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -72,7 +71,9 @@ def run(data_dir: Path, limit: int, refresh_days: int, start_date: str) -> None:
                 print(f"    FAILED: {e}")
     except MissingApiKey as e:
         print(f"\n{e}")
-        raise SystemExit(1)
+        # `from None`: the message is already printed for the user, so a chained
+        # traceback would add noise, not information, to a clean config-error exit.
+        raise SystemExit(1) from None
 
     print(f"\nLanded {landed}, skipped {skipped} (already fresh), failed {failed}.")
     print(f"Data under {out_root}")

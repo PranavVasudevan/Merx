@@ -116,7 +116,7 @@ def _matrix(rows, means):
 
 def _standardize(X):
     n, d = len(X), len(X[0])
-    cols = list(zip(*X))
+    cols = list(zip(*X, strict=True))
     mu = [sum(c) / n for c in cols]
     sd = [(sum((v - mu[j]) ** 2 for v in cols[j]) / n) ** 0.5 or 1.0 for j in range(d)]
     Xs = [[(X[i][j] - mu[j]) / sd[j] for j in range(d)] for i in range(n)]

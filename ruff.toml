@@ -1,0 +1,40 @@
+# Repo-wide lint contract for BankLens.
+#
+# Deliberately an EXPLICIT, minimal rule set rather than ruff's full defaults.
+# Rationale: this lint was added to an already-working ~135-test codebase. Adopting
+# every default style opinion at once would mean either (a) mass-rewriting working,
+# reviewed code to satisfy retroactive preferences, or (b) leaving lint permanently
+# non-blocking (`|| true`) — which is lint theater that catches nothing. Instead we
+# enable the rules that catch REAL defects and make those blocking in CI.
+#
+# Widening this set later is welcome — but do it as a deliberate, reviewed change
+# with the fixes in the same commit, not by flipping on defaults and hoping.
+
+line-length = 100
+target-version = "py311"
+
+exclude = [
+    "frontend",          # TypeScript — typechecked by `tsc`, not ruff
+    "data",
+    ".venv",
+    "**/__pycache__",
+]
+
+[lint]
+# F   — pyflakes: undefined names, unused imports/variables. Real bugs.
+# E9  — syntax / IO errors that stop the file being parsed at all.
+# B   — flake8-bugbear's genuine footguns (mutable default args, etc).
+#
+# Deliberately NOT selected (and why): BLE001 (blind except) — this codebase uses
+# broad `except Exception` in a few places where a crash must not propagate
+# (provider clients, MCP tool dispatch, the per-file test runners); each such site
+# carries an inline comment explaining the choice. Style/modernization families
+# (I, UP, RUF) are also out of scope for now — see the header note.
+select = ["F", "E9", "B"]
+
+[lint.flake8-bugbear]
+# B008 exists to catch MUTABLE default arguments (the classic `def f(x=[])` bug).
+# `range(...)` is immutable and stateless, so `k_range=range(2, 8)` in clustering.py
+# is safe — this is a false positive, correctly silenced by config rather than by
+# restructuring correct code or sprinkling `# noqa`.
+extend-immutable-calls = ["range"]

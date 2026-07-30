@@ -6,9 +6,12 @@ namespace: banklens-dev
 resources:
   - ../../base
   - namespace.yaml
+  - data-pvc.yaml
+  # data-loader.yaml is deliberately NOT here — it's a one-shot bootstrap pod
+  # applied directly by scripts/k8s_dev_up.ps1, not part of the running app.
 
 patches:
-  - path: bridge-hostpath-patch.yaml
+  - path: bridge-data-patch.yaml
     target:
       kind: Deployment
       name: banklens-bridge
@@ -24,3 +27,16 @@ patches:
       - op: add
         path: /spec/ports/0/nodePort
         value: 30080
+  # The frontend calls the bridge at http://localhost:8791 (hardcoded in
+  # src/api.ts), so the bridge needs a fixed host port too — otherwise the
+  # browser has nothing to talk to. Same NodePort trick.
+  - target:
+      kind: Service
+      name: banklens-bridge
+    patch: |
+      - op: replace
+        path: /spec/type
+        value: NodePort
+      - op: add
+        path: /spec/ports/0/nodePort
+        value: 30791

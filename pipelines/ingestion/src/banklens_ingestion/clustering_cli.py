@@ -65,7 +65,7 @@ def run(repdte: str, data_dir: Path, highlight_cert: int, k_override: int | None
     print(f"        so interpretability drives the choice. Using k={k}"
           f"{' (forced)' if k_override else f' (auto: best non-degenerate = {auto_k})'}.\n")
 
-    for g, lab in zip(kept, labels):
+    for g, lab in zip(kept, labels, strict=True):
         g["peer_cluster_id"] = lab
 
     # characterize clusters

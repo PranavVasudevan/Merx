@@ -28,7 +28,7 @@ Everything you need for the first slice is already standard Python 3.11+. Pull o
 # from the repo root
 powershell -File scripts/run_vertical_slice.ps1               # Wells Fargo (CERT 3511)
 powershell -File scripts/run_vertical_slice.ps1 -Cert 628     # JPMorgan Chase
-powershell -File scripts/run_tests.ps1                        # run the metric tests
+powershell -File scripts/run_tests.ps1                        # full suite: 23 files, 135 tests
 ```
 
 You'll see the balance sheet, the derived Gold features (uninsured-deposit %, loan-to-deposit, QoQ deltas), and the raw/normalised JSON written under `data/`.
@@ -114,12 +114,21 @@ the bridge image was missing `ml/` (the trained deposit-flight model card), whic
 surfaced as an honest "model not trained yet" error rather than silently serving
 wrong data — fixed by adding it to the Dockerfile like source, not runtime data.
 
-Kubernetes manifests (`platform/k8s/overlays/dev`) are validated with `kubectl
-kustomize` (genuinely correct YAML, zero warnings) but not yet applied to a live
-cluster — Docker Desktop's Kubernetes is a separate GUI settings toggle that needs
-enabling by hand (Settings → Kubernetes → Enable). See
-[`platform/k8s/README.md`](platform/k8s/README.md) for exactly what's verified vs.
-what still needs that one manual step.
+### On Kubernetes (Phase 8) — also deployed and verified for real
+
+```powershell
+powershell -File scripts/k8s_dev_up.ps1     # build, load data into a PVC, deploy
+kubectl port-forward -n banklens-dev svc/banklens-bridge 8791:8791   # 2nd terminal
+kubectl port-forward -n banklens-dev svc/banklens-web 8080:80        # 3rd terminal
+```
+
+Deployed to a real cluster (Docker Desktop k8s v1.36.1) with the whole UI verified
+in a browser against it. Doing it for real surfaced three gotchas that reading docs
+wouldn't have: Docker Desktop's k8s is **kind-based**, so `hostPath` can't reach
+your files at all (hence a PVC), mutable image tags are silently stale in its
+containerd (hence a unique tag per deploy), and NodePorts aren't published to
+Windows (hence `port-forward`). All three are written up in
+[`platform/k8s/README.md`](platform/k8s/README.md).
 
 ---
 
@@ -167,7 +176,7 @@ banklens/
 | 5 | MCP server & tooling — 11 tools, all 6 features + market data | ✅ reference done |
 | 6 | Agentic AI layer — supervisor + 4 specialists, 3 providers (Ollama/Gemini/Anthropic) | ✅ reference done, live-tested on Ollama |
 | 7 | Quant-terminal UI (X-Ray, Diff, Clusters, Risk, M&A, Stress, peer scatter, candles) | ✅ reference done |
-| 8 | Hardening, security, DR & GA | 🟡 containerization + K8s manifests started (real Dockerfiles + a validated Kustomize `dev` overlay); security/DR/GA not started |
+| 8 | Hardening, security, DR & GA | 🟡 containerization + K8s **deployed and verified on a real cluster**; CI made real (full suite + blocking lint). Security/DR/GA not started |
 
 ## Tooling as phases arrive
 

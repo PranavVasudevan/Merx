@@ -19,6 +19,10 @@ banklens-slice = "banklens_ingestion.cli:main"
 packages = ["src/banklens_ingestion"]
 
 [tool.ruff]
+# Inherit the repo-wide lint contract (see /ruff.toml). Without this `extend`,
+# ruff treats the nearest config as authoritative and this subtree would silently
+# fall back to ruff's defaults instead of the agreed rule set.
+extend = "../../ruff.toml"
 line-length = 100
 target-version = "py311"
 

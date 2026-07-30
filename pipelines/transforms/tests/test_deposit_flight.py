@@ -10,7 +10,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from banklens_transforms.deposit_flight import features_from, score_vector  # noqa: E402
-from banklens_transforms.logreg import LogisticRegression, auc, sigmoid  # noqa: E402
+from banklens_transforms.logreg import LogisticRegression, auc  # noqa: E402
 
 
 def test_logreg_separates_linearly_separable():

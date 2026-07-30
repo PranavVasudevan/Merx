@@ -15,6 +15,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from banklens_mcp import server  # noqa: E402
 
 
+class SkipTest(Exception):
+    """A test needs landed Bronze data that isn't present. `data/` is git-ignored
+    (it's reproducible from the landing scripts), so a fresh clone or CI legitimately
+    won't have it — that's a SKIP, not a failure."""
+
+
+def require_landed_data():
+    from banklens_mcp import data
+    if not data._POP.exists():
+        raise SkipTest(f"no landed population at {data._POP} "
+                       f"(run scripts/run_vertical_slice.ps1 / the landing scripts)")
+
+
 def test_initialize_reports_server_info():
     r = server.handle({"jsonrpc": "2.0", "id": 1, "method": "initialize",
                        "params": {"protocolVersion": "2025-06-18"}})
@@ -67,7 +80,9 @@ def test_uncoercible_value_passed_through_unchanged():
 
 
 def test_tools_call_actually_coerces_end_to_end():
-    """Full tools/call round trip with a string cert — must succeed, not 400."""
+    """Full tools/call round trip with a string cert — must succeed, not 400.
+    The only test in this file that needs real landed data."""
+    require_landed_data()
     r = server.handle({"jsonrpc": "2.0", "id": 5, "method": "tools/call",
                        "params": {"name": "get_bank_xray", "arguments": {"cert": "6976"}}})
     text = r["result"]["content"][0]["text"]
@@ -99,12 +114,20 @@ def test_unknown_method_returns_error():
 
 
 if __name__ == "__main__":
-    failures = 0
+    failures = skipped = 0
     for name, fn in sorted(globals().items()):
-        if name.startswith("test_") and callable(fn):
+        if name.startswith("test_") and callable(fn) and name != "require_landed_data":
             try:
                 fn(); print(f"PASS  {name}")
+            except SkipTest as e:
+                skipped += 1; print(f"SKIP  {name}: {e}")
             except AssertionError as e:
                 failures += 1; print(f"FAIL  {name}: {e}")
-    print("\n" + ("OK - all tests passed" if not failures else f"{failures} test(s) failed"))
+            except Exception as e:  # noqa: BLE001 — a crash is a failure, but must
+                # NOT abort the remaining tests (real bug: an uncaught RuntimeError
+                # used to kill the whole file, hiding every other test's result).
+                failures += 1; print(f"ERROR {name}: {type(e).__name__}: {e}")
+    tail = f" ({skipped} skipped)" if skipped else ""
+    print("\n" + (f"OK - all tests passed{tail}" if not failures
+                  else f"{failures} test(s) failed{tail}"))
     sys.exit(1 if failures else 0)
