@@ -5,7 +5,12 @@ so it runs with zero installs and is fully inspectable. Production (Phase 5) swa
 the official `mcp` SDK; the tool contracts in tools.py stay identical.
 
 Handles: initialize, notifications/initialized, ping, tools/list, tools/call.
-Every tool call is appended to data/mcp_audit.jsonl (the auditability requirement).
+Every tool call is logged to the real `mcp_audit_log` Postgres table (see
+libs/python/banklens_common/src/banklens_common/db.py — needs
+`docker compose -f platform/docker/docker-compose.dev.yml up -d postgres`).
+If Postgres is unreachable, falls back to appending data/mcp_audit.jsonl so a
+quick local run without Docker running doesn't lose its audit trail entirely,
+but warns once per process rather than failing silently.
 
 Run as an MCP server (configure an MCP client to launch it):
     $env:PYTHONPATH = "services/mcp-server/src;pipelines/transforms/src"
@@ -19,11 +24,14 @@ import json
 import sys
 import time
 
+from banklens_common import db as common_db
+
 from . import data
 from .tools import TOOLS, TOOL_BY_NAME
 
 PROTOCOL_VERSION = "2025-06-18"
 _AUDIT = data.DATA / "mcp_audit.jsonl"
+_pg_warned = False
 
 
 def _result(mid, result):
@@ -76,10 +84,20 @@ def _coerce_arguments(args: dict, schema: dict) -> dict:
 
 
 def _audit(tool, args, ok, ms):
+    global _pg_warned
+    ts = datetime.datetime.now(datetime.timezone.utc)
+    try:
+        common_db.record_audit(tool, args, ok, ms, ts=ts)
+        return
+    except Exception as exc:
+        if not _pg_warned:
+            print(f"[banklens_mcp] Postgres audit log unavailable ({exc}); "
+                  f"falling back to {_AUDIT} for this process", file=sys.stderr)
+            _pg_warned = True
     try:
         _AUDIT.parent.mkdir(parents=True, exist_ok=True)
-        rec = {"ts": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-               "tool": tool, "arguments": args, "ok": ok, "latency_ms": round(ms, 1)}
+        rec = {"ts": ts.isoformat(), "tool": tool, "arguments": args, "ok": ok,
+               "latency_ms": round(ms, 1)}
         with open(_AUDIT, "a", encoding="utf-8") as f:
             f.write(json.dumps(rec, default=str) + "\n")
     except Exception:

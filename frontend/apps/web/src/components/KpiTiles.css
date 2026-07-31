@@ -1,26 +1,26 @@
 .kpi-row {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 12px;
+  gap: var(--space-3);
 }
 @media (max-width: 980px) {
   .kpi-row { grid-template-columns: repeat(2, 1fr); }
   .kpi-wide { grid-column: span 2; }
 }
 
-.kpi-tile { padding: 14px 16px; }
+.kpi-tile { padding: var(--space-3) var(--space-4); }
 .kpi-label {
-  font-size: 11px;
+  font-size: var(--text-xs);
   letter-spacing: .06em;
   text-transform: uppercase;
   color: var(--text-muted);
   font-weight: 600;
 }
 .kpi-value {
-  font-size: 24px;
+  font-size: var(--text-2xl);
   font-weight: 650;
-  letter-spacing: -0.01em;
-  margin-top: 6px;
+  letter-spacing: -0.015em;
+  margin-top: var(--space-1);
   color: var(--text-primary);
 }
-.kpi-sub { font-size: 12px; margin-top: 4px; }
+.kpi-sub { font-size: var(--text-sm); margin-top: var(--space-1); }

@@ -1,16 +1,18 @@
-.fdiff-list { display: flex; flex-direction: column; gap: 8px; }
+.fdiff-list { display: flex; flex-direction: column; gap: var(--space-2); }
 .fdiff-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 12.5px;
-  padding: 6px 0;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+  padding: var(--space-2) 0;
   border-bottom: 1px solid var(--gridline);
+  transition: background-color var(--duration-fast) var(--ease-organic);
 }
 .fdiff-row:last-child { border-bottom: none; }
-.fdiff-arrow { font-size: 11px; width: 14px; }
+.fdiff-row:hover { background: var(--surface-2); }
+.fdiff-arrow { font-size: var(--text-xs); width: 14px; }
 .fdiff-up { color: var(--cat-red); }
 .fdiff-down { color: var(--cat-blue); }
 .fdiff-item { flex: 1; }
 .fdiff-change { width: 60px; text-align: right; font-weight: 600; }
-.fdiff-z { width: 56px; text-align: right; font-size: 11px; }
+.fdiff-z { width: 56px; text-align: right; font-size: var(--text-xs); }

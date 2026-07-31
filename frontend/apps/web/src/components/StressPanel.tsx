@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { motion } from 'motion/react';
 import { api } from '../api';
 import { chartColors } from '../colors';
 import type { StressResult } from '../types';
@@ -14,12 +15,12 @@ function WaterfallTip({ active, payload }: { active?: boolean; payload?: { paylo
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
   return (
-    <div className="chart-tooltip">
+    <motion.div className="chart-tooltip" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.12 }}>
       <div className="chart-tooltip-label">{d.label}</div>
       <div className="chart-tooltip-value tabular">
         {d.kind === 'loss' ? '−' : ''}{fmtB(Math.abs(d.delta))}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -29,14 +30,15 @@ export function StressPanel({ cert }: { cert: number }) {
   const [rateBps, setRateBps] = useState(200);
   const [result, setResult] = useState<StressResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const colors = chartColors();
 
   useEffect(() => {
     setLoading(true);
     const t = setTimeout(() => {
       api.stressTest(cert, loanLoss, outflow, rateBps)
-        .then(setResult)
-        .catch(() => setResult(null))
+        .then((r) => { setResult(r); setError(null); })
+        .catch((e: Error) => { setResult(null); setError(e.message); })
         .finally(() => setLoading(false));
     }, 300);
     return () => clearTimeout(t);
@@ -83,6 +85,14 @@ export function StressPanel({ cert }: { cert: number }) {
         </label>
       </div>
 
+      {error && !result && (
+        <p className="muted stress-liq-note">
+          {error.includes('not permitted')
+            ? 'Running the stress simulator requires the analyst role — sign in as analyst1 to use this panel.'
+            : error}
+        </p>
+      )}
+
       {result && (
         <>
           <div className={`stress-verdict ${result.passes_all ? 'stress-pass' : 'stress-fail'}`}>
@@ -111,7 +121,8 @@ export function StressPanel({ cert }: { cert: number }) {
                 axisLine={{ stroke: colors.baseline }} tickLine={false} width={130} />
               <Tooltip content={<WaterfallTip />} cursor={{ fill: 'var(--surface-2)' }} />
               <Bar dataKey="base" stackId="w" fill="transparent" />
-              <Bar dataKey="delta" stackId="w" radius={[0, 4, 4, 0]} maxBarSize={20}>
+              <Bar dataKey="delta" stackId="w" radius={[0, 4, 4, 0]} maxBarSize={20}
+                animationDuration={500} animationEasing="ease-out">
                 {waterfall.map((d, i) => (
                   <Cell key={i} fill={d.kind === 'total' ? colors.violet : colors.critical} />
                 ))}

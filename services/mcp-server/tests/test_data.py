@@ -57,15 +57,80 @@ def test_price_bars_containment_check_matches_a_real_ticker():
     assert base.resolve() in p.resolve().parents  # the check itself doesn't false-positive
 
 
+class SkipTest(Exception):
+    """Needs landed Bronze population data — see test_mcp.py's identical convention."""
+
+
+def _require_landed_population():
+    if not data._POP.exists():
+        raise SkipTest(f"no landed population at {data._POP}")
+
+
+def test_query_banks_matches_hand_filtered_python_semantics():
+    """DuckDB's query_banks() must return exactly what the Python filter it
+    replaced in tools.list_banks() used to (verified against real landed data,
+    not a synthetic fixture, before the SQL rewrite ever shipped)."""
+    _require_landed_population()
+    gold = data.population()["gold"]
+
+    def hand_filter(state=None, min_assets_b=None, max_assets_b=None, limit=20):
+        def keep(g):
+            if state and (g.get("state") or "").upper() != state.upper():
+                return False
+            a = (g.get("total_assets") or 0) / 1e9
+            if min_assets_b is not None and a < min_assets_b:
+                return False
+            if max_assets_b is not None and a > max_assets_b:
+                return False
+            return True
+        return [g["cert_number"] for g in
+                sorted((g for g in gold if keep(g)),
+                      key=lambda g: g.get("total_assets") or 0, reverse=True)[:limit]]
+
+    cases = [
+        {}, {"state": "NY", "max_assets_b": 20, "limit": 3},
+        {"min_assets_b": 5, "max_assets_b": 15, "limit": 100}, {"state": "ca", "limit": 10},
+    ]
+    for c in cases:
+        expected = hand_filter(**c)
+        actual = [g["cert_number"] for g in data.query_banks(**c)]
+        assert actual == expected, f"mismatch for {c}: expected {expected}, got {actual}"
+
+
+def test_query_banks_name_search_is_case_insensitive_substring():
+    _require_landed_population()
+    hits = data.query_banks(query="bank", limit=1000)
+    assert hits
+    assert all("bank" in g["name"].lower() for g in hits)
+
+
+def test_query_banks_sorted_descending_by_assets():
+    _require_landed_population()
+    hits = data.query_banks(limit=50)
+    assets = [g.get("total_assets") or 0 for g in hits]
+    assert assets == sorted(assets, reverse=True)
+
+
+def test_query_banks_limit_is_respected():
+    _require_landed_population()
+    total = len(data.population()["gold"])
+    assert len(data.query_banks(limit=5)) == 5
+    assert len(data.query_banks(limit=total + 1000)) == total
+
+
 if __name__ == "__main__":
-    failures = 0
+    failures = skipped = 0
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):
             try:
                 fn(); print(f"PASS  {name}")
+            except SkipTest as e:
+                skipped += 1; print(f"SKIP  {name}: {e}")
             except AssertionError as e:
                 failures += 1; print(f"FAIL  {name}: {e}")
             except Exception as e:  # noqa: BLE001 — a crash must not abort the rest
                 failures += 1; print(f"ERROR {name}: {type(e).__name__}: {e}")
-    print("\n" + ("OK - all tests passed" if not failures else f"{failures} test(s) failed"))
+    tail = f" ({skipped} skipped)" if skipped else ""
+    print("\n" + (f"OK - all tests passed{tail}" if not failures
+                  else f"{failures} test(s) failed{tail}"))
     sys.exit(1 if failures else 0)

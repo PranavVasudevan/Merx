@@ -23,7 +23,9 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 
-# Same PYTHONPATH the individual scripts/*.ps1 wrappers set up.
+# Same PYTHONPATH the individual scripts/*.ps1 wrappers set up. banklens_common
+# isn't here — it's a real editable pip install (`pip install -e
+# libs/python/banklens_common`), not a PYTHONPATH-only package like the rest.
 SRC_PATHS = [
     REPO / "services" / "agents" / "src",
     REPO / "services" / "mcp-server" / "src",
@@ -31,7 +33,7 @@ SRC_PATHS = [
     REPO / "pipelines" / "ingestion" / "src",
 ]
 
-SEARCH_DIRS = [REPO / "pipelines", REPO / "services"]
+SEARCH_DIRS = [REPO / "pipelines", REPO / "services", REPO / "libs"]
 
 _COUNT_RE = re.compile(r"^(PASS|FAIL|SKIP|ERROR)\s", re.MULTILINE)
 

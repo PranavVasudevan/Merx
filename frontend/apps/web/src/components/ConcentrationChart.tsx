@@ -25,7 +25,7 @@ export function ConcentrationChart({ profile }: { profile: BankProfile }) {
           <YAxis tick={{ fill: colors.muted, fontSize: 11 }} axisLine={false} tickLine={false}
             width={36} unit="%" />
           <Tooltip content={<CategoricalTooltip suffix="%" pctileKey="pctile" />} cursor={{ fill: 'var(--surface-2)' }} />
-          <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={54}>
+          <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={54} animationDuration={700} animationEasing="ease-out">
             {data.map((d) => <Cell key={d.label} fill={d.color} />)}
           </Bar>
         </BarChart>

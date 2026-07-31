@@ -1,0 +1,25 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "banklens-common"
+version = "0.1.0"
+description = "BankLens shared Python utilities — real Postgres/DuckDB wiring, config, identifiers"
+requires-python = ">=3.11"
+dependencies = ["psycopg[binary]>=3.2", "duckdb>=1.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/banklens_common"]
+
+[tool.ruff]
+extend = "../../../ruff.toml"
+line-length = 100
+target-version = "py311"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

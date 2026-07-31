@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "lightweight-charts": "^5.2.0",
+    "motion": "^12.43.0",
+    "oidc-client-ts": "^3.5.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "recharts": "^3.10.1"

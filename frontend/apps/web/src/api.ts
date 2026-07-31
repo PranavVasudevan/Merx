@@ -2,6 +2,7 @@ import type {
   BankProfile, CandlesResult, FilingDiffResult, MaFitResult, MarketSnapshot, PeerClusterResult,
   PopulationBank, RiskScoreResult, StressResult, XrayResult,
 } from './types';
+import { getCurrentUser } from './auth';
 
 const BASE = 'http://localhost:8791/api';
 
@@ -10,7 +11,13 @@ async function get<T>(path: string, params: Record<string, string | number | und
     .filter(([, v]) => v !== undefined && v !== '')
     .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`)
     .join('&');
-  const res = await fetch(`${BASE}${path}${qs ? `?${qs}` : ''}`);
+  // The bridge gates every route except /api/health behind a real Keycloak
+  // token (see services/api-gateway/src/auth.py) — attach it on every call.
+  const user = await getCurrentUser();
+  const headers: HeadersInit = user?.access_token
+    ? { Authorization: `Bearer ${user.access_token}` }
+    : {};
+  const res = await fetch(`${BASE}${path}${qs ? `?${qs}` : ''}`, { headers });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error || `${res.status} ${res.statusText}`);

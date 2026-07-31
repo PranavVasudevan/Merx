@@ -1,5 +1,7 @@
-# BankLens production connector SDK (Rust) — the throughput/safety rewrite of
-# pipelines/ingestion once data shapes are understood. Skeleton only for now.
+# BankLens production connector SDK (Rust) — real implementation of the FDIC
+# BankFind connector, ported from pipelines/ingestion/src/banklens_ingestion
+# (Python reference kept as-is; this is Bronze-layer only, not a full port of
+# every source — see src/main.rs and README.md for exact scope).
 [package]
 name = "banklens-ingestion"
 version = "0.1.0"
@@ -8,13 +10,14 @@ description = "BankLens Bronze-layer connectors (production, Rust)"
 license = "LicenseRef-Proprietary"
 
 [dependencies]
-# Uncomment when the Rust toolchain is installed and this phase begins:
-# tokio = { version = "1", features = ["full"] }
-# reqwest = { version = "0.12", features = ["json", "gzip"] }
-# serde = { version = "1", features = ["derive"] }
-# serde_json = "1"
-# arrow = "52"
-# object_store = "0.10"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time"] }
+reqwest = { version = "0.12", features = ["json", "cookies"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+scraper = "0.20"
+regex = "1"
 
 [[bin]]
 name = "banklens-ingest"

@@ -12,6 +12,12 @@ FROM python:3.13-slim
 
 WORKDIR /app
 
+# banklens_mcp.data imports duckdb unconditionally (the Gold-layer SQL query
+# engine backing list_banks — see CHANGELOG.md's DuckDB entry). Found live: a
+# container built without this crashes at import time on the first request.
+# prometheus-client backs bridge_server.py's /metrics endpoint (observability).
+RUN pip install --no-cache-dir duckdb prometheus-client
+
 # Preserve the exact relative directory depth the two REPO=Path(__file__)...
 # computations expect (bridge_server.py: parents[3]; data.py: parents[4]) —
 # copying anywhere else silently breaks their repo-root resolution.

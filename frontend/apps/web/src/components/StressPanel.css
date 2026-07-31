@@ -1,22 +1,61 @@
 .stress-controls {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 14px;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
 }
-.stress-slider { display: flex; flex-direction: column; gap: 6px; font-size: 12px; }
+.stress-slider { display: flex; flex-direction: column; gap: var(--space-2); font-size: var(--text-sm); }
 .stress-slider span { display: flex; justify-content: space-between; color: var(--text-secondary); }
+
+/* Custom range track/thumb — the native browser slider had zero styling
+   before this. Thumb press-feedback (scale down slightly, quick ease) is
+   the KokonutUI "quick scale press effect" pattern adapted to a plain CSS
+   input (their component code isn't directly copyable — it's a compiled
+   Motion+Tailwind component — so this reimplements the interaction, not the
+   markup: :active scales the thumb, everything eases with the same organic
+   curve the rest of the app uses). */
 .stress-slider input[type="range"] {
-  accent-color: var(--accent);
+  -webkit-appearance: none;
+  appearance: none;
   width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--gridline);
+  cursor: pointer;
 }
+.stress-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--surface);
+  box-shadow: 0 0 0 1px var(--border);
+  transition: transform var(--duration-fast) var(--ease-organic);
+}
+.stress-slider input[type="range"]:hover::-webkit-slider-thumb { transform: scale(1.12); }
+.stress-slider input[type="range"]:active::-webkit-slider-thumb { transform: scale(0.94); }
+.stress-slider input[type="range"]::-moz-range-thumb {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--surface);
+  box-shadow: 0 0 0 1px var(--border);
+  transition: transform var(--duration-fast) var(--ease-organic);
+}
+.stress-slider input[type="range"]:hover::-moz-range-thumb { transform: scale(1.12); }
+.stress-slider input[type="range"]:active::-moz-range-thumb { transform: scale(0.94); }
 
 .stress-verdict {
-  font-size: 12.5px;
+  font-size: var(--text-sm);
   font-weight: 650;
-  padding: 8px 12px;
-  border-radius: 6px;
-  margin-bottom: 12px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-3);
+  transition: background-color var(--duration-base) var(--ease-organic),
+              color var(--duration-base) var(--ease-organic);
 }
 .stress-pass { background: color-mix(in srgb, var(--status-good) 14%, transparent); color: var(--status-good); }
 .stress-fail { background: color-mix(in srgb, var(--status-critical) 14%, transparent); color: var(--status-critical); }
@@ -24,13 +63,18 @@
 .stress-ratio-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin-bottom: 14px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
 }
-.stress-ratio { background: var(--surface-2); border-radius: 6px; padding: 8px 10px; }
+.stress-ratio {
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  transition: background-color var(--duration-base) var(--ease-organic);
+}
 .stress-ratio-label { font-size: 10.5px; letter-spacing: .05em; }
-.stress-ratio-nums { font-size: 13px; margin-top: 3px; }
+.stress-ratio-nums { font-size: var(--text-base); margin-top: 3px; }
 .stress-good-text { color: var(--status-good); font-weight: 650; }
 .stress-bad-text { color: var(--status-critical); font-weight: 650; }
 
-.stress-liq-note { font-size: 12px; margin: 10px 0 0; }
+.stress-liq-note { font-size: var(--text-sm); margin: var(--space-2) 0 0; }

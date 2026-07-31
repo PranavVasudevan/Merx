@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   CartesianGrid, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis, ZAxis,
 } from 'recharts';
+import { motion } from 'motion/react';
 import { api } from '../api';
 import { chartColors } from '../colors';
 import type { PopulationBank } from '../types';
@@ -11,11 +12,11 @@ function Tip({ active, payload }: { active?: boolean; payload?: { payload: Popul
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
   return (
-    <div className="chart-tooltip">
+    <motion.div className="chart-tooltip" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.12 }}>
       <div className="chart-tooltip-label">{d.name}{d.isTarget ? ' (selected)' : ''}</div>
       <div className="chart-tooltip-sub">CRE {d.cre_pct.toFixed(0)}% · Uninsured {d.uninsured_pct.toFixed(0)}%</div>
       <div className="chart-tooltip-sub muted">{d.cluster_label} · ${d.assets_b.toFixed(1)}B</div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -44,9 +45,11 @@ export function PeerScatter({ cert }: { cert: number }) {
             label={{ value: 'Uninsured deposit %', angle: -90, position: 'insideLeft', fill: colors.muted, fontSize: 11 }} />
           <ZAxis range={[24, 24]} />
           <Tooltip content={<Tip />} cursor={{ strokeDasharray: '3 3', stroke: colors.baseline }} />
-          <Scatter name="Peer banks" data={others} fill={colors.muted} fillOpacity={0.45} />
+          <Scatter name="Peer banks" data={others} fill={colors.muted} fillOpacity={0.45}
+            animationDuration={600} animationEasing="ease-out" />
           {target && (
-            <Scatter name={target.name} data={[{ ...target, isTarget: true }]} fill={colors.blue} shape="star" />
+            <Scatter name={target.name} data={[{ ...target, isTarget: true }]} fill={colors.blue} shape="star"
+              animationDuration={600} animationEasing="ease-out" />
           )}
         </ScatterChart>
       </ResponsiveContainer>

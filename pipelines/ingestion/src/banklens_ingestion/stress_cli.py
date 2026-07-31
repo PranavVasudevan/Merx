@@ -15,7 +15,9 @@ import json
 from pathlib import Path
 
 from banklens_transforms.silver import to_bank_financials
-from banklens_transforms.stress import Shock, run_stress_test, starting_position
+from banklens_transforms.stress import (
+    Shock, run_stress_test, run_stress_test_quantlib, starting_position,
+)
 
 _LABELS = {"cet1": "CET1", "tier1": "Tier 1 RBC", "total": "Total RBC", "leverage": "Tier 1 leverage"}
 
@@ -24,7 +26,8 @@ def _b(v) -> str:
     return "n/a" if v is None else f"${v/1e9:,.2f}B"
 
 
-def run(cert: int, data_dir: Path, loan_loss: float, outflow: float, rate_bps: float) -> None:
+def run(cert: int, data_dir: Path, loan_loss: float, outflow: float, rate_bps: float,
+       compare_quantlib: bool = False) -> None:
     bronze = data_dir / "bronze" / "source=fdic" / f"cert={cert}" / "records.json"
     raw = json.loads(bronze.read_text(encoding="utf-8-sig"))
     silver = to_bank_financials(raw[0])          # latest quarter (records are DESC)
@@ -77,6 +80,20 @@ def run(cert: int, data_dir: Path, loan_loss: float, outflow: float, rate_bps: f
                              if res["passes_all"] else "FAIL — breaches a regulatory minimum"))
     print("=" * W)
 
+    if compare_quantlib:
+        ql_res = run_stress_test_quantlib(pos, shock)
+        ql_w = ql_res["capital_waterfall"]
+        print("\n  COMPARISON — linear duration approx (above) vs real QuantLib DCF re-price")
+        print(f"    AFS mark-to-market:  linear {_b(w['afs_mark_loss'])}   vs   "
+              f"quantlib {_b(ql_w['afs_mark_loss'])}")
+        print(f"    total capital hit:   linear {_b(w['total_capital_hit'])}   vs   "
+              f"quantlib {_b(ql_w['total_capital_hit'])}")
+        print(f"    CET1 after shock:    linear {res['after']['cet1']:.2f}%   vs   "
+              f"quantlib {ql_res['after']['cet1']:.2f}%")
+        print("    (convexity means the real re-price is always a SMALLER loss than the "
+              "linear approximation for a given yield rise — see quantlib_pricing.py)")
+        print("=" * W)
+
 
 def main() -> None:
     p = argparse.ArgumentParser(description="BankLens Feature 16 — capital buffer stress test")
@@ -85,8 +102,11 @@ def main() -> None:
     p.add_argument("--outflow", type=float, default=15.0, help="%% of deposits withdrawn")
     p.add_argument("--rate-bps", type=float, default=200.0, help="parallel rate rise (bps)")
     p.add_argument("--data-dir", type=Path, default=Path(__file__).resolve().parents[4] / "data")
+    p.add_argument("--quantlib", action="store_true",
+                   help="also show the real QuantLib DCF re-price alongside the linear approximation")
     args = p.parse_args()
-    run(args.cert, args.data_dir, args.loan_loss, args.outflow, args.rate_bps)
+    run(args.cert, args.data_dir, args.loan_loss, args.outflow, args.rate_bps,
+        compare_quantlib=args.quantlib)
 
 
 if __name__ == "__main__":

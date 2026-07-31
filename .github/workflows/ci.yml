@@ -10,6 +10,29 @@ jobs:
   python:
     name: Python — lint + full test suite
     runs-on: ubuntu-latest
+    # Real Postgres for banklens_common.db's round-trip tests (and the audit-log /
+    # agent-run wiring itself) — same pgvector/pgvector:pg16 image as
+    # platform/docker/docker-compose.dev.yml, so CI exercises the identical DB the
+    # MCP server and agent CLI actually write to, not a stand-in.
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: banklens
+          POSTGRES_PASSWORD: change_me_locally
+          POSTGRES_DB: banklens
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U banklens"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: banklens
+      POSTGRES_PASSWORD: change_me_locally
+      POSTGRES_DB: banklens
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -19,18 +42,60 @@ jobs:
       - name: Install lint tooling
         run: pip install ruff==0.16.0
 
+      # Editable install, not PYTHONPATH — this is a real installable dependency
+      # (psycopg, duckdb) other packages import as `banklens_common`, unlike the
+      # rest of the repo's PYTHONPATH-only packages.
+      - name: Install banklens_common (Postgres/DuckDB wiring)
+        run: pip install -e libs/python/banklens_common
+
+      # QuantLib's official prebuilt wheel (real compiled C++ under a SWIG
+      # Python binding) — needed by quantlib_pricing.py / stress.py's
+      # run_stress_test_quantlib(). PYTHONPATH-only for the rest of
+      # pipelines/transforms, so installing the one real dependency directly
+      # rather than `pip install -e` the whole package.
+      - name: Install QuantLib
+        run: pip install "QuantLib>=1.35"
+
       # BLOCKING, not `|| true`. The rule set is an explicit, minimal contract
       # (see /ruff.toml) chosen so it catches real defects without retroactively
       # rewriting working code — the repo passes it cleanly today.
       - name: Lint
         run: ruff check .
 
-      # Runs ALL 23 test files (135 tests). Tests needing landed Bronze data —
-      # `data/` is git-ignored and reproducible from the landing scripts — SKIP
-      # rather than fail here, so CI is honest about coverage instead of either
-      # lying (green on 2 files) or failing on absent data.
+      # Runs every test file under pipelines/, services/, libs/. Tests needing
+      # landed Bronze data (`data/`, git-ignored and reproducible from the landing
+      # scripts) SKIP rather than fail here, so CI is honest about coverage
+      # instead of either lying (green on a handful of files) or failing on
+      # absent data. Postgres above means the DB round-trip tests actually RUN
+      # in CI rather than skipping too.
       - name: Tests
         run: python scripts/run_all_tests.py
+
+  rust:
+    name: Rust — clippy + test (stress-engine, ingestion)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      # Both crates are real, not skeletons — see CHANGELOG.md's Phase 9 entry
+      # for the parity/interop verification done locally against the Python
+      # reference before this landed (byte-for-byte stress-test output match,
+      # full Silver/Gold/X-Ray pipeline run against Rust-landed Bronze data).
+      - name: Clippy — stress-engine
+        run: cargo clippy --release --all-targets --manifest-path services/stress-engine/Cargo.toml
+      - name: Test — stress-engine (incl. proptest property tests)
+        run: cargo test --release --manifest-path services/stress-engine/Cargo.toml
+
+      - name: Clippy — ingestion
+        run: cargo clippy --release --all-targets --manifest-path services/ingestion/Cargo.toml
+      # Hermetic only (envelope parsing, checksum, Bronze partition layout) —
+      # no live FDIC network calls in CI, same convention as
+      # pipelines/ingestion/tests/test_fdic.py.
+      - name: Test — ingestion
+        run: cargo test --release --manifest-path services/ingestion/Cargo.toml
 
   frontend:
     name: Frontend — typecheck + build
@@ -70,3 +135,9 @@ jobs:
         run: |
           kubectl kustomize platform/k8s/base > /dev/null
           kubectl kustomize platform/k8s/overlays/dev > /dev/null
+
+      # Catches YAML/schema mistakes in the Postgres/Prometheus/Grafana dev
+      # stack (docker-compose.dev.yml) that `docker build` above wouldn't —
+      # this file was never checked in CI before.
+      - name: Validate docker-compose.dev.yml
+        run: docker compose -f platform/docker/docker-compose.dev.yml config --quiet

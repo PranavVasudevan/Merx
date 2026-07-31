@@ -1,3 +1,4 @@
+import { motion } from 'motion/react';
 import type { XrayResult } from '../types';
 import './XrayPanel.css';
 
@@ -26,7 +27,12 @@ export function XrayPanel({ xray }: { xray: XrayResult }) {
             </div>
             {f.peer_percentile !== undefined && (
               <div className="xray-pctile-track">
-                <div className="xray-pctile-fill" style={{ width: `${f.peer_percentile}%` }} />
+                <motion.div
+                  className="xray-pctile-fill"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${f.peer_percentile}%` }}
+                  transition={{ duration: 0.7, ease: [0.85, 0, 0.15, 1] }}
+                />
                 <span className="xray-pctile-label muted tabular">{f.peer_percentile}th percentile vs peers</span>
               </div>
             )}

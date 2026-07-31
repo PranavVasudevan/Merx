@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import { api, type BankSearchResult } from '../api';
 import './BankSearch.css';
 
@@ -33,20 +34,31 @@ export function BankSearch({ onSelect }: { onSelect: (cert: number, name: string
         onChange={(e) => setQuery(e.target.value)}
         onFocus={() => results.length > 0 && setOpen(true)}
       />
-      {open && results.length > 0 && (
-        <div className="bank-search-results">
-          {results.map((b) => (
-            <button
-              key={b.cert}
-              className="bank-search-result"
-              onClick={() => { onSelect(b.cert, b.name); setQuery(b.name); setOpen(false); }}
-            >
-              <span className="bsr-name">{b.name}</span>
-              <span className="muted bsr-meta">${b.assets_b.toFixed(1)}B · {b.state ?? '—'}</span>
-            </button>
-          ))}
-        </div>
-      )}
+      <AnimatePresence>
+        {open && results.length > 0 && (
+          <motion.div
+            className="bank-search-results"
+            initial={{ opacity: 0, y: -6, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.98 }}
+            transition={{ duration: 0.16, ease: [0.85, 0, 0.15, 1] }}
+          >
+            {results.map((b, i) => (
+              <motion.button
+                key={b.cert}
+                className="bank-search-result"
+                onClick={() => { onSelect(b.cert, b.name); setQuery(b.name); setOpen(false); }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1, transition: { delay: i * 0.02, duration: 0.15 } }}
+                whileHover={{ x: 2 }}
+              >
+                <span className="bsr-name">{b.name}</span>
+                <span className="muted bsr-meta">${b.assets_b.toFixed(1)}B · {b.state ?? '—'}</span>
+              </motion.button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

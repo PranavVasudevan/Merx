@@ -1,30 +1,56 @@
 .app-shell {
   max-width: 1180px;
   margin: 0 auto;
-  padding: 22px 24px 60px;
+  padding: var(--space-5) var(--space-5) 60px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: var(--space-4);
+}
+
+.app-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
 }
 
 .app-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
-  padding-bottom: 6px;
+  gap: var(--space-5);
+  padding-bottom: var(--space-2);
 }
-.app-brand { display: flex; align-items: baseline; gap: 10px; }
-.app-logo { font-size: 19px; font-weight: 700; letter-spacing: -0.01em; }
-.app-tagline { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; }
+.app-brand { display: flex; align-items: baseline; gap: var(--space-2); }
+.app-logo {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.app-tagline { font-size: var(--text-xs); letter-spacing: .06em; text-transform: uppercase; }
+
+.app-user { display: flex; align-items: center; gap: var(--space-2); flex-shrink: 0; }
+.app-user-name { font-size: var(--text-xs); white-space: nowrap; }
+.app-user-logout {
+  border: 1px solid var(--gridline);
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  padding: 5px 11px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-organic),
+              border-color var(--duration-fast) var(--ease-organic);
+}
+.app-user-logout:hover { background: var(--surface-2); border-color: var(--border-strong); }
 
 .app-grid {
   display: grid;
   grid-template-columns: 1.6fr 1fr;
-  gap: 18px;
+  gap: var(--space-4);
   align-items: start;
 }
-.app-col { display: flex; flex-direction: column; gap: 18px; }
+.app-col { display: flex; flex-direction: column; gap: var(--space-4); }
 
 @media (max-width: 880px) {
   .app-grid { grid-template-columns: 1fr; }
@@ -33,27 +59,27 @@
 .app-banner-error {
   background: color-mix(in srgb, var(--status-critical) 12%, transparent);
   color: var(--status-critical);
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 13px;
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
 }
 
 .app-error {
   max-width: 520px;
   margin: 80px auto;
   text-align: center;
-  padding: 0 20px;
+  padding: 0 var(--space-5);
 }
 .app-error code {
   background: var(--surface-2);
   padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 12.5px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
 }
 
 .app-footer {
   text-align: center;
-  font-size: 11.5px;
-  padding-top: 20px;
+  font-size: var(--text-xs);
+  padding-top: var(--space-5);
   border-top: 1px solid var(--gridline);
 }

@@ -1,10 +1,10 @@
 .risk-gauge-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
 }
-.risk-score-value { font-size: 26px; font-weight: 700; min-width: 70px; }
+.risk-score-value { font-size: var(--text-2xl); font-weight: 700; min-width: 70px; }
 .risk-gauge-track {
   flex: 1;
   height: 10px;
@@ -12,5 +12,5 @@
   background: var(--gridline);
   overflow: hidden;
 }
-.risk-gauge-fill { height: 100%; border-radius: 5px; transition: width .3s; }
-.risk-zone-label { font-size: 12px; white-space: nowrap; }
+.risk-gauge-fill { height: 100%; border-radius: 5px; }
+.risk-zone-label { font-size: var(--text-sm); white-space: nowrap; }

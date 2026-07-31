@@ -4,9 +4,15 @@ Stress-tests one bank's REAL filed balance sheet under user-defined shocks and s
 how CET1 / Tier 1 / Total / Leverage ratios move against regulatory minimums.
 
 Deliberately transparent math — NOT a model — because stress-test logic must be
-auditable. The Rust engine (services/stress-engine) will port this exact logic and
-bridge QuantLib for proper duration/curve analytics; here we use a modified-duration
-approximation for rate shocks, which is standard and easy to inspect.
+auditable. `run_stress_test()` uses a modified-duration approximation for rate
+shocks (standard, easy to inspect, and what the Rust port in
+services/stress-engine mirrors exactly — verified byte-for-byte, see
+CHANGELOG.md). `run_stress_test_quantlib()` is a real upgrade: it replaces that
+linear approximation with an actual QuantLib DCF re-price (see
+quantlib_pricing.py) that captures convexity, which the linear formula can't.
+Both share the same loan-loss/liquidity/SVB-chain logic below via
+`_apply_shocks()` — only how the AFS/HTM rate-shock dollar loss gets computed
+differs between the two.
 
 Baseline reproduces the bank's reported ratios exactly (we derive RWA / leverage
 denominator from the reported capital dollars + ratios), so any change you see is
@@ -34,6 +40,9 @@ class Shock:
     htm_duration: float = 6.0         # modified duration of the HTM book (years)
     tax_rate: float = 0.0             # loss tax shield (0 = conservative)
     realize_htm_on_shortfall: bool = True  # forced HTM sales realize their loss
+    base_yield: float = 0.045         # assumed current book yield (only used by
+                                       # run_stress_test_quantlib's DCF re-price;
+                                       # ignored by the linear approximation)
 
 
 def starting_position(silver: dict) -> dict:
@@ -72,8 +81,11 @@ def _ratios(cet1, tier1, total, rwa, lev_denom) -> dict:
             "total": r(total, rwa), "leverage": r(tier1, lev_denom)}
 
 
-def run_stress_test(pos: dict, shock: Shock) -> dict:
-    """Apply shocks to a starting position and recompute capital ratios."""
+def _apply_shocks(pos: dict, shock: Shock, afs_loss: float, htm_unrealized: float) -> dict:
+    """Shared loan-loss / liquidity / SVB-chain / capital-ratio logic for both
+    run_stress_test() and run_stress_test_quantlib() — identical for both,
+    only how `afs_loss`/`htm_unrealized` (the rate-shock dollar marks) get
+    computed differs between the two callers."""
     loans = pos["total_loans"] or 0.0
     deposits = pos["total_deposits"] or 0.0
     cash = pos["cash"] or 0.0
@@ -83,12 +95,7 @@ def run_stress_test(pos: dict, shock: Shock) -> dict:
     # 1) credit losses on the loan book
     loan_loss = shock.loan_loss_pct / 100.0 * loans
 
-    # 2) rate shock -> mark-to-market losses (modified-duration approximation)
-    dy = shock.rate_shock_bps / 10000.0
-    afs_loss = afs * shock.afs_duration * dy
-    htm_unrealized = htm * shock.htm_duration * dy   # a memo item unless realized
-
-    # 3) deposit outflow -> may force selling HTM, realizing its loss (the SVB chain)
+    # 2) deposit outflow -> may force selling HTM, realizing its loss (the SVB chain)
     outflow = shock.deposit_outflow_pct / 100.0 * deposits
     liquidity = cash + afs                            # AFS is sellable; cash on hand
     shortfall = max(0.0, outflow - liquidity)
@@ -130,3 +137,42 @@ def run_stress_test(pos: dict, shock: Shock) -> dict:
             "htm_unrealized_loss_memo": round(htm_unrealized, 0),
         },
     }
+
+
+def run_stress_test(pos: dict, shock: Shock) -> dict:
+    """Apply shocks to a starting position and recompute capital ratios, using
+    a modified-duration approximation for rate shocks. This is the version the
+    Rust port (services/stress-engine) mirrors exactly."""
+    afs = pos["securities_afs"] or 0.0
+    htm = pos["securities_htm"] or 0.0
+
+    # rate shock -> mark-to-market losses (modified-duration approximation)
+    dy = shock.rate_shock_bps / 10000.0
+    afs_loss = afs * shock.afs_duration * dy
+    htm_unrealized = htm * shock.htm_duration * dy   # a memo item unless realized
+
+    return _apply_shocks(pos, shock, afs_loss, htm_unrealized)
+
+
+def run_stress_test_quantlib(pos: dict, shock: Shock) -> dict:
+    """Same as run_stress_test(), except the AFS/HTM rate-shock dollar marks
+    come from a real QuantLib DCF re-price (quantlib_pricing.py) instead of
+    the linear duration approximation — this captures bond convexity, so the
+    resulting loss is consistently SMALLER in magnitude than run_stress_test's
+    for the same shock (verified in test_quantlib_pricing.py and
+    test_stress.py). See quantlib_pricing.py's module docstring for the
+    single-representative-bond modeling scope.
+    """
+    from . import quantlib_pricing  # local: only pay for the QuantLib import on this path
+
+    afs = pos["securities_afs"] or 0.0
+    htm = pos["securities_htm"] or 0.0
+
+    afs_loss = quantlib_pricing.loss_from_reprice(
+        afs, shock.afs_duration, shock.base_yield, shock.rate_shock_bps)
+    htm_unrealized = quantlib_pricing.loss_from_reprice(
+        htm, shock.htm_duration, shock.base_yield, shock.rate_shock_bps)
+
+    result = _apply_shocks(pos, shock, afs_loss, htm_unrealized)
+    result["pricing_engine"] = "quantlib_dcf_reprice"
+    return result

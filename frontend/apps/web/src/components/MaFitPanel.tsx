@@ -1,3 +1,4 @@
+import { motion } from 'motion/react';
 import type { MaFitResult } from '../types';
 import './MaFitPanel.css';
 
@@ -12,7 +13,12 @@ export function MaFitPanel({ result }: { result: MaFitResult }) {
             <span className="mafit-rank muted">{i + 1}</span>
             <span className="mafit-name">{c.name}</span>
             <div className="mafit-bar-track">
-              <div className="mafit-bar-fill" style={{ width: `${(c.fit_score / max) * 100}%` }} />
+              <motion.div
+                className="mafit-bar-fill"
+                initial={{ width: 0 }}
+                animate={{ width: `${(c.fit_score / max) * 100}%` }}
+                transition={{ duration: 0.6, delay: i * 0.03, ease: [0.85, 0, 0.15, 1] }}
+              />
             </div>
             <span className="mafit-score tabular">{c.fit_score.toFixed(2)}</span>
           </div>

@@ -89,7 +89,8 @@ def main() -> None:
 
     proc.stdin.close()
     proc.wait(timeout=5)
-    print("\nAudit log: data/mcp_audit.jsonl")
+    print("\nAudit log: mcp_audit_log table in Postgres (docker compose up -d postgres), "
+          "or data/mcp_audit.jsonl if Postgres is unreachable")
 
 
 if __name__ == "__main__":

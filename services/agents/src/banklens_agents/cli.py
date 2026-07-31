@@ -9,8 +9,11 @@ Default provider is **ollama** (BANKLENS_LLM_PROVIDER env var overrides) — thi
 project has a hard $0 spending rule, and Ollama is the only backend that costs
 nothing to actually run. See providers.py / services/agents/README.md.
 
-Every run is saved to data/agent_runs/<timestamp>.json for audit, mirroring the MCP
-server's own per-tool-call audit log.
+Every run is saved to data/agent_runs/<timestamp>.json (the full transcript) AND
+indexed in the real `agent_runs` Postgres table (see banklens_common.db) so it's
+queryable without grepping flat files — same store the MCP server's own audit
+log now uses. If Postgres is unreachable the JSON transcript still gets written
+(that's the actual content); only the queryable index is skipped, with a warning.
 """
 
 from __future__ import annotations
@@ -20,6 +23,8 @@ import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+from banklens_common import db as common_db
 
 from . import providers
 from .agent import run_agent, to_json
@@ -70,10 +75,21 @@ def main() -> None:
         print("=" * 70)
 
         RUNS_DIR.mkdir(parents=True, exist_ok=True)
-        ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%f")
+        now = datetime.now(timezone.utc)
+        ts = now.strftime("%Y%m%dT%H%M%S%f")
         out = RUNS_DIR / f"{ts}.json"
         out.write_text(json.dumps(to_json(result), indent=2), encoding="utf-8")
         print(f"\n(transcript saved to {out.relative_to(REPO)})")
+
+        try:
+            model_id = providers.resolve_model(provider_name, args.model)
+            common_db.record_agent_run(
+                persona=persona.key, provider=provider_name, model=model_id,
+                question=question, answer=result.answer, ok=True,
+                transcript_path=str(out.relative_to(REPO)), ts=now)
+        except Exception as exc:
+            print(f"[banklens_agents] Postgres agent-run index unavailable ({exc}); "
+                  f"transcript is still saved to disk.", file=sys.stderr)
 
     except Exception as e:  # MissingApiKey (anthropic/gemini) or OllamaError
         print(f"\n{e}\n", file=sys.stderr)

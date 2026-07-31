@@ -8,8 +8,11 @@ the UI use. No business logic lives here that isn't already in banklens_transfor
 from __future__ import annotations
 
 import json
+import tempfile
 from collections import defaultdict
 from pathlib import Path
+
+import duckdb
 
 from banklens_transforms import clustering
 from banklens_transforms.footprint import build_footprints
@@ -71,6 +74,64 @@ def population() -> dict:
         "cluster_labels": cluster_labels,
     }
     return _cache["pop"]
+
+
+def duckdb_gold() -> duckdb.DuckDBPyConnection:
+    """A real DuckDB table over the computed Gold layer — the actual SQL query
+    surface for query_banks() below, not ad hoc Python list filtering.
+
+    Loading path: population()'s Gold rows -> a scratch NDJSON file ->
+    read_json_auto. Verified live that duckdb 1.5's Python API does NOT support
+    scanning a plain list-of-dicts directly (`InvalidInputException: ... not
+    suitable for replacement scans` — only DataFrame/Arrow/ndarray are), so the
+    NDJSON round-trip is the robust option that doesn't require adding a pandas
+    dependency just to get dict rows into a table. The scratch file is deleted
+    immediately after loading; only the in-memory table persists (for the life
+    of this cache entry, same as population()'s own cache).
+    """
+    if "duckdb_conn" in _cache:
+        return _cache["duckdb_conn"]
+    gold = population()["gold"]
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".ndjson", delete=False, encoding="utf-8"
+    ) as f:
+        for row in gold:
+            f.write(json.dumps(row, default=str) + "\n")
+        tmp_path = f.name
+    try:
+        con = duckdb.connect(":memory:")
+        con.execute("CREATE TABLE gold AS SELECT * FROM read_json_auto(?)", [tmp_path])
+    finally:
+        Path(tmp_path).unlink(missing_ok=True)
+    _cache["duckdb_conn"] = con
+    return con
+
+
+def query_banks(query: str | None = None, state: str | None = None,
+                min_assets_b: float | None = None, max_assets_b: float | None = None,
+                limit: int = 20) -> list[dict]:
+    """Filter/sort the Gold population via real SQL, replacing what used to be
+    a hand-rolled Python list comprehension in tools.list_banks()."""
+    con = duckdb_gold()
+    clauses, params = [], []
+    if query:
+        clauses.append("lower(name) LIKE ?")
+        params.append(f"%{query.lower()}%")
+    if state:
+        clauses.append("upper(state) = ?")
+        params.append(state.upper())
+    if min_assets_b is not None:
+        clauses.append("total_assets / 1e9 >= ?")
+        params.append(min_assets_b)
+    if max_assets_b is not None:
+        clauses.append("total_assets / 1e9 <= ?")
+        params.append(max_assets_b)
+    where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+    sql = f"SELECT * FROM gold {where} ORDER BY total_assets DESC NULLS LAST LIMIT ?"
+    params.append(limit)
+    cur = con.execute(sql, params)
+    cols = [c[0] for c in cur.description]
+    return [dict(zip(cols, row, strict=True)) for row in cur.fetchall()]
 
 
 def footprints() -> dict[int, dict]:

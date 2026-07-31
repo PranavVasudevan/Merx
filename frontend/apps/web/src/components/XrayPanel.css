@@ -1,16 +1,18 @@
-.xray-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 12.5px; }
-.xray-empty { margin: 0; font-size: 13px; }
+.xray-head { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); font-size: var(--text-sm); }
+.xray-empty { margin: 0; font-size: var(--text-base); }
 
-.xray-flags { display: flex; flex-direction: column; gap: 12px; }
+.xray-flags { display: flex; flex-direction: column; gap: var(--space-3); }
 .xray-flag {
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
   background: var(--surface-2);
+  transition: border-color var(--duration-fast) var(--ease-organic);
 }
-.xray-flag-top { display: flex; align-items: center; gap: 8px; }
-.xray-factor { font-weight: 600; font-size: 13px; flex: 1; }
-.xray-value { font-size: 13px; color: var(--text-secondary); }
+.xray-flag:hover { border-color: var(--border-strong); }
+.xray-flag-top { display: flex; align-items: center; gap: var(--space-2); }
+.xray-factor { font-weight: 600; font-size: var(--text-base); flex: 1; }
+.xray-value { font-size: var(--text-base); color: var(--text-secondary); }
 
 .xray-pctile-track {
   position: relative;
@@ -30,4 +32,4 @@
   font-size: 10.5px;
   margin-top: 4px;
 }
-.xray-note { margin: 6px 0 0; font-size: 12px; }
+.xray-note { margin: var(--space-2) 0 0; font-size: var(--text-sm); }

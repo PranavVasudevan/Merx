@@ -13,7 +13,12 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-banklens}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_locally}
       POSTGRES_DB: ${POSTGRES_DB:-banklens}
-    ports: ["5432:5432"]
+    # Host port 55432, not 5432: this machine already runs a native
+    # postgresql-x64-18 Windows service bound to 5432 (a different project).
+    # Confirmed live — publishing to 5432 silently lost that bind race and every
+    # client got "role banklens does not exist" from the wrong server. Internal
+    # container port stays 5432 (that's what K8s/manifests reference).
+    ports: ["${POSTGRES_PORT:-55432}:5432"]
     volumes: ["pgdata:/var/lib/postgresql/data"]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-banklens}"]
@@ -43,6 +48,68 @@ services:
   redis:
     image: redis:7-alpine
     ports: ["6379:6379"]
+
+  # Real observability, not scaffolding — scrapes the REST bridge's actual
+  # /metrics endpoint (services/api-gateway/src/bridge_server.py,
+  # prometheus-client backed). host.docker.internal reaches the bridge
+  # whether it runs bare (`python bridge_server.py`) or containerized via
+  # docker-compose.app.yml with its port published to the host.
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    volumes:
+      - ../observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports: ["9090:9090"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # no-op on Docker Desktop, needed on native Linux Docker
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_AUTH_ANONYMOUS_ENABLED: "true"        # local dev convenience only — see .env.example
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    volumes:
+      - ../observability/grafana/provisioning:/etc/grafana/provisioning:ro
+    ports: ["3000:3000"]
+    depends_on: [prometheus]
+
+  # Real OIDC provider, not scaffolding — gates the REST bridge (see
+  # services/api-gateway/src/bridge_server.py's _verify_token()). Realm/client/
+  # roles/test-users are scripted via banklens-realm.json (--import-realm),
+  # not manually clicked through the admin console, so this is reproducible.
+  # Host port 8081, not Keycloak's default 8080 — that's docker-compose.app.yml's
+  # web frontend port on this project.
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-change_me_locally}
+      KC_HEALTH_ENABLED: "true"
+    volumes:
+      - ../auth/keycloak/banklens-realm.json:/opt/keycloak/data/import/banklens-realm.json:ro
+    ports: ["8081:8080"]
+    healthcheck:
+      # The health endpoint lives on the management port (9000), NOT the app
+      # port (8080/8081) — found live: the first version of this healthcheck
+      # targeted 8080 and reported "unhealthy" forever despite Keycloak
+      # actually working fine (confirmed via real logins). No curl/wget in
+      # this image, but /dev/tcp works in its shell — verified live.
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q '\"status\": \"UP\"' <&3"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  # Real authorization policy engine, not just token validation duplicated —
+  # see platform/auth/opa/policy.rego for the actual viewer/analyst rules and
+  # bridge_server.py's _opa_authorize() for how the bridge calls it.
+  opa:
+    image: openpolicyagent/opa:0.70.0
+    command: ["run", "--server", "--addr", "0.0.0.0:8181", "/policies/policy.rego"]
+    volumes:
+      - ../auth/opa/policy.rego:/policies/policy.rego:ro
+    ports: ["8181:8181"]
 
 volumes:
   pgdata:

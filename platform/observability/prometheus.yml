@@ -1,0 +1,19 @@
+# Real scrape config for the BankLens REST bridge's /metrics endpoint (see
+# services/api-gateway/src/bridge_server.py — prometheus-client backed).
+#
+# host.docker.internal reaches the Windows/Mac host from inside a container —
+# works whether the bridge runs bare (`python bridge_server.py`) or
+# containerized via docker-compose.app.yml with its port published to the host.
+
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  - job_name: banklens-bridge
+    static_configs:
+      - targets: ["host.docker.internal:8791"]
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]

@@ -1,3 +1,4 @@
+import { motion } from 'motion/react';
 import type { BankProfile } from '../types';
 import './KpiTiles.css';
 
@@ -17,11 +18,16 @@ export function KpiTiles({ profile }: { profile: BankProfile }) {
   return (
     <div className="kpi-row">
       {tiles.map((t) => (
-        <div className={`kpi-tile panel${t.wide ? ' kpi-wide' : ''}`} key={t.label}>
+        <motion.div
+          className={`kpi-tile panel${t.wide ? ' kpi-wide' : ''}`}
+          key={t.label}
+          whileHover={{ y: -2 }}
+          transition={{ duration: 0.15, ease: [0.85, 0, 0.15, 1] }}
+        >
           <div className="kpi-label">{t.label}</div>
           <div className="kpi-value tabular">{t.value}</div>
           <div className="kpi-sub muted">{t.sub}</div>
-        </div>
+        </motion.div>
       ))}
     </div>
   );

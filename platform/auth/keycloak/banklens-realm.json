@@ -1,0 +1,63 @@
+{
+  "realm": "banklens",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "accessTokenLifespan": 1800,
+  "roles": {
+    "realm": [
+      { "name": "viewer", "description": "Can view bank profiles, X-ray, peer clusters, risk scores" },
+      { "name": "analyst", "description": "Viewer, plus can run the stress simulator and M&A fit matcher" }
+    ]
+  },
+  "users": [
+    {
+      "username": "viewer1",
+      "enabled": true,
+      "email": "viewer1@example.test",
+      "emailVerified": true,
+      "firstName": "Viewer",
+      "lastName": "One",
+      "requiredActions": [],
+      "credentials": [{ "type": "password", "value": "viewer123", "temporary": false }],
+      "realmRoles": ["viewer"]
+    },
+    {
+      "username": "analyst1",
+      "enabled": true,
+      "email": "analyst1@example.test",
+      "emailVerified": true,
+      "firstName": "Analyst",
+      "lastName": "One",
+      "requiredActions": [],
+      "credentials": [{ "type": "password", "value": "analyst123", "temporary": false }],
+      "realmRoles": ["viewer", "analyst"]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "banklens-web",
+      "enabled": true,
+      "publicClient": true,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:5173/*",
+        "http://localhost:8080/*",
+        "http://localhost:30080/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5173",
+        "http://localhost:8080",
+        "http://localhost:30080"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "fullScopeAllowed": true
+    }
+  ]
+}

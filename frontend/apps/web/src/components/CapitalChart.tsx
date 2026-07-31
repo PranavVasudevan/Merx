@@ -1,4 +1,5 @@
 import { Bar, BarChart, Cell, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { motion } from 'motion/react';
 import { chartColors } from '../colors';
 import type { BankProfile } from '../types';
 import './charts.css';
@@ -10,11 +11,11 @@ function Tip({ active, payload }: { active?: boolean; payload?: { payload: { lab
   const d = payload[0].payload;
   const pass = d.value >= d.min;
   return (
-    <div className="chart-tooltip">
+    <motion.div className="chart-tooltip" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.12 }}>
       <div className="chart-tooltip-label">{d.label}</div>
       <div className="chart-tooltip-value tabular">{d.value.toFixed(2)}%</div>
       <div className="chart-tooltip-sub muted">min {d.min}% — {pass ? 'passes' : 'breach'}</div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -37,7 +38,7 @@ export function CapitalChart({ profile }: { profile: BankProfile }) {
           <YAxis type="category" dataKey="label" tick={{ fill: colors.muted, fontSize: 11 }}
             axisLine={{ stroke: colors.baseline }} tickLine={false} width={58} />
           <Tooltip content={<Tip />} cursor={{ fill: 'var(--surface-2)' }} />
-          <Bar dataKey="value" radius={[0, 4, 4, 0]} maxBarSize={22}>
+          <Bar dataKey="value" radius={[0, 4, 4, 0]} maxBarSize={22} animationDuration={700} animationEasing="ease-out">
             {data.map((d) => (
               <Cell key={d.label} fill={d.value >= d.min ? colors.good : colors.critical} />
             ))}

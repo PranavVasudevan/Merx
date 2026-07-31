@@ -4,7 +4,8 @@ The MCP server speaks JSON-RPC over stdio, which a browser can't call directly.
 This bridge exposes the SAME tool functions (no duplicated logic) as plain REST/JSON
 over HTTP, for the quant-terminal frontend (Phase 7). Production (Phase 5+) will
 likely front the official MCP server with a proper gRPC/REST gateway; this reference
-keeps things runnable with zero installs (stdlib `http.server` only).
+keeps things runnable with zero installs (stdlib `http.server` only) plus one real
+dependency for observability (prometheus-client — see /metrics below).
 
 Run:
     $env:PYTHONPATH = "services/mcp-server/src;pipelines/transforms/src"
@@ -16,10 +17,15 @@ from __future__ import annotations
 import json
 import os
 import sys
+import time
 import traceback
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
+
+import auth
 
 REPO = Path(__file__).resolve().parents[3]
 for rel in ("services/mcp-server/src", "pipelines/transforms/src"):
@@ -30,6 +36,18 @@ for rel in ("services/mcp-server/src", "pipelines/transforms/src"):
 from banklens_mcp import data, tools  # noqa: E402
 
 PORT = 8791
+
+# Real metrics (platform/docker/docker-compose.dev.yml's prometheus service
+# scrapes GET /metrics), not a stub — see CHANGELOG.md for the live
+# Prometheus+Grafana verification. `route` is always one of the fixed
+# ROUTES[].route strings below (query-string params, no path params), so this
+# label can't blow up in cardinality the way per-ID path segments would.
+REQUEST_COUNT = Counter(
+    "banklens_bridge_requests_total", "Total HTTP requests handled by the REST bridge",
+    ["route", "status"])
+REQUEST_LATENCY = Histogram(
+    "banklens_bridge_request_duration_seconds", "Request latency in seconds",
+    ["route"])
 
 
 def _cap(cert: int) -> int:
@@ -113,17 +131,47 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
+
+        if parsed.path == "/metrics":
+            body = generate_latest()
+            self.send_response(200)
+            self.send_header("Content-Type", CONTENT_TYPE_LATEST)
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
+
         query = {k: v[0] for k, v in urllib.parse.parse_qs(parsed.query).items()}
         for method, route, fn in ROUTES:
             if method == "GET" and parsed.path == route:
+                start = time.time()
+                status = 200
                 try:
+                    if auth.AUTH_ENABLED and route not in auth.OPEN_ROUTES:
+                        claims = auth.authenticate(self.headers.get("Authorization"))
+                        auth.authorize(route, "GET", auth.roles_from_claims(claims))
                     self._send(200, fn(query))
+                except auth.AuthError as e:
+                    status = 401
+                    self._send(401, {"error": str(e)})
+                except auth.ForbiddenError as e:
+                    status = 403
+                    self._send(403, {"error": str(e)})
+                except auth.AuthUnavailable as e:
+                    status = 503
+                    self._send(503, {"error": str(e)})
                 except KeyError as e:
+                    status = 400
                     self._send(400, {"error": f"missing required param: {e}"})
                 except Exception as e:
+                    status = 400
                     traceback.print_exc()
                     self._send(400, {"error": str(e)})
+                finally:
+                    REQUEST_COUNT.labels(route=route, status=str(status)).inc()
+                    REQUEST_LATENCY.labels(route=route).observe(time.time() - start)
                 return
+        REQUEST_COUNT.labels(route="unmatched", status="404").inc()
         self._send(404, {"error": f"no route for {parsed.path}"})
 
 

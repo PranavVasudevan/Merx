@@ -26,20 +26,10 @@ def _need_bank(cert: int) -> dict:
 # ---- handlers ------------------------------------------------------------
 def list_banks(query: str = None, state: str = None, min_assets_b: float = None,
                max_assets_b: float = None, limit: int = 20) -> dict:
-    rows = data.population()["gold"]
-    def keep(g):
-        if query and query.lower() not in (g.get("name") or "").lower():
-            return False
-        if state and (g.get("state") or "").upper() != state.upper():
-            return False
-        a = (g.get("total_assets") or 0) / 1e9
-        if min_assets_b is not None and a < min_assets_b:
-            return False
-        if max_assets_b is not None and a > max_assets_b:
-            return False
-        return True
-    hits = sorted((g for g in rows if keep(g)),
-                  key=lambda g: g.get("total_assets") or 0, reverse=True)[:limit]
+    """Search/filter the Gold population — real SQL via data.query_banks()
+    (DuckDB), not a hand-rolled Python filter/sort."""
+    hits = data.query_banks(query=query, state=state, min_assets_b=min_assets_b,
+                            max_assets_b=max_assets_b, limit=limit)
     return {"count": len(hits), "banks": [{
         "cert": g["cert_number"], "name": g["name"], "state": g.get("state"),
         "assets_b": round((g.get("total_assets") or 0) / 1e9, 1),

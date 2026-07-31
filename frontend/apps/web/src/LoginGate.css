@@ -1,0 +1,82 @@
+.login-gate-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: 100vh;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.login-gate-spinner {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 2px solid var(--gridline);
+  border-top-color: var(--accent);
+  display: inline-block;
+}
+
+/* A quiet radial vignette behind the centered card — the login screen is
+   the one place worth a touch more visual richness than the flat, tint-only
+   depth the rest of the (data-dense) app uses; the card itself stays exactly
+   as restrained as everywhere else. */
+.login-gate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  padding: 0 var(--space-5);
+  background:
+    radial-gradient(600px 400px at 50% 38%, color-mix(in srgb, var(--accent) 6%, transparent), transparent 70%),
+    var(--page);
+}
+
+.login-gate-card {
+  max-width: 380px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  text-align: center;
+  padding: var(--space-6) var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-float);
+}
+
+.login-gate-mark {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: var(--space-1);
+}
+
+.login-gate-button {
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #fff;
+  font-size: var(--text-base);
+  font-weight: 600;
+  padding: 10px 22px;
+  cursor: pointer;
+  margin-top: var(--space-1);
+}
+.login-gate-button:hover { filter: brightness(1.08); }
+
+.login-gate-hint {
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+.login-gate-hint code {
+  background: var(--surface-2);
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+}

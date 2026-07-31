@@ -28,6 +28,17 @@ Neither finding involved secrets or PII — this project only ever serves public
 FDIC/SEC/Tiingo data — but "no PII at risk" doesn't mean "no bug," and both are
 fixed regardless.
 
+## Real auth (Phase 9): OIDC + OPA, fails closed
+
+The REST bridge now requires a real, signed Keycloak JWT plus a real OPA
+authorization decision for every route except `/api/health`/`/metrics` (see
+`platform/auth/README.md`, `services/api-gateway/src/auth.py`). Deliberately
+fails **closed**: if Keycloak or OPA are unreachable, requests are rejected
+(503), not silently allowed through — verified live by stopping the `opa`
+container mid-session and confirming an otherwise-valid request got rejected,
+not a silent pass. Set `BANKLENS_AUTH_ENABLED=false` only for local dev
+without the auth stack running; never in a shared/deployed environment.
+
 ## Supported versions
 
 Pre-GA: only `main` is supported.

@@ -7,7 +7,7 @@ name = "banklens-transforms"
 version = "0.1.0"
 description = "BankLens Bronze->Silver->Gold reference transforms (Phase 1)"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = ["QuantLib>=1.35"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.6", "black>=24"]
