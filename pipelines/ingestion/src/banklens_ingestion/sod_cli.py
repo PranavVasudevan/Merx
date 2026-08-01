@@ -11,9 +11,10 @@ via ~8 paginated requests.
 from __future__ import annotations
 
 import argparse
-import json
 from pathlib import Path
 
+from .bronze.writer import write_partition
+from .provenance import Provenance
 from .sources.sod import SodSource
 
 
@@ -22,11 +23,15 @@ def run(year: int, data_dir: Path) -> None:
     src = SodSource()
     records = src.fetch_all_branches(year)
     print(f"  got {len(records)} branch records")
+    placed = sum(1 for r in records if r.get("STCNTYBR") not in (None, ""))
+    print(f"  {placed} carry a branch-level FIPS county ({placed / max(len(records), 1):.1%})")
 
-    out_dir = data_dir / "bronze" / "source=fdic" / "sod" / f"year={year}"
-    out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "records.json").write_text(json.dumps(records, indent=2), encoding="utf-8")
-    print(f"Landed to {out_dir}\\records.json")
+    prov = Provenance.create(
+        source=src.name, endpoint=src.page_url(year, 0),
+        license=src.license, payload=records)
+    path = write_partition(records, prov, base_dir=data_dir / "bronze",
+                           source="fdic", parts=("sod", f"year={year}"))
+    print(f"Landed to {path}  (checksum {prov.checksum[:12]}...)")
 
 
 def main() -> None:

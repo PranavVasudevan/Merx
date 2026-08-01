@@ -158,3 +158,33 @@ class FdicSource(Source):
         for r in rows:
             r["_source_url"] = url
         return rows
+
+    def fetch_population(self, repdte: str, min_assets_k: int = 1_000_000,
+                         max_assets_k: int = 250_000_000) -> tuple[list[dict], str]:
+        """Every bank in the MVP asset band for one quarter, as (rows, source_url).
+
+        The whole slice arrives in ONE request: the band holds ~1,050 banks and the
+        API's `limit` ceiling is 10,000, so no pagination is needed (unlike SOD's
+        ~76k branch rows). Asset bounds are in $ THOUSANDS, matching FDIC's own
+        convention — $1B-$250B is 1_000_000 to 250_000_000.
+
+        Returns the URL alongside the rows so the caller can hand the REAL endpoint
+        to Provenance.create(); the previously-landed provenance listed a URL whose
+        field list didn't match the records, so replaying it wouldn't reproduce the
+        file. Deriving it here makes that class of drift impossible.
+        """
+        payload, url = self._get("financials", {
+            "filters": f"REPDTE:{repdte} AND ASSET:[{min_assets_k} TO {max_assets_k}]",
+            "fields": ",".join(FINANCIAL_FIELDS),
+            "sort_by": "ASSET", "sort_order": "DESC",
+            "limit": 10000,
+        })
+        rows = self._unwrap(payload)
+        total = payload.get("meta", {}).get("total")
+        if total is not None and len(rows) < total:
+            raise RuntimeError(
+                f"FDIC population for {repdte} returned {len(rows)} of {total} rows — "
+                f"the slice outgrew the 10,000-row single-request ceiling; add pagination.")
+        for r in rows:
+            r["_source_url"] = url
+        return rows, url
