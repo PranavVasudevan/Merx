@@ -68,6 +68,32 @@ FINANCIAL_FIELDS = [
     "RBC1AAJ",     # Tier 1 leverage ratio
     "EQV",         # equity / assets
     "LNLSDEPR",    # net loans / deposits (FDIC's own computation)
+    # ---- income statement ($ thousands unless noted) ----
+    "NETINC",      # net income
+    "INTINC",      # total interest income
+    "EINTEXP",     # total interest expense
+    "NONII",       # total non-interest income
+    "NONIX",       # total non-interest expense
+    "ELNATR",      # provision for credit losses
+    "NIMY",        # net interest margin (RATIO, %)
+    "ROA",         # return on assets (RATIO, %)
+    "ROE",         # return on equity (RATIO, %)
+    "EEFFR",       # efficiency ratio (RATIO, %)
+    # ---- asset quality ----
+    "NCLNLS",      # noncurrent loans & leases (90+ days past due or nonaccrual)
+    "NTLNLS",      # net charge-offs
+    "LNATRES",     # allowance for credit losses on loans & leases
+    "P3ASSET",     # assets past due 30-89 days (ASSET-level, not loan-level)
+    "P9ASSET",     # assets past due 90+ days (ASSET-level, not loan-level)
+    "ORE",         # other real estate owned (OREO) — the Texas Ratio numerator
+    "INTAN",       # intangible assets — for tangible common equity
+    "NPERFV",      # noncurrent assets + OREO / assets (RATIO, %)
+    # ---- funding composition (the SVB/Signature story, quantified) ----
+    "BRO",         # brokered deposits
+    "VOLIAB",      # volatile liabilities
+    "DEPLGAMT",    # deposits held in accounts over the insurance limit
+    "NTRTIME",     # total time deposits
+    "IDLNCORR",    # net loans & leases / core deposits (RATIO, %)
 ]
 
 INSTITUTION_FIELDS = ["NAME", "CERT", "STALP", "CITY", "ACTIVE", "ASSET", "DEP", "ESTYMD"]

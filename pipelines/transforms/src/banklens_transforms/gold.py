@@ -12,12 +12,46 @@ Still TODO (needs the peer population): ``percentile_rank_*``.
 from __future__ import annotations
 
 # Loan categories we report concentration for: canonical column -> label.
+#
+# These MUST be mutually disjoint or the ratios don't sum to a book and the chart is
+# a fabricated number. FDIC's RC-C schedule nests, and the nesting was verified
+# empirically against all 1,038 banks in the landed population rather than assumed:
+#
+#   LNRE  (real_estate_loans) = construction + multifamily + nonfarm_nonres
+#                               + residential_mortgage + farmland
+#       -> reconciles for 99.2% of banks ONLY once HELOC is removed, because
+#          LNRELOC (HELOC) is a SUBSET of LNRERES (1-4 family residential), which
+#          includes revolving open-end lines. Verified exactly on Dime Community:
+#          8.9395B - 0.0310B HELOC = 8.9086B = LNRE, to the dollar.
+#   LNCON (consumer_loans)    ⊃ credit_card + auto + consumer_other, but those three
+#          reconcile to the parent for only 36.6% of banks, so the TOTAL is the leaf
+#          and the three are reported as sub-components.
+#
+# An earlier draft used 12 "categories" that double-counted parents and children and
+# summed to 129.9% of the loan book on Wells Fargo. This 8-leaf set sums to a median
+# 98.7% (p99 100.3%), the ~1.3% residual being leases and other loan types.
 LOAN_CATEGORIES = {
-    "cre_loans": "cre",
-    "c_and_i_loans": "c_and_i",
+    "construction_loans": "construction",
+    "multifamily_loans": "multifamily",
+    "nonfarm_nonres_loans": "nonfarm_nonres",
     "residential_mortgage_loans": "residential_mortgage",
-    "consumer_loans": "consumer",
+    "farmland_loans": "farmland",
     "agricultural_loans": "agricultural",
+    "c_and_i_loans": "c_and_i",
+    "consumer_loans": "consumer",
+}
+
+# Reported alongside, but deliberately EXCLUDED from the concentration set above so
+# nothing is counted twice: roll-ups of the leaves, and sub-components within one.
+LOAN_ROLLUPS = {
+    "cre_loans": "cre",                       # construction + multifamily + nonfarm_nonres
+    "real_estate_loans": "real_estate",       # all five RE leaves
+}
+LOAN_SUBCOMPONENTS = {
+    "heloc_loans": "heloc",                   # within residential_mortgage
+    "credit_card_loans": "credit_card",       # within consumer
+    "auto_loans": "auto",                     # within consumer
+    "consumer_other_loans": "consumer_other",  # within consumer
 }
 
 
@@ -78,6 +112,103 @@ def cre_to_equity_pct(row: dict) -> float | None:
     return _pct(row.get("cre_loans"), row.get("total_equity"))
 
 
+def cre_to_total_capital_pct(row: dict) -> float | None:
+    """CRE loans / TOTAL RISK-BASED CAPITAL — the denominator the supervisory guidance
+    actually specifies.
+
+    The 2006 Interagency CRE Concentration Guidance (reaffirmed 2023) screens on CRE
+    at or above 300% of total risk-based capital *together with* 50% growth over 36
+    months. `cre_to_equity_pct` above uses book equity as a proxy, which runs high
+    because equity is smaller than total risk-based capital. This is the real ratio.
+    Returns None for CBLR electers and foreign branches, which report no total
+    risk-based capital — see data_quality.capital_basis.
+    """
+    return _pct(row.get("cre_loans"), row.get("total_capital"))
+
+
+def construction_to_total_capital_pct(row: dict) -> float | None:
+    """Construction & land development / total risk-based capital. The guidance's
+    *first* screening criterion is construction at or above 100% of capital — a
+    separate, tighter test than the 300% total-CRE one."""
+    return _pct(row.get("construction_loans"), row.get("total_capital"))
+
+
+# ---- profitability -------------------------------------------------------
+def net_interest_income(row: dict) -> float | None:
+    ii, ie = row.get("interest_income"), row.get("interest_expense")
+    return None if ii is None or ie is None else ii - ie
+
+
+def noninterest_income_share_pct(row: dict) -> float | None:
+    """Fee income as % of total revenue (net interest income + non-interest income).
+    A high share means earnings lean on fees rather than the lending spread."""
+    nii, fee = net_interest_income(row), row.get("noninterest_income")
+    if nii is None or fee is None:
+        return None
+    return _pct(fee, nii + fee)
+
+
+# ---- asset quality -------------------------------------------------------
+def npl_ratio_pct(row: dict) -> float | None:
+    """Noncurrent LOANS / gross LOANS. Uses NCLNLS (loan-level), deliberately not
+    P3ASSET/P9ASSET, which are ASSET-level and would be a unit mismatch here."""
+    return _pct(row.get("noncurrent_loans"), row.get("total_loans_gross"))
+
+
+def net_charge_off_rate_pct(row: dict) -> float | None:
+    return _pct(row.get("net_charge_offs"), row.get("total_loans_gross"))
+
+
+def allowance_to_loans_pct(row: dict) -> float | None:
+    return _pct(row.get("allowance_for_credit_losses"), row.get("total_loans_gross"))
+
+
+def allowance_coverage_pct(row: dict) -> float | None:
+    """Allowance / noncurrent loans — reserves per dollar already gone bad. Under
+    100% means the existing reserve doesn't cover loans already noncurrent."""
+    return _pct(row.get("allowance_for_credit_losses"), row.get("noncurrent_loans"))
+
+
+def texas_ratio_pct(row: dict) -> float | None:
+    """(Noncurrent loans + OREO) / (tangible common equity + allowance).
+
+    The classic bank-distress screen: above ~100% a bank's troubled assets exceed the
+    resources available to absorb them. Tangible common equity is equity less
+    intangibles — goodwill can't absorb a loss.
+    """
+    npl, oreo = row.get("noncurrent_loans"), row.get("other_real_estate_owned")
+    equity, intangibles = row.get("total_equity"), row.get("intangible_assets")
+    allowance = row.get("allowance_for_credit_losses")
+    if npl is None or equity is None:
+        return None
+    troubled = npl + (oreo or 0)
+    resources = equity - (intangibles or 0) + (allowance or 0)
+    return _pct(troubled, resources) if resources and resources > 0 else None
+
+
+# ---- funding composition -------------------------------------------------
+def brokered_deposit_pct(row: dict) -> float | None:
+    """Brokered deposits as % of total. Rate-shopping money that leaves fastest —
+    a central mechanism in both the 2023 failures and the 2008 thrift collapses."""
+    return _pct(row.get("brokered_deposits"), row.get("total_deposits"))
+
+
+def large_denomination_deposit_pct(row: dict) -> float | None:
+    """Deposits in accounts above the insurance limit, as % of total. Related to
+    uninsured_deposit_pct but measured account-side rather than balance-side."""
+    return _pct(row.get("large_denomination_deposits"), row.get("total_deposits"))
+
+
+def time_deposit_pct(row: dict) -> float | None:
+    return _pct(row.get("time_deposits"), row.get("total_deposits"))
+
+
+def volatile_liability_pct(row: dict) -> float | None:
+    """Volatile liabilities as % of assets — wholesale/short-term funding that can
+    reprice or vanish under stress."""
+    return _pct(row.get("volatile_liabilities"), row.get("total_assets"))
+
+
 def qoq_delta(current, previous) -> dict | None:
     if current is None or previous is None:
         return None
@@ -94,6 +225,11 @@ def gold_features(row: dict, prev: dict | None = None) -> dict:
     """
     conc = concentration_ratios(row)
     max_label, max_val = max_concentration(conc)
+    gross = row.get("total_loans_gross")
+    rollups = {f"concentration_ratio_{label}": _pct(row.get(col), gross)
+               for col, label in LOAN_ROLLUPS.items()}
+    subs = {f"concentration_ratio_{label}": _pct(row.get(col), gross)
+            for col, label in LOAN_SUBCOMPONENTS.items()}
     return {
         "cert_number": row.get("cert_number"),
         "name": row.get("name"),
@@ -104,11 +240,34 @@ def gold_features(row: dict, prev: dict | None = None) -> dict:
         "core_deposit_pct": core_deposit_pct(row),
         "loan_to_deposit_pct": loan_to_deposit_pct(row),
         "equity_to_assets_pct": equity_to_assets_pct(row),
-        # concentration (Feature 11 inputs)
-        **conc,
+        "brokered_deposit_pct": brokered_deposit_pct(row),
+        "large_denomination_deposit_pct": large_denomination_deposit_pct(row),
+        "time_deposit_pct": time_deposit_pct(row),
+        "volatile_liability_pct": volatile_liability_pct(row),
+        "loans_to_core_deposits_pct": row.get("loans_to_core_deposits_reported"),
+        # concentration (Feature 11 inputs). `conc` is the DISJOINT leaf set that
+        # max_concentration ranks over; rollups/subs are reported but never ranked,
+        # so a parent can't beat its own child.
+        **conc, **rollups, **subs,
         "max_loan_concentration_category": max_label,
         "max_loan_concentration_pct": max_val,
         "cre_to_equity_pct": cre_to_equity_pct(row),
+        "cre_to_total_capital_pct": cre_to_total_capital_pct(row),
+        "construction_to_total_capital_pct": construction_to_total_capital_pct(row),
+        # profitability
+        "net_interest_margin_pct": row.get("net_interest_margin_reported"),
+        "roa_pct": row.get("roa_reported"),
+        "roe_pct": row.get("roe_reported"),
+        "efficiency_ratio_pct": row.get("efficiency_ratio_reported"),
+        "net_interest_income": net_interest_income(row),
+        "noninterest_income_share_pct": noninterest_income_share_pct(row),
+        # asset quality
+        "npl_ratio_pct": npl_ratio_pct(row),
+        "net_charge_off_rate_pct": net_charge_off_rate_pct(row),
+        "allowance_to_loans_pct": allowance_to_loans_pct(row),
+        "allowance_coverage_pct": allowance_coverage_pct(row),
+        "texas_ratio_pct": texas_ratio_pct(row),
+        "noncurrent_assets_ratio_pct": row.get("noncurrent_assets_ratio_reported"),
         # capital adequacy (straight from FDIC)
         "cet1_ratio": row.get("cet1_ratio"),
         "tier1_rbc_ratio": row.get("tier1_rbc_ratio"),

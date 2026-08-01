@@ -44,12 +44,32 @@ RULES: list[Rule] = [
     Rule("loan_to_deposit_pct", "Loan-to-deposit (liquidity)", 90.0, 100.0,
          "higher_worse",
          "Loans funded beyond the deposit base lean on wholesale/volatile funding."),
-    Rule("max_loan_concentration_pct", "Single-sector loan concentration", 30.0, 40.0,
+    # Recalibrated against the real population distribution. The old 30/40 thresholds
+    # sat BELOW the 25th percentile and fired "high" for 84% of all banks — a constant,
+    # not a signal. Both thresholds are now plain-English statements that hold up:
+    # above 50% one sector is more than half the loan book; above 65% it is roughly
+    # two-thirds. (Ranking against peers is available separately as
+    # percentile_rank_max_loan_concentration_pct — a flag should say what IS true, not
+    # merely that others are lower.)
+    Rule("max_loan_concentration_pct", "Single-sector loan concentration", 50.0, 65.0,
          "higher_worse",
          "One sector dominating the book concentrates credit risk regardless of headline capital."),
-    Rule("cre_to_equity_pct", "CRE vs capital", 250.0, 300.0,
+    # The 2006 Interagency CRE Concentration Guidance (reaffirmed 2023) screens on CRE
+    # against TOTAL RISK-BASED CAPITAL, not book equity — so this rule uses the correct
+    # denominator. 300% is the guidance's own criterion and it is a screen meaning
+    # "may warrant further supervisory analysis", NOT a limit, so it maps to elevated;
+    # "high" is reserved for the far tail (p97.5 of the real population is 533%).
+    Rule("cre_to_total_capital_pct", "CRE vs total risk-based capital", 300.0, 500.0,
          "higher_worse",
-         "CRE above ~300% of capital is the classic supervisory concentration flag."),
+         "The 2006 interagency guidance screens banks with CRE at or above 300% of total "
+         "risk-based capital for further supervisory analysis.",
+         family="risk_based_capital"),
+    # The guidance's FIRST criterion, a separate and tighter test than the 300% one.
+    Rule("construction_to_total_capital_pct", "Construction vs total risk-based capital",
+         100.0, 150.0, "higher_worse",
+         "Construction & land development at or above 100% of total risk-based capital is "
+         "the guidance's first screening criterion — the most cyclical CRE segment.",
+         family="risk_based_capital"),
     Rule("core_deposit_pct", "Core-deposit stability", 55.0, 40.0,
          "lower_worse",
          "Low core (sticky) deposits mean funding can evaporate under stress."),

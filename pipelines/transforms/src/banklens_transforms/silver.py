@@ -55,6 +55,27 @@ _DOLLAR_FIELDS = {
     "RWAJT": "risk_weighted_assets",
     "ASSET5": "average_assets",
     "CHBAL": "cash_and_balances",
+    # income statement
+    "NETINC": "net_income",
+    "INTINC": "interest_income",
+    "EINTEXP": "interest_expense",
+    "NONII": "noninterest_income",
+    "NONIX": "noninterest_expense",
+    "ELNATR": "provision_for_credit_losses",
+    # asset quality. NOTE P3ASSET/P9ASSET are ASSET-level past-due, not loan-level —
+    # named accordingly so nobody divides them by a loan denominator by accident.
+    "NCLNLS": "noncurrent_loans",
+    "NTLNLS": "net_charge_offs",
+    "LNATRES": "allowance_for_credit_losses",
+    "P3ASSET": "assets_past_due_30_89",
+    "P9ASSET": "assets_past_due_90_plus",
+    "ORE": "other_real_estate_owned",
+    "INTAN": "intangible_assets",
+    # funding composition
+    "BRO": "brokered_deposits",
+    "VOLIAB": "volatile_liabilities",
+    "DEPLGAMT": "large_denomination_deposits",
+    "NTRTIME": "time_deposits",
 }
 
 # raw FDIC code -> canonical column, for RATIO fields (already %, pass through)
@@ -65,6 +86,15 @@ _RATIO_FIELDS = {
     "RBC1AAJ": "leverage_ratio",
     "EQV": "equity_to_assets_ratio_reported",
     "LNLSDEPR": "loan_to_deposit_ratio_reported",
+    # FDIC's own computed performance ratios. These are **year-to-date annualized**,
+    # so Q1 and Q4 are not like-for-like — anything comparing them across quarters
+    # must de-annualize from net_income/average_assets instead of differencing these.
+    "NIMY": "net_interest_margin_reported",
+    "ROA": "roa_reported",
+    "ROE": "roe_reported",
+    "EEFFR": "efficiency_ratio_reported",
+    "NPERFV": "noncurrent_assets_ratio_reported",
+    "IDLNCORR": "loans_to_core_deposits_reported",
 }
 
 

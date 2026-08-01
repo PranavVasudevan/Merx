@@ -92,7 +92,10 @@ def test_cblr_suppresses_cet1_but_keeps_leverage():
     still be evaluated."""
     row = {"cert_number": 1, "name": "CBLR BANK", "cet1_ratio": 0.0, "leverage_ratio": 3.5}
     x = evaluate_xray(row, capital_basis="cblr")
-    assert x["rules_not_applicable"] == ["cet1_ratio"]
+    # every capital-relative rule is suppressed — CET1 and both CRE-vs-capital screens,
+    # since a CBLR electer reports no total risk-based capital to measure against
+    assert set(x["rules_not_applicable"]) == {
+        "cet1_ratio", "cre_to_total_capital_pct", "construction_to_total_capital_pct"}
     assert not any(f["metric"] == "cet1_ratio" for f in x["flags"])
     assert any(f["metric"] == "leverage_ratio" and f["severity"] == "high" for f in x["flags"])
 
@@ -101,7 +104,9 @@ def test_foreign_branch_suppresses_all_capital_rules():
     row = {"cert_number": 1, "name": "FOREIGN BRANCH", "cet1_ratio": 0.0,
            "leverage_ratio": 0.0, "uninsured_deposit_pct": 60.0}
     x = evaluate_xray(row, capital_basis="none")
-    assert set(x["rules_not_applicable"]) == {"cet1_ratio", "leverage_ratio"}
+    assert set(x["rules_not_applicable"]) == {
+        "cet1_ratio", "leverage_ratio", "cre_to_total_capital_pct",
+        "construction_to_total_capital_pct"}
     # non-capital analytics still apply to these banks — they're not dropped wholesale
     assert any(f["metric"] == "uninsured_deposit_pct" for f in x["flags"])
 

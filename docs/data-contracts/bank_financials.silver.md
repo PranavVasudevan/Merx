@@ -38,7 +38,40 @@
 - **Securities:** `securities_total`, `securities_afs`, derived `securities_htm`.
 - **Capital ratios (from FDIC, already %):** `cet1_ratio`, `tier1_rbc_ratio`, `total_rbc_ratio`, `leverage_ratio`, plus reported `equity_to_assets_ratio_reported`, `loan_to_deposit_ratio_reported`.
 
-## Still to add (Phase 2)
-Funding detail (`brokered_deposits`, `fhlb_advances`, `short_term_borrowings`) for the
-funding-stability score; CET1/RWA **dollar** amounts for a precise CRE-to-capital ratio;
-the CERT↔CIK↔RSSD crosswalk (`RSSDID` is available) to join Fed/SEC data.
+## Added in the roadmap expansion (every code probed live against the FDIC API first)
+
+**Income statement** ($ thousands): `net_income` (NETINC), `interest_income` (INTINC),
+`interest_expense` (EINTEXP), `noninterest_income` (NONII), `noninterest_expense`
+(NONIX), `provision_for_credit_losses` (ELNATR).
+
+**Asset quality** ($ thousands): `noncurrent_loans` (NCLNLS), `net_charge_offs`
+(NTLNLS), `allowance_for_credit_losses` (LNATRES), `other_real_estate_owned` (ORE),
+`intangible_assets` (INTAN), `assets_past_due_30_89` (P3ASSET),
+`assets_past_due_90_plus` (P9ASSET).
+
+> ⚠️ `P3ASSET`/`P9ASSET` are **asset-level** past-due totals, not loan-level. They are
+> named accordingly so nothing divides them by a loan denominator. Loan-level
+> noncurrency is `noncurrent_loans` (NCLNLS), and that is what `npl_ratio_pct` uses.
+
+**Funding composition** ($ thousands): `brokered_deposits` (BRO),
+`volatile_liabilities` (VOLIAB), `large_denomination_deposits` (DEPLGAMT),
+`time_deposits` (NTRTIME).
+
+**FDIC-computed ratios** (already %, passed through): `net_interest_margin_reported`
+(NIMY), `roa_reported` (ROA), `roe_reported` (ROE), `efficiency_ratio_reported`
+(EEFFR), `noncurrent_assets_ratio_reported` (NPERFV), `loans_to_core_deposits_reported`
+(IDLNCORR).
+
+> ⚠️ FDIC's computed performance ratios are **year-to-date annualized**, so Q1 and Q4
+> are not like-for-like. Anything comparing profitability across quarters must
+> de-annualize from `net_income`/`average_assets` rather than differencing these.
+
+Codes probed and found **invalid** (do not re-add): `DEPBR`, `IDDEPBR`, `TIMEB1`,
+`OTBFHLB`. There is consequently **no FHLB/wholesale-borrowings field** and no
+LCR/NSFR in FDIC data — funding analytics must not be labelled "liquidity" in the
+regulatory sense.
+
+## Still to add
+`fhlb_advances`/`short_term_borrowings` (not exposed under the codes tried above —
+needs the FFIEC Call Report schedule rather than FDIC's summary endpoint); the
+CERT↔CIK↔RSSD crosswalk beyond `RSSDID` to join Fed/SEC data.

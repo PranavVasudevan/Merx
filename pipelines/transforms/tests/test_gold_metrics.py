@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from banklens_transforms.gold import (  # noqa: E402
     concentration_ratios, cre_to_equity_pct, derive_gold, equity_to_assets_pct,
-    loan_to_deposit_pct, max_concentration, uninsured_deposit_pct,
+    gold_features, loan_to_deposit_pct, max_concentration, uninsured_deposit_pct,
 )
 from banklens_transforms.silver import to_bank_financials  # noqa: E402
 
@@ -72,15 +72,38 @@ def test_computed_ratios_match_fdic_reported():
     assert approx(equity_to_assets_pct(s), s["equity_to_assets_ratio_reported"], 0.01)  # vs EQV
 
 
-def test_concentration_ratios():
+def test_concentration_ratios_are_the_disjoint_leaf_set():
+    """`concentration_ratios` returns only MUTUALLY DISJOINT categories, so the ratios
+    describe one loan book and `max_concentration` can't rank a parent against its own
+    child. CRE and total real estate are roll-ups and are reported separately by
+    `gold_features`, not here."""
     s = to_bank_financials(WF_2026Q1)
     c = concentration_ratios(s)
-    assert approx(c["concentration_ratio_cre"], 12.48)
     assert approx(c["concentration_ratio_c_and_i"], 20.14)
     assert approx(c["concentration_ratio_residential_mortgage"], 23.66)
-    # residential mortgage is Wells Fargo's most concentrated category
+    assert "concentration_ratio_cre" not in c
+    assert "concentration_ratio_real_estate" not in c
+    assert "concentration_ratio_heloc" not in c          # subset of residential_mortgage
+    # residential mortgage is still Wells Fargo's most concentrated single category
     label, val = max_concentration(c)
     assert label == "residential_mortgage" and approx(val, 23.66)
+
+
+def test_disjoint_leaves_do_not_exceed_the_loan_book():
+    """The guard against the defect this taxonomy exists to fix: an earlier 12-category
+    draft double-counted parents and children and summed to 129.9% on this exact bank."""
+    s = to_bank_financials(WF_2026Q1)
+    total = sum(v for v in concentration_ratios(s).values() if v is not None)
+    assert total <= 101.0, f"disjoint leaves sum to {total:.1f}% — categories overlap"
+
+
+def test_rollups_and_subcomponents_are_reported_but_not_ranked():
+    g = gold_features(to_bank_financials(WF_2026Q1))
+    assert approx(g["concentration_ratio_cre"], 12.48)          # roll-up, still reported
+    assert g["concentration_ratio_real_estate"] is not None
+    assert g["concentration_ratio_heloc"] is not None           # sub-component
+    # ...but the ranked winner comes only from the disjoint leaves
+    assert g["max_loan_concentration_category"] == "residential_mortgage"
 
 
 def test_cre_to_equity():
