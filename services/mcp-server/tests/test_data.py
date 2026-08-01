@@ -62,8 +62,8 @@ class SkipTest(Exception):
 
 
 def _require_landed_population():
-    if not data._POP.exists():
-        raise SkipTest(f"no landed population at {data._POP}")
+    if not data.available_quarters():
+        raise SkipTest(f"no landed population under {data._POP_DIR} ")
 
 
 def test_query_banks_matches_hand_filtered_python_semantics():

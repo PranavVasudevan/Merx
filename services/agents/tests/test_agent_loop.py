@@ -25,8 +25,8 @@ class SkipTest(Exception):
 
 def require_landed_data():
     from banklens_mcp import data
-    if not data._POP.exists():
-        raise SkipTest(f"no landed population at {data._POP} "
+    if not data.available_quarters():
+        raise SkipTest(f"no landed population under {data._POP_DIR} "
                        f"(run scripts/run_vertical_slice.ps1 / the landing scripts)")
 
 

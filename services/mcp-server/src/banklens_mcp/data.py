@@ -23,26 +23,80 @@ from banklens_transforms.silver import to_bank_financials
 
 REPO = Path(__file__).resolve().parents[4]
 DATA = REPO / "data"
-_POP = DATA / "bronze" / "source=fdic" / "population" / "repdte=20260331" / "records.json"
+_POP_DIR = DATA / "bronze" / "source=fdic" / "population"
 _CROSSWALK = DATA / "silver" / "crosswalk.json"
 _SOD = DATA / "bronze" / "source=fdic" / "sod" / "year=2025" / "records.json"
 
 _CLUSTER_METRICS = ["concentration_ratio_cre", "concentration_ratio_c_and_i",
                     "concentration_ratio_residential_mortgage", "uninsured_deposit_pct",
                     "core_deposit_pct"]
+# The training-only historical cross-sections. They carry a REDUCED 15-field set
+# (landed for the deposit-flight model, not for analytics) so they must never be
+# picked up as "the current quarter" or as a QoQ comparison base.
+_TRAINING_ONLY_QUARTERS = {"20221231", "20080331"}
+
 _cache: dict = {}
 
 
-def population() -> dict:
-    """Return {gold, by_cert, silver_by_cert, cluster_members, cluster_labels}.
-    Real branch footprints (for Feature 15's geo-overlap) are a separate cached
-    accessor — see footprints() below."""
-    if "pop" in _cache:
-        return _cache["pop"]
+def available_quarters() -> list[str]:
+    """Landed analytical population quarters, newest first (REPDTE strings).
 
-    raw = json.loads(_POP.read_text(encoding="utf-8-sig"))
-    silver = [to_bank_financials(r) for r in raw]
-    gold = [gold_features(s) for s in silver]
+    Discovered by glob rather than hardcoded — this used to pin `repdte=20260331`,
+    which made every multi-quarter view impossible.
+    """
+    if "quarters" not in _cache:
+        found = sorted((p.name.split("=", 1)[1] for p in _POP_DIR.glob("repdte=*")
+                        if p.is_dir() and (p / "records.json").exists()), reverse=True)
+        _cache["quarters"] = [q for q in found if q not in _TRAINING_ONLY_QUARTERS]
+    return _cache["quarters"]
+
+
+def latest_quarter() -> str | None:
+    qs = available_quarters()
+    return qs[0] if qs else None
+
+
+def previous_quarter(repdte: str) -> str | None:
+    """The landed quarter immediately before `repdte`, or None."""
+    qs = available_quarters()
+    if repdte not in qs:
+        return None
+    i = qs.index(repdte)
+    return qs[i + 1] if i + 1 < len(qs) else None
+
+
+def _silver_for(repdte: str) -> list[dict]:
+    key = f"silver:{repdte}"
+    if key not in _cache:
+        path = _POP_DIR / f"repdte={repdte}" / "records.json"
+        raw = json.loads(path.read_text(encoding="utf-8-sig"))
+        _cache[key] = [to_bank_financials(r) for r in raw]
+    return _cache[key]
+
+
+def population(repdte: str | None = None) -> dict:
+    """Return {gold, by_cert, silver_by_cert, cluster_members, cluster_labels} for one
+    quarter. Defaults to the most recent landed quarter, so every existing caller is
+    unchanged.
+
+    Percentiles and clusters are computed WITHIN a quarter — a percentile against a
+    pool mixing quarters would be meaningless. Real branch footprints (Feature 15's
+    geo-overlap) are a separate cached accessor, see footprints().
+    """
+    repdte = repdte or latest_quarter()
+    if repdte is None:
+        raise FileNotFoundError(f"no landed population quarters under {_POP_DIR}")
+    key = f"pop:{repdte}"
+    if key in _cache:
+        return _cache[key]
+
+    silver = _silver_for(repdte)
+    # QoQ needs the same bank's prior quarter. Without this every qoq_* field is None,
+    # which is exactly what the single-quarter landing used to produce for all 1,049.
+    prev_q = previous_quarter(repdte)
+    prev_by_cert = ({s.get("cert_number"): s for s in _silver_for(prev_q)}
+                    if prev_q else {})
+    gold = [gold_features(s, prev_by_cert.get(s.get("cert_number"))) for s in silver]
     add_percentile_ranks(gold)
 
     silver_by_cert = {}
@@ -52,28 +106,56 @@ def population() -> dict:
         if cert is not None:
             silver_by_cert[cert] = s
 
-    # behavioral clusters (k=7, deterministic seed)
+    # Behavioral clusters (k=7, deterministic seed). Cluster IDs come from the label,
+    # not from k-means' arbitrary integer, so the same behavioral group keeps the same
+    # id across quarters — otherwise a multi-quarter view renders fake migration.
     kept, X = clustering.build_matrix(gold)
     labels, _, _ = clustering.kmeans(X, 7)
-    members = defaultdict(list)
+    raw_members = defaultdict(list)
     for g, lab in zip(kept, labels, strict=True):
-        g["peer_cluster_id"] = lab
-        members[lab].append(g)
-    cluster_labels = {}
-    for lab, ms in members.items():
-        means = {m: _avg(ms, m) for m in _CLUSTER_METRICS}
-        cluster_labels[lab] = clustering.label_cluster(means)
-    for g in kept:
-        g["peer_cluster_label"] = cluster_labels[g["peer_cluster_id"]]
+        raw_members[lab].append(g)
 
-    _cache["pop"] = {
+    members: dict[int, list] = defaultdict(list)
+    cluster_labels: dict[int, str] = {}
+    for lab, ms in raw_members.items():
+        means = {m: _avg(ms, m) for m in _CLUSTER_METRICS}
+        text = clustering.label_cluster(means)
+        sid = clustering.stable_cluster_id(text)
+        cluster_labels[sid] = text
+        for g in ms:
+            g["peer_cluster_id"] = sid
+            g["peer_cluster_label"] = text
+            members[sid].append(g)
+
+    _cache[key] = {
+        "quarter": repdte,
         "gold": gold,
         "by_cert": {g["cert_number"]: g for g in gold},
         "silver_by_cert": silver_by_cert,
         "cluster_members": {lab: [g["cert_number"] for g in ms] for lab, ms in members.items()},
         "cluster_labels": cluster_labels,
     }
-    return _cache["pop"]
+    return _cache[key]
+
+
+def bank_history(cert: int) -> list[dict]:
+    """One bank's Silver rows across every landed population quarter, newest first.
+
+    `bank_quarters()` below reads the per-bank `cert=<n>` Bronze partitions, which
+    exist for only a handful of individually-landed banks. This reassembles the same
+    shape from the population partitions instead, so multi-quarter analytics work for
+    the whole population rather than those few certs.
+    """
+    try:
+        cert = int(cert)
+    except (TypeError, ValueError):
+        return []
+    out = []
+    for q in available_quarters():
+        row = next((s for s in _silver_for(q) if s.get("cert_number") == cert), None)
+        if row is not None:
+            out.append(row)
+    return out
 
 
 def duckdb_gold() -> duckdb.DuckDBPyConnection:

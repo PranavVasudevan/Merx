@@ -164,6 +164,25 @@ def select_k(diag: dict, *, max_share: float = 0.55, fallback: int = 6) -> int:
 
 
 # ---- interpretation ------------------------------------------------------
+_BASES = ("CRE-concentrated", "C&I / commercial", "Residential-mortgage", "Diversified")
+_FUNDING = ("high-uninsured", "core-funded", "mixed-funded")
+
+# Every label `label_cluster` can emit, in a fixed order. k-means assigns cluster
+# INTEGERS arbitrarily, so the same behavioral group gets a different integer in every
+# quarter — which would render as fake "cluster migration" on any multi-quarter view.
+# Deriving the id from the label instead makes cluster identity stable over time and
+# semantically meaningful, at the cost that two k-means clusters landing on the same
+# label in one quarter collapse to one id (which is arguably the right answer: they
+# are behaviorally the same group).
+CANONICAL_CLUSTER_LABELS = [f"{b}, {f}" for b in _BASES for f in _FUNDING]
+STABLE_CLUSTER_ID = {label: i for i, label in enumerate(CANONICAL_CLUSTER_LABELS)}
+
+
+def stable_cluster_id(label: str) -> int:
+    """Time-stable id for a behavioral cluster label (see CANONICAL_CLUSTER_LABELS)."""
+    return STABLE_CLUSTER_ID[label]
+
+
 def label_cluster(centroid_means: dict) -> str:
     """A short human label from a cluster's average behavior."""
     cre = centroid_means.get("concentration_ratio_cre", 0)

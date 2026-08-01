@@ -112,10 +112,19 @@ def run_stress(cert: int, loan_loss_pct: float = 3.0, deposit_outflow_pct: float
 
 
 def diff_filings(cert: int, quarter_a: str = None, quarter_b: str = None) -> dict:
-    rows = data.bank_quarters(cert)
+    # Prefer the per-bank Bronze partition where one exists (it can run deeper than the
+    # population history), and otherwise reassemble the series from the population
+    # quarters — which is what makes this work for all ~1,000 banks instead of only
+    # the handful that were individually landed.
+    rows = data.bank_quarters(cert) or data.bank_history(cert)
     if not rows:
-        raise ValueError(f"Multi-quarter data not landed for CERT {cert}. "
-                         f"Available: {data.landed_bank_certs()}.")
+        raise ValueError(
+            f"No multi-quarter data for CERT {cert}. Landed population quarters: "
+            f"{', '.join(data.available_quarters()) or 'none'}.")
+    if len(rows) < 2:
+        raise ValueError(
+            f"CERT {cert} appears in only {len(rows)} landed quarter(s); a filing diff "
+            f"needs at least two.")
     return diff(build_quarters(rows), quarter_a, quarter_b)
 
 
