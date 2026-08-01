@@ -131,6 +131,39 @@ def get_risk_score(cert: int) -> dict:
     return res
 
 
+def get_risk_leaderboard(top_n: int = 25) -> dict:
+    """Feature 13, population-wide: score every bank in the $1B-$250B slice
+    and rank by deposit-flight resemblance. Same model as get_risk_score
+    (score_vector is a handful of multiplications + a sigmoid — verified
+    live that scoring the full ~1,049-bank population takes well under a
+    second in pure Python, so this needs no caching/precomputation to be
+    viable on every request)."""
+    card = load_card()
+    if card is None:
+        raise ValueError("Deposit-flight model not trained yet; run deposit_flight_cli.")
+    pop = data.population()
+    scored = []
+    for g in pop["gold"]:
+        cert = g.get("cert_number")
+        silver = pop["silver_by_cert"].get(cert)
+        if silver is None:
+            continue
+        res = score_vector(card, features_from(silver, g, None))
+        scored.append({"cert": cert, "name": g["name"], "risk_score": res["risk_score"]})
+    scored.sort(key=lambda r: r["risk_score"], reverse=True)
+    return {
+        "count": len(scored),
+        "model_trained_on": card["trained_on"],
+        # Same honesty caveat get_risk_score carries per-bank — a leaderboard
+        # of bare numbers with no caveat would overstate what this model is.
+        "note": "structural resemblance to real bank failures (2023: SVB/Signature/First "
+               "Republic; 2008: IndyMac — though IndyMac's own archetype, subprime-credit-"
+               "driven with a late retail run, is NOT reliably caught by this feature set, "
+               "see risk-score README); growth feature imputed for 2026Q1.",
+        "top": scored[:top_n],
+    }
+
+
 def get_price_candles(cert: int, limit_days: int = 180) -> dict:
     """Real EOD OHLCV candles for a bank's crosswalk-matched ticker (never a
     low-confidence guess). Needs `scripts/land_market_data.ps1` to have been run
@@ -219,6 +252,11 @@ TOOLS = [
      "description": "Feature 13 — deposit-flight risk score (model trained on real 2023 + 2008 failures) with drivers.",
      "inputSchema": {"type": "object", "properties": {"cert": _CERT}, "required": ["cert"]},
      "handler": get_risk_score},
+    {"name": "get_risk_leaderboard",
+     "description": "Feature 13, population-wide — deposit-flight risk score for every bank in "
+                    "the $1B-$250B slice, ranked descending.",
+     "inputSchema": {"type": "object", "properties": {"top_n": {"type": "integer"}}},
+     "handler": get_risk_leaderboard},
     {"name": "diff_filings",
      "description": "Feature 12 — flag line-item moves that are unusual vs the bank's own history.",
      "inputSchema": {"type": "object", "properties": {

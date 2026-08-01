@@ -6,6 +6,14 @@ import './LoginGate.css';
 
 type Status = 'checking' | 'callback' | 'signed-out' | 'signed-in' | 'error';
 
+// Where to send the user back to after login. Only matters now that real
+// routes exist (Phase A of the multi-page expansion) — before that, every
+// page was "/", so losing the path on login was invisible. Found live: a
+// bookmarked/shared /bank/6976 link, or a new tab (sessionStorage-backed
+// auth state doesn't cross tabs), would bounce through Keycloak and dump the
+// user on "/" instead of where they were headed.
+const RETURN_TO_KEY = 'banklens.returnTo';
+
 // Spring entrance pattern from motion.dev/examples/react-enter-animation,
 // reused as-is (a real reference value, not guessed): opacity+scale with a
 // spring on scale gives the "pleasant bouncy" settle their docs describe,
@@ -41,7 +49,9 @@ export function LoginGate({ children }: { children: (user: User, logout: () => v
         setStatus('callback');
         try {
           const u = await handleSigninCallback();
-          window.history.replaceState({}, '', '/');
+          const returnTo = sessionStorage.getItem(RETURN_TO_KEY) || '/';
+          sessionStorage.removeItem(RETURN_TO_KEY);
+          window.history.replaceState({}, '', returnTo);
           setUser(u);
           setStatus('signed-in');
         } catch (e) {
@@ -60,6 +70,11 @@ export function LoginGate({ children }: { children: (user: User, logout: () => v
     }
     run();
   }, []);
+
+  function startLogin() {
+    sessionStorage.setItem(RETURN_TO_KEY, window.location.pathname + window.location.search);
+    void login();
+  }
 
   if (status === 'checking' || status === 'callback') {
     return (
@@ -83,7 +98,7 @@ export function LoginGate({ children }: { children: (user: User, logout: () => v
           <p className="app-banner-error">Sign-in failed: {error}</p>
           <motion.button
             className="login-gate-button"
-            onClick={() => login()}
+            onClick={startLogin}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
             transition={{ duration: 0.15 }}
@@ -104,7 +119,7 @@ export function LoginGate({ children }: { children: (user: User, logout: () => v
           <p className="muted">Sign in with your BankLens account to view bank data.</p>
           <motion.button
             className="login-gate-button"
-            onClick={() => login()}
+            onClick={startLogin}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
             transition={{ duration: 0.15 }}

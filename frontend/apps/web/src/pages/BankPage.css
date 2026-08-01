@@ -1,0 +1,35 @@
+.app-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.bank-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.bank-page-title {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+
+.app-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: var(--space-4);
+  align-items: start;
+}
+.app-col { display: flex; flex-direction: column; gap: var(--space-4); }
+
+@media (max-width: 880px) {
+  .app-grid { grid-template-columns: 1fr; }
+}
+
+.bank-page-footnote {
+  text-align: center;
+  font-size: var(--text-xs);
+}

@@ -6,8 +6,9 @@ them (today `banklens_transforms`; later the Rust engines, ClickHouse, DuckDB, M
 
 **Status:** a dependency-free reference server is **implemented** in
 `services/mcp-server` (JSON-RPC 2.0 over stdio, per-call audit to `data/mcp_audit.jsonl`),
-exposing **11 tools** — the 9 core feature tools plus `get_price_candles` and
-`get_market_snapshot` (real Tiingo EOD data via the CERT↔CIK↔RSSD crosswalk).
+exposing **12 tools** — the 9 core feature tools plus `get_risk_leaderboard`,
+`get_price_candles`, and `get_market_snapshot` (real Tiingo EOD data via the
+CERT↔CIK↔RSSD crosswalk).
 Drive it with `scripts/mcp_demo.ps1`; use it in Claude Code via the repo's `.mcp.json`.
 
 ## Core tools (from the product spec)
@@ -19,6 +20,7 @@ Drive it with `scripts/mcp_demo.ps1`; use it in Claude Code via the repo's `.mcp
 | `get_bank_xray` | `(bank_id)` | F11 concentration risk |
 | `diff_filings` | `(bank_id, quarter_a, quarter_b)` | F12 filing diff |
 | `get_risk_score` | `(bank_id)` | F13 deposit-flight + SHAP drivers |
+| `get_risk_leaderboard` | `(top_n)` | F13, population-wide — ranked deposit-flight risk |
 | `get_peer_cluster` | `(bank_id)` | F14 behavioural peers |
 | `find_ma_matches` | `(bank_id, top_n)` | F15 M&A fit |
 | `run_stress_test` | `(bank_id, shock_params)` | F16 capital-buffer sim |

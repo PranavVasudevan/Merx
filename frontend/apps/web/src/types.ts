@@ -196,6 +196,71 @@ export interface CandlesResult {
   bars: PriceBar[];
 }
 
+export interface RiskLeaderboardEntry {
+  cert: number;
+  name: string;
+  risk_score: number;
+}
+
+export interface RiskLeaderboardResult {
+  count: number;
+  model_trained_on: string;
+  note: string;
+  top: RiskLeaderboardEntry[];
+}
+
+export interface CompareRow {
+  cert: number;
+  name: string;
+  [metric: string]: number | string | null;
+}
+
+export interface CompareResult {
+  metrics: string[];
+  banks: CompareRow[];
+}
+
+export interface WatchlistItem {
+  cert: number;
+  created_at: string;
+}
+
+export interface AuditLogEntry {
+  id: number;
+  ts: string;
+  tool: string;
+  arguments: Record<string, unknown>;
+  ok: boolean;
+  latency_ms: number;
+}
+
+export interface AgentRunEntry {
+  id: number;
+  ts: string;
+  persona: string;
+  provider: string;
+  model: string | null;
+  question: string;
+  answer: string;
+  ok: boolean;
+  transcript_path: string;
+}
+
+export interface ToolCallRecord {
+  name: string;
+  arguments: Record<string, unknown>;
+  result_preview: string;
+}
+
+export interface AssistantResult {
+  persona: string;
+  question: string;
+  answer: string;
+  provider: string;
+  turns: number;
+  tool_calls: ToolCallRecord[];
+}
+
 export interface MarketSnapshot {
   cert: number;
   name: string;

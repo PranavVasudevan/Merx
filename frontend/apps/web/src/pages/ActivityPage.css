@@ -1,0 +1,26 @@
+.activity-page { display: flex; flex-direction: column; gap: var(--space-4); }
+.activity-note { margin: 0 0 var(--space-4); font-size: var(--text-sm); line-height: 1.5; max-width: 720px; }
+.activity-empty { font-size: var(--text-sm); }
+
+.activity-subheading { font-size: var(--text-base); margin: var(--space-4) 0 var(--space-2); }
+.activity-subheading:first-of-type { margin-top: 0; }
+
+.activity-table-wrap { overflow-x: auto; }
+.activity-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.activity-table th {
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+  border-bottom: 1px solid var(--gridline);
+  white-space: nowrap;
+}
+.activity-table td { padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--gridline); vertical-align: top; }
+.activity-td-ts { white-space: nowrap; }
+.activity-td-text { max-width: 260px; }
+
+.activity-status-ok { color: var(--status-good); font-weight: 650; font-size: var(--text-xs); }
+.activity-status-fail { color: var(--status-critical); font-weight: 650; font-size: var(--text-xs); }

@@ -54,6 +54,13 @@ CREATE TABLE IF NOT EXISTS agent_runs (
     transcript_path TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS agent_runs_ts_idx ON agent_runs (ts DESC);
+
+CREATE TABLE IF NOT EXISTS watchlists (
+    user_sub TEXT NOT NULL,
+    cert INTEGER NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL,
+    PRIMARY KEY (user_sub, cert)
+);
 """
 
 _lock = threading.Lock()
@@ -160,3 +167,30 @@ def fetch_recent_agent_runs(limit: int = 50) -> list[dict]:
         (limit,),
     ).fetchall()
     return [dict(zip(cols, row, strict=True)) for row in rows]
+
+
+def add_watchlist_item(user_sub: str, cert: int,
+                        ts: datetime.datetime | None = None) -> None:
+    conn = get_conn()
+    # ON CONFLICT DO NOTHING: re-adding an already-watched bank is a no-op,
+    # not an error — the frontend toggle button doesn't need to special-case it.
+    conn.execute(
+        "INSERT INTO watchlists (user_sub, cert, created_at) VALUES (%s, %s, %s) "
+        "ON CONFLICT (user_sub, cert) DO NOTHING",
+        (user_sub, cert, ts or datetime.datetime.now(datetime.timezone.utc)),
+    )
+
+
+def remove_watchlist_item(user_sub: str, cert: int) -> None:
+    conn = get_conn()
+    conn.execute(
+        "DELETE FROM watchlists WHERE user_sub = %s AND cert = %s", (user_sub, cert))
+
+
+def fetch_watchlist(user_sub: str) -> list[dict]:
+    conn = get_conn()
+    rows = conn.execute(
+        "SELECT cert, created_at FROM watchlists WHERE user_sub = %s ORDER BY created_at DESC",
+        (user_sub,),
+    ).fetchall()
+    return [{"cert": cert, "created_at": created_at} for cert, created_at in rows]

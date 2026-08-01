@@ -107,6 +107,25 @@ def test_record_and_fetch_agent_run_round_trip():
     conn.execute("DELETE FROM agent_runs WHERE question = %s", ("test_db_py question",))
 
 
+def test_watchlist_add_remove_round_trip():
+    _require_live_db()
+    user_sub = "test_db_py_watchlist_user"
+    conn = db.get_conn()
+    conn.execute("DELETE FROM watchlists WHERE user_sub = %s", (user_sub,))
+    try:
+        db.add_watchlist_item(user_sub, 999999)
+        assert [w["cert"] for w in db.fetch_watchlist(user_sub)] == [999999]
+        # re-adding the same (user_sub, cert) is a no-op, not a conflict error
+        db.add_watchlist_item(user_sub, 999999)
+        assert [w["cert"] for w in db.fetch_watchlist(user_sub)] == [999999]
+        db.add_watchlist_item(user_sub, 888888)
+        assert {w["cert"] for w in db.fetch_watchlist(user_sub)} == {999999, 888888}
+        db.remove_watchlist_item(user_sub, 999999)
+        assert [w["cert"] for w in db.fetch_watchlist(user_sub)] == [888888]
+    finally:
+        conn.execute("DELETE FROM watchlists WHERE user_sub = %s", (user_sub,))
+
+
 if __name__ == "__main__":
     failures = skipped = 0
     for name, fn in sorted(globals().items()):

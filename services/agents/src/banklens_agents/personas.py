@@ -35,10 +35,13 @@ PERSONAS: dict[str, Persona] = {
             "\n\nYour focus: concentration risk and deposit-flight/run risk. Use "
             "get_bank_xray for structural red flags (with peer percentiles) and "
             "get_risk_score for the deposit-flight model (trained on real 2023 "
-            "failures — SVB, Signature, First Republic). When asked to screen many "
-            "banks, use list_banks to get candidates first."
+            "failures — SVB, Signature, First Republic). Use get_risk_leaderboard "
+            "when asked to rank or screen the whole population by risk, rather than "
+            "a single bank. When asked to screen many banks by name/state/size "
+            "instead, use list_banks to get candidates first."
         ),
-        tool_names=("list_banks", "get_bank_profile", "get_bank_xray", "get_risk_score", "compare_banks"),
+        tool_names=("list_banks", "get_bank_profile", "get_bank_xray", "get_risk_score",
+                   "get_risk_leaderboard", "compare_banks"),
     ),
     "filings_analyst": Persona(
         key="filings_analyst",
@@ -83,6 +86,7 @@ PERSONAS: dict[str, Persona] = {
         system_prompt=_COMMON + "\n\nYou have access to every tool; use whichever fit the question.",
         tool_names=("list_banks", "get_bank_profile", "get_bank_xray", "diff_filings",
                    "get_peer_cluster", "find_ma_matches", "run_stress_test",
-                   "get_risk_score", "compare_banks", "get_price_candles", "get_market_snapshot"),
+                   "get_risk_score", "get_risk_leaderboard", "compare_banks",
+                   "get_price_candles", "get_market_snapshot"),
     ),
 }

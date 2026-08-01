@@ -40,6 +40,13 @@ viewer_routes := {
     "/api/banks/risk-score",
     "/api/banks/candles",
     "/api/banks/market-snapshot",
+    "/api/risk-leaderboard",
+    "/api/compare",
+    # GET/POST/DELETE all need the same role (managing your own watchlist
+    # isn't analyst-gated) — this set format can't express per-method rules
+    # on the same path, but the bridge only ever calls authorize() with the
+    # request's actual method, so one entry here covers all three verbs.
+    "/api/watchlist",
 }
 
 # Compute-heavier "what-if" actions: require the analyst role specifically.
@@ -47,6 +54,17 @@ viewer_routes := {
 # user-triggered sliders/API call, not bundled into the core profile load.
 analyst_routes := {
     "/api/banks/stress-test",
+    # The MCP server has NO authorization of its own (OPA is only enforced
+    # here, at the REST bridge) — a persona can call run_stress_test or any
+    # other tool directly through the agent loop with no secondary check.
+    # This whole-endpoint gate is therefore the SOLE enforcement point for
+    # the entire agent fleet, not a redundant one — keep it analyst-only
+    # until/unless real per-tool authorization is built inside the loop.
+    "/api/assistant/ask",
+    # Activity feeds can reveal OTHER users' questions/tool activity, not
+    # just the caller's own — treat as an ops capability, not a plain read.
+    "/api/activity/agent-runs",
+    "/api/activity/audit-log",
 }
 
 allow if {

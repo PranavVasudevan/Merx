@@ -164,6 +164,43 @@ def test_authorize_viewer_can_use_ma_fit():
     auth.authorize("/api/banks/ma-fit", "GET", ["viewer"])  # must not raise
 
 
+def test_authorize_analyst_can_use_assistant_but_viewer_cannot():
+    """The MCP server has no authorization of its own — this whole-endpoint
+    gate is the SOLE enforcement point for the entire agent fleet (a persona
+    could otherwise call run_stress_test with no secondary check), so it
+    must stay analyst-only, not viewer-tier like most other reads."""
+    _require_live_keycloak_and_opa()
+    auth.authorize("/api/assistant/ask", "POST", ["analyst"])  # must not raise
+    try:
+        auth.authorize("/api/assistant/ask", "POST", ["viewer"])
+        raise AssertionError("expected ForbiddenError")
+    except auth.ForbiddenError:
+        pass
+
+
+def test_authorize_analyst_can_view_activity_but_viewer_cannot():
+    """Activity feeds can reveal other users' questions/tool activity, not
+    just the caller's own — treat as an ops capability, analyst-tier."""
+    _require_live_keycloak_and_opa()
+    auth.authorize("/api/activity/agent-runs", "GET", ["analyst"])  # must not raise
+    auth.authorize("/api/activity/audit-log", "GET", ["analyst"])   # must not raise
+    for path in ("/api/activity/agent-runs", "/api/activity/audit-log"):
+        try:
+            auth.authorize(path, "GET", ["viewer"])
+            raise AssertionError(f"expected ForbiddenError for {path}")
+        except auth.ForbiddenError:
+            pass
+
+
+def test_authorize_viewer_can_manage_own_watchlist():
+    """Watchlist is viewer-tier for all three verbs (GET/POST/DELETE) —
+    managing your own watchlist isn't a compute-heavier analyst action."""
+    _require_live_keycloak_and_opa()
+    auth.authorize("/api/watchlist", "GET", ["viewer"])     # must not raise
+    auth.authorize("/api/watchlist", "POST", ["viewer"])    # must not raise
+    auth.authorize("/api/watchlist", "DELETE", ["viewer"])  # must not raise
+
+
 def test_authorize_no_roles_denied_for_viewer_routes():
     _require_live_keycloak_and_opa()
     try:

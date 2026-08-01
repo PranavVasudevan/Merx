@@ -7,6 +7,7 @@ a real tool against the landed population (same data other suites already rely o
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -43,7 +44,8 @@ def test_tools_list_exposes_all_features():
     r = server.handle({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
     names = {t["name"] for t in r["result"]["tools"]}
     for expected in ("get_bank_xray", "get_peer_cluster", "find_ma_matches",
-                     "run_stress_test", "diff_filings", "list_banks", "compare_banks"):
+                     "run_stress_test", "diff_filings", "list_banks", "compare_banks",
+                     "get_risk_leaderboard"):
         assert expected in names
     # every tool has a description and an input schema
     assert all(t["description"] and t["inputSchema"]["type"] == "object"
@@ -88,6 +90,26 @@ def test_tools_call_actually_coerces_end_to_end():
     text = r["result"]["content"][0]["text"]
     assert not r["result"].get("isError")
     assert "DIME COMMUNITY BANK" in text.upper()
+
+
+def test_get_risk_leaderboard_sorted_descending():
+    """Phase B — population-wide risk ranking (same score_vector/features_from
+    the per-bank get_risk_score already uses). Needs landed data AND a trained
+    deposit-flight model card, so a missing card is a SKIP, not a failure —
+    same reasoning require_landed_data() already applies to missing Bronze."""
+    require_landed_data()
+    r = server.handle({"jsonrpc": "2.0", "id": 7, "method": "tools/call",
+                       "params": {"name": "get_risk_leaderboard", "arguments": {"top_n": 5}}})
+    text = r["result"]["content"][0]["text"]
+    if r["result"].get("isError"):
+        if "not trained yet" in text:
+            raise SkipTest("deposit-flight model not trained yet (run deposit_flight_cli)")
+        raise AssertionError(text)
+    payload = json.loads(text)
+    top = payload["top"]
+    assert 0 < len(top) <= 5
+    scores = [b["risk_score"] for b in top]
+    assert scores == sorted(scores, reverse=True)
 
 
 def test_non_dict_arguments_is_an_in_band_error_not_a_crash():

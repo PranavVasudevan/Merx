@@ -20,20 +20,31 @@ import sys
 import time
 import traceback
 import urllib.parse
+from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 
 import auth
+from banklens_common import db as common_db
 
 REPO = Path(__file__).resolve().parents[3]
-for rel in ("services/mcp-server/src", "pipelines/transforms/src"):
+for rel in ("services/mcp-server/src", "pipelines/transforms/src", "services/agents/src"):
     p = REPO / rel
     if str(p) not in sys.path:
         sys.path.insert(0, str(p))
 
 from banklens_mcp import data, tools  # noqa: E402
+
+# The bridge's first-ever dependency on the agents package — surfaces the
+# fleet (supervisor + 4 personas, real MCP tool-calling loop) that was
+# previously CLI-only. Deliberate new coupling, not accidental.
+from banklens_agents import providers  # noqa: E402
+from banklens_agents.agent import run_agent, to_json  # noqa: E402
+from banklens_agents.personas import PERSONAS  # noqa: E402
+
+RUNS_DIR = REPO / "data" / "agent_runs"
 
 PORT = 8791
 
@@ -55,32 +66,120 @@ def _cap(cert: int) -> int:
 
 
 ROUTES = [
-    ("GET", "/api/health", lambda q: {"status": "ok"}),
-    ("GET", "/api/population", lambda q: _population_summary()),
-    ("GET", "/api/banks", lambda q: tools.list_banks(
+    ("GET", "/api/health", lambda q, claims: {"status": "ok"}),
+    ("GET", "/api/population", lambda q, claims: _population_summary()),
+    ("GET", "/api/banks", lambda q, claims: tools.list_banks(
         query=q.get("query"), state=q.get("state"),
         min_assets_b=_f(q.get("min_assets_b")), max_assets_b=_f(q.get("max_assets_b")),
         limit=int(q.get("limit", 20)))),
-    ("GET", "/api/banks/profile", lambda q: tools.get_bank_profile(_cap(q["cert"]))),
-    ("GET", "/api/banks/xray", lambda q: tools.get_bank_xray(_cap(q["cert"]))),
-    ("GET", "/api/banks/peer-cluster", lambda q: tools.get_peer_cluster(_cap(q["cert"]))),
-    ("GET", "/api/banks/ma-fit", lambda q: tools.find_ma_matches(
+    ("GET", "/api/banks/profile", lambda q, claims: tools.get_bank_profile(_cap(q["cert"]))),
+    ("GET", "/api/banks/xray", lambda q, claims: tools.get_bank_xray(_cap(q["cert"]))),
+    ("GET", "/api/banks/peer-cluster", lambda q, claims: tools.get_peer_cluster(_cap(q["cert"]))),
+    ("GET", "/api/banks/ma-fit", lambda q, claims: tools.find_ma_matches(
         _cap(q["cert"]), top_n=int(q.get("top_n", 8)))),
-    ("GET", "/api/banks/stress-test", lambda q: tools.run_stress(
+    ("GET", "/api/banks/stress-test", lambda q, claims: tools.run_stress(
         _cap(q["cert"]), loan_loss_pct=_f(q.get("loan_loss_pct"), 3.0),
         deposit_outflow_pct=_f(q.get("deposit_outflow_pct"), 15.0),
         rate_shock_bps=_f(q.get("rate_shock_bps"), 200.0))),
-    ("GET", "/api/banks/filing-diff", lambda q: tools.diff_filings(
+    ("GET", "/api/banks/filing-diff", lambda q, claims: tools.diff_filings(
         _cap(q["cert"]), quarter_a=q.get("quarter_a"), quarter_b=q.get("quarter_b"))),
-    ("GET", "/api/banks/risk-score", lambda q: tools.get_risk_score(_cap(q["cert"]))),
-    ("GET", "/api/banks/candles", lambda q: tools.get_price_candles(
+    ("GET", "/api/banks/risk-score", lambda q, claims: tools.get_risk_score(_cap(q["cert"]))),
+    ("GET", "/api/banks/candles", lambda q, claims: tools.get_price_candles(
         _cap(q["cert"]), limit_days=int(q.get("limit_days", 180)))),
-    ("GET", "/api/banks/market-snapshot", lambda q: tools.get_market_snapshot(_cap(q["cert"]))),
+    ("GET", "/api/banks/market-snapshot", lambda q, claims: tools.get_market_snapshot(_cap(q["cert"]))),
+    ("GET", "/api/risk-leaderboard", lambda q, claims: tools.get_risk_leaderboard(
+        top_n=int(q.get("top_n", 25)))),
+    ("GET", "/api/compare", lambda q, claims: tools.compare_banks(
+        _certs(q["certs"]), metrics=q["metrics"].split(",") if q.get("metrics") else None)),
+    ("GET", "/api/watchlist", lambda q, claims: {
+        "items": common_db.fetch_watchlist(_require_sub(claims))}),
+    ("GET", "/api/activity/agent-runs", lambda q, claims: {
+        "items": common_db.fetch_recent_agent_runs(int(q.get("limit", 50)))}),
+    ("GET", "/api/activity/audit-log", lambda q, claims: {
+        "items": common_db.fetch_recent_audit(int(q.get("limit", 50)))}),
+]
+
+POST_ROUTES = [
+    ("POST", "/api/watchlist", lambda body, claims: _watchlist_add(body, claims)),
+    ("POST", "/api/assistant/ask", lambda body, claims: _assistant_ask(body, claims)),
+]
+
+DELETE_ROUTES = [
+    ("DELETE", "/api/watchlist", lambda q, claims: _watchlist_remove(q, claims)),
 ]
 
 
 def _f(v, default=None):
     return float(v) if v not in (None, "") else default
+
+
+def _certs(v: str) -> list[int]:
+    # do_GET's query parser collapses repeated keys (parse_qs -> first value
+    # only), so a list param has to travel as one comma-separated string —
+    # no existing precedent for a list query param elsewhere in this file.
+    return [int(c) for c in v.split(",") if c.strip()]
+
+
+def _require_sub(claims: dict) -> str:
+    # Real Keycloak tokens always carry "sub" — this only trips in the
+    # documented BANKLENS_AUTH_ENABLED=false local dev escape hatch, which
+    # has no real user to scope a watchlist to.
+    sub = claims.get("sub")
+    if not sub:
+        raise ValueError("watchlist requires an authenticated user (no 'sub' claim on "
+                         "the token) — set BANKLENS_AUTH_ENABLED=true")
+    return sub
+
+
+def _watchlist_add(body: dict, claims: dict) -> dict:
+    sub = _require_sub(claims)
+    common_db.add_watchlist_item(sub, _cap(body["cert"]))
+    return {"items": common_db.fetch_watchlist(sub)}
+
+
+def _watchlist_remove(query: dict, claims: dict) -> dict:
+    sub = _require_sub(claims)
+    common_db.remove_watchlist_item(sub, _cap(query["cert"]))
+    return {"items": common_db.fetch_watchlist(sub)}
+
+
+def _assistant_ask(body: dict, claims: dict) -> dict:
+    """v1 skips supervisor.route() auto-routing on purpose — the frontend has
+    the user pick a persona tab directly, saving one whole LLM round-trip and
+    making it visible which lens is answering. Always the $0 default provider
+    (ollama) — no model/provider override from the client for v1. This can
+    legitimately take minutes (Ollama's own client retries with a 120s
+    timeout, run_agent loops up to 6 turns) — the caller (do_POST) has no
+    special-cased timeout for this route, so the request just blocks."""
+    persona_key = body.get("persona")
+    persona = PERSONAS.get(persona_key)
+    if persona is None:
+        raise ValueError(f"unknown persona '{persona_key}' — choose one of {list(PERSONAS)}")
+    question = (body.get("question") or "").strip()
+    if not question:
+        raise ValueError("question must be a non-empty string")
+
+    result = run_agent(persona, question)
+
+    RUNS_DIR.mkdir(parents=True, exist_ok=True)
+    now = datetime.now(timezone.utc)
+    out = RUNS_DIR / f"{now.strftime('%Y%m%dT%H%M%S%f')}.json"
+    payload = to_json(result)
+    out.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+    try:
+        model_id = providers.resolve_model(result.provider, None)
+        common_db.record_agent_run(
+            persona=persona.key, provider=result.provider, model=model_id,
+            question=question, answer=result.answer, ok=True,
+            transcript_path=str(out.relative_to(REPO)), ts=now)
+    except Exception:
+        # Same tradeoff cli.py makes: the transcript on disk is the real
+        # content; the Postgres index is queryability, not the record of
+        # truth — a DB hiccup shouldn't fail an otherwise-successful answer.
+        traceback.print_exc()
+
+    return payload
 
 
 def _population_summary() -> dict:
@@ -123,34 +222,40 @@ class Handler(BaseHTTPRequestHandler):
         if origin in _ALLOWED_ORIGINS:
             self.send_header("Access-Control-Allow-Origin", origin)
         self.send_header("Access-Control-Allow-Headers", "*")
+        # GET/POST are CORS-safelisted methods (exempt from the preflight
+        # Access-Control-Allow-Methods check regardless of this header), but
+        # DELETE (added for watchlist removal) is not — without this,
+        # DELETE's own preflight OPTIONS would pass, then the browser would
+        # still block the real request.
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
         self.end_headers()
         self.wfile.write(body)
 
     def do_OPTIONS(self):
         self._send(204, {})
 
-    def do_GET(self):
-        parsed = urllib.parse.urlparse(self.path)
+    def _read_json_body(self) -> dict:
+        length = int(self.headers.get("Content-Length") or 0)
+        if length == 0:
+            return {}
+        return json.loads(self.rfile.read(length))
 
-        if parsed.path == "/metrics":
-            body = generate_latest()
-            self.send_response(200)
-            self.send_header("Content-Type", CONTENT_TYPE_LATEST)
-            self.send_header("Content-Length", str(len(body)))
-            self.end_headers()
-            self.wfile.write(body)
-            return
-
-        query = {k: v[0] for k, v in urllib.parse.parse_qs(parsed.query).items()}
-        for method, route, fn in ROUTES:
-            if method == "GET" and parsed.path == route:
+    def _dispatch(self, method: str, path: str, routes: list, arg) -> bool:
+        """Shared auth + call + error-mapping + metrics for GET/POST/DELETE —
+        do_GET used to inline this; do_POST/do_DELETE need the exact same
+        shape, so it's factored here rather than tripled. Returns whether a
+        route matched (the caller sends 404 itself if not, since the 404
+        response/metric label is identical across all three verbs)."""
+        for m, route, fn in routes:
+            if m == method and path == route:
                 start = time.time()
                 status = 200
+                claims: dict = {}
                 try:
                     if auth.AUTH_ENABLED and route not in auth.OPEN_ROUTES:
                         claims = auth.authenticate(self.headers.get("Authorization"))
-                        auth.authorize(route, "GET", auth.roles_from_claims(claims))
-                    self._send(200, fn(query))
+                        auth.authorize(route, method, auth.roles_from_claims(claims))
+                    self._send(200, fn(arg, claims))
                 except auth.AuthError as e:
                     status = 401
                     self._send(401, {"error": str(e)})
@@ -170,7 +275,44 @@ class Handler(BaseHTTPRequestHandler):
                 finally:
                     REQUEST_COUNT.labels(route=route, status=str(status)).inc()
                     REQUEST_LATENCY.labels(route=route).observe(time.time() - start)
-                return
+                return True
+        return False
+
+    def do_GET(self):
+        parsed = urllib.parse.urlparse(self.path)
+
+        if parsed.path == "/metrics":
+            body = generate_latest()
+            self.send_response(200)
+            self.send_header("Content-Type", CONTENT_TYPE_LATEST)
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
+
+        query = {k: v[0] for k, v in urllib.parse.parse_qs(parsed.query).items()}
+        if self._dispatch("GET", parsed.path, ROUTES, query):
+            return
+        REQUEST_COUNT.labels(route="unmatched", status="404").inc()
+        self._send(404, {"error": f"no route for {parsed.path}"})
+
+    def do_POST(self):
+        parsed = urllib.parse.urlparse(self.path)
+        try:
+            body = self._read_json_body()
+        except json.JSONDecodeError:
+            self._send(400, {"error": "malformed JSON body"})
+            return
+        if self._dispatch("POST", parsed.path, POST_ROUTES, body):
+            return
+        REQUEST_COUNT.labels(route="unmatched", status="404").inc()
+        self._send(404, {"error": f"no route for {parsed.path}"})
+
+    def do_DELETE(self):
+        parsed = urllib.parse.urlparse(self.path)
+        query = {k: v[0] for k, v in urllib.parse.parse_qs(parsed.query).items()}
+        if self._dispatch("DELETE", parsed.path, DELETE_ROUTES, query):
+            return
         REQUEST_COUNT.labels(route="unmatched", status="404").inc()
         self._send(404, {"error": f"no route for {parsed.path}"})
 
