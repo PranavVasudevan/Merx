@@ -47,6 +47,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from .data_quality import exclusion_for
 from .gold import gold_features
 from .logreg import LogisticRegression, auc, sigmoid
 from .silver import to_bank_financials
@@ -85,15 +86,27 @@ def features_from(silver: dict, gold: dict, prior_deposits_usd: float | None = N
     }
 
 
-def build_rows(records: list[dict], prior_dep_usd: dict[int, float]) -> list[dict]:
-    rows = []
+def build_rows(records: list[dict], prior_dep_usd: dict[int, float]
+               ) -> tuple[list[dict], list[dict]]:
+    """Training rows for the deposit-flight model, plus the exclusions applied.
+
+    Returns (rows, exclusions). Non-deposit-funded charters are dropped here rather
+    than clipped later — see banklens_transforms.data_quality for why, and for the
+    measured damage they did to the previous model card (imputation mean 7,846.88%).
+    The exclusions are returned, not swallowed, so the CLI and the UI can name them.
+    """
+    rows, exclusions = [], []
     for r in records:
         s = to_bank_financials(r)
+        exc = exclusion_for(s)
+        if exc is not None:
+            exclusions.append(exc)
+            continue
         g = gold_features(s)
         cert = s.get("cert_number")
         rows.append({"cert": cert, "name": s.get("name"),
                      "features": features_from(s, g, prior_dep_usd.get(cert))})
-    return rows
+    return rows, exclusions
 
 
 def _impute_means(rows: list[dict]) -> dict:

@@ -12,6 +12,7 @@ import argparse
 import json
 from pathlib import Path
 
+from banklens_transforms.data_quality import summarize
 from banklens_transforms.deposit_flight import (
     EXCLUDED_CANDIDATES, POSITIVE_CERTS, build_rows, leave_one_out, save_card,
     score_vector, train,
@@ -30,14 +31,16 @@ def _prior_deposits(data_dir: Path, repdte: str) -> dict[int, float]:
 def run(data_dir: Path) -> None:
     # 2022Q4 cross-section (pre-2023-failures), paired with 2021Q4 deposits for growth.
     recs22 = _load(data_dir / "bronze" / "source=fdic" / "population" / "repdte=20221231" / "records.json")
-    rows_2022 = build_rows(recs22, _prior_deposits(data_dir, "20211231"))
+    rows_2022, exc_2022 = build_rows(recs22, _prior_deposits(data_dir, "20211231"))
 
     # 2008Q1 cross-section (pre-IndyMac-failure), paired with 2007Q1 deposits.
     recs08 = _load(data_dir / "bronze" / "source=fdic" / "population" / "repdte=20080331" / "records.json")
-    rows_2008 = build_rows(recs08, _prior_deposits(data_dir, "20070331"))
+    rows_2008, exc_2008 = build_rows(recs08, _prior_deposits(data_dir, "20070331"))
 
     rows = rows_2022 + rows_2008
+    exclusions = exc_2022 + exc_2008
     card, fit = train(rows, trained_on="2022Q4 + 2008Q1")
+    card["exclusions"] = summarize(exclusions, len(rows) + len(exclusions))
     save_card(card)
 
     W = 84
@@ -48,6 +51,20 @@ def run(data_dir: Path) -> None:
     print(f"  Positives (real failures, both crises): {', '.join(POSITIVE_CERTS.values())}")
     for cert, info in EXCLUDED_CANDIDATES.items():
         print(f"  Excluded: {info['name']} (CERT {cert}) — {info['reason']}")
+
+    exc = card["exclusions"]
+    print(f"\n  Data-quality exclusions: {exc['excluded_count']} of {exc['total_considered']} "
+          f"({exc['excluded_pct']}%) — deposits under {exc['threshold_pct']}% of assets, i.e. "
+          f"not deposit-funded banks:")
+    for e in exc["excluded"][:6]:
+        print(f"    CERT {e['cert']:>6}  {e['deposits_to_assets_pct']:>7.3f}% dep/assets  "
+              f"{(e['name'] or '')[:44]}")
+    if exc["excluded_count"] > 6:
+        print(f"    ... and {exc['excluded_count'] - 6} more (all listed in the model card)")
+    print(f"  -> loan_to_deposit_pct imputation mean is now "
+          f"{card['impute_means']['loan_to_deposit_pct']:,.2f}% "
+          f"(it was 7,846.88% when these were pooled in, which flattened the feature to noise)")
+
     print(f"\n  In-sample ROC-AUC: {card['auc']}")
     print("\n  Coefficients (standardized; + raises modeled run-risk):")
     for f, w in sorted(zip(card["features"], card["weights"], strict=True), key=lambda t: abs(t[1]), reverse=True):

@@ -11,6 +11,7 @@ from banklens_transforms.filing_diff import build_quarters, diff
 from banklens_transforms.ma_fit import rank_partners
 from banklens_transforms.market import price_snapshot
 from banklens_transforms.stress import Shock, run_stress_test, starting_position
+from banklens_transforms.data_quality import capital_basis
 from banklens_transforms.xray import evaluate_xray
 
 from . import data
@@ -71,7 +72,12 @@ def get_bank_profile(cert: int) -> dict:
 
 
 def get_bank_xray(cert: int) -> dict:
-    return evaluate_xray(_need_bank(cert))     # gold row carries percentile ranks -> peer context
+    # Gold row carries percentile ranks -> flags get peer context. Which capital rules
+    # apply depends on the bank's regulatory capital regime: 195 CBLR electers and 13
+    # foreign-bank branches report zeros for reasons that are not thin capital, and
+    # were otherwise all flagged "CET1 below the Basel minimum".
+    silver = data.population()["silver_by_cert"].get(cert) or {}
+    return evaluate_xray(_need_bank(cert), capital_basis=capital_basis(silver))
 
 
 def get_peer_cluster(cert: int) -> dict:

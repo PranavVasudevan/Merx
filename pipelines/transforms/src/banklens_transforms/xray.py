@@ -31,6 +31,9 @@ class Rule:
     high: float              # threshold for "high"
     direction: str           # "higher_worse" or "lower_worse"
     why: str                 # plain-English rationale
+    # "risk_based_capital" rules are skipped for CBLR electers and foreign-bank
+    # branches; "leverage" is skipped only for the latter. See evaluate_xray.
+    family: str = "general"
 
 
 # Thresholds are supervisory-informed starting points, tunable per the peer study.
@@ -52,10 +55,12 @@ RULES: list[Rule] = [
          "Low core (sticky) deposits mean funding can evaporate under stress."),
     Rule("cet1_ratio", "CET1 capital buffer", 10.5, 7.0,
          "lower_worse",
-         "CET1 below the Basel minimum-plus-buffer (~10.5%) leaves little loss absorption."),
+         "CET1 below the Basel minimum-plus-buffer (~10.5%) leaves little loss absorption.",
+         family="risk_based_capital"),
     Rule("leverage_ratio", "Tier 1 leverage", 5.0, 4.0,
          "lower_worse",
-         "Leverage ratio under 5% (well-capitalized threshold) signals a thin equity base."),
+         "Leverage ratio under 5% (well-capitalized threshold) signals a thin equity base.",
+         family="leverage"),
 ]
 
 
@@ -74,10 +79,36 @@ def _severity(rule: Rule, value: float) -> str:
         return "low"
 
 
-def evaluate_xray(gold_row: dict) -> dict:
-    """Score one Gold row, returning an interpretable risk breakdown."""
+def evaluate_xray(gold_row: dict, *, capital_basis: str = "risk_based") -> dict:
+    """Score one Gold row, returning an interpretable risk breakdown.
+
+    `capital_basis` selects which capital rules legitimately apply — see
+    `banklens_transforms.data_quality.capital_basis`, which derives it from Silver:
+
+      "risk_based" — the normal case; every rule applies.
+      "cblr"       — a Community Bank Leverage Ratio electer. Reports no RWA and no
+                     risk-based ratios *because the regulation deems it to satisfy
+                     them*, so the CET1 rule is suppressed. Its leverage ratio is the
+                     binding measure and IS still evaluated.
+      "none"       — a US branch/agency of a foreign bank, capital held at the parent.
+                     No capital rule applies.
+
+    Measured on the real 2026Q1 population, reading those zeros as thin capital was
+    producing a false "CET1 below the Basel minimum" flag on 208 of 1,049 banks (19.8%)
+    — for the 195 CBLR electers it inverted the regulator's actual finding.
+    """
+    suppressed = {
+        "risk_based": set(),
+        "cblr": {"risk_based_capital"},
+        "none": {"risk_based_capital", "leverage"},
+    }.get(capital_basis, set())
+
     flags: list[dict] = []
+    skipped: list[str] = []
     for rule in RULES:
+        if rule.family in suppressed:
+            skipped.append(rule.key)
+            continue
         value = gold_row.get(rule.key)
         if value is None:
             continue
@@ -111,6 +142,10 @@ def evaluate_xray(gold_row: dict) -> dict:
         "overall_risk": overall,
         "flag_count": len(flags),
         "flags": flags,
+        # Named, not silent: a consumer must be able to tell "no capital flag" from
+        # "capital not assessed", and see why.
+        "capital_basis": capital_basis,
+        "rules_not_applicable": skipped,
         "key_metrics": {
             "uninsured_deposit_pct": gold_row.get("uninsured_deposit_pct"),
             "loan_to_deposit_pct": gold_row.get("loan_to_deposit_pct"),
