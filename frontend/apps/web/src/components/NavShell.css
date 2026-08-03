@@ -24,6 +24,30 @@
 .app-tagline { font-size: var(--text-xs); letter-spacing: .06em; text-transform: uppercase; }
 
 .app-nav { display: flex; align-items: center; gap: var(--space-1); flex-wrap: wrap; }
+.app-nav-group { display: flex; align-items: center; gap: var(--space-1); }
+.app-nav-group-label {
+  font-size: 9.5px;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding-right: 2px;
+  white-space: nowrap;
+}
+.app-nav-sep {
+  width: 1px;
+  align-self: stretch;
+  background: var(--gridline);
+  margin: 0 var(--space-2);
+}
+/* The group labels are orientation, not navigation — below the header's own
+   breakpoint they cost more room than they buy. */
+@media (max-width: 1080px) {
+  .app-nav-group-label { display: none; }
+  .app-nav-sep { margin: 0 var(--space-1); }
+}
+
+.route-loading { padding: var(--space-6) 0; text-align: center; font-size: var(--text-sm); }
 .app-nav-link {
   display: inline-flex;
   align-items: center;

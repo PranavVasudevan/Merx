@@ -65,6 +65,36 @@ def _cap(cert: int) -> int:
     return int(cert)
 
 
+# The authorization tier every non-open route must be declared under. This is the
+# single source of truth the OPA policy is checked against — see
+# services/api-gateway/tests/test_route_policy.py, which fails if a route here is
+# missing from platform/auth/opa/policy.rego or sits in the wrong tier.
+#
+# That test exists because these were four hand-maintained parallel lists (this table,
+# policy.rego, api.ts, NavShell.tsx) and a missing policy entry already broke an entire
+# page once: OPA denies by default, and the frontend's Promise.all rejects
+# all-or-nothing on a single 403, so one absent line took down a whole view rather than
+# one panel. Adding a dozen more routes by hand without a check would guarantee a repeat.
+ROUTE_TIERS: dict[str, str] = {
+    "/api/population": "viewer",
+    "/api/banks": "viewer",
+    "/api/banks/profile": "viewer",
+    "/api/banks/xray": "viewer",
+    "/api/banks/peer-cluster": "viewer",
+    "/api/banks/ma-fit": "viewer",
+    "/api/banks/filing-diff": "viewer",
+    "/api/banks/risk-score": "viewer",
+    "/api/banks/candles": "viewer",
+    "/api/banks/market-snapshot": "viewer",
+    "/api/risk-leaderboard": "viewer",
+    "/api/compare": "viewer",
+    "/api/watchlist": "viewer",
+    "/api/banks/stress-test": "analyst",
+    "/api/assistant/ask": "analyst",
+    "/api/activity/agent-runs": "analyst",
+    "/api/activity/audit-log": "analyst",
+}
+
 ROUTES = [
     ("GET", "/api/health", lambda q, claims: {"status": "ok"}),
     ("GET", "/api/population", lambda q, claims: _population_summary()),

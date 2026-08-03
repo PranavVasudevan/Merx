@@ -11,6 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "echarts": "^6.1.0",
     "lightweight-charts": "^5.2.0",
     "motion": "^12.43.0",
     "oidc-client-ts": "^3.5.0",

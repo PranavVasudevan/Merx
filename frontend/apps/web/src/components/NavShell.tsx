@@ -13,13 +13,25 @@ import './NavShell.css';
 // instead of only failing after the click.
 const ANALYST_ONLY_PATHS = new Set(['/assistant', '/activity']);
 
-const NAV_LINKS: { to: string; label: string }[] = [
-  { to: '/', label: 'Overview' },
-  { to: '/screener', label: 'Screener' },
-  { to: '/compare', label: 'Compare' },
-  { to: '/watchlist', label: 'Watchlist' },
-  { to: '/assistant', label: 'Assistant' },
-  { to: '/activity', label: 'Activity' },
+// Grouped, not a flat bar: the expansion takes this well past the half-dozen links a
+// single row can hold. Groups are the user's mental model (find banks / analyse them /
+// my stuff / tooling), and each new page joins a group rather than lengthening a list.
+interface NavLink { to: string; label: string }
+interface NavGroup { label: string; links: NavLink[] }
+
+const NAV_GROUPS: NavGroup[] = [
+  { label: 'Explore', links: [
+    { to: '/', label: 'Overview' },
+    { to: '/screener', label: 'Screener' },
+    { to: '/compare', label: 'Compare' },
+  ] },
+  { label: 'My work', links: [
+    { to: '/watchlist', label: 'Watchlist' },
+  ] },
+  { label: 'Tools', links: [
+    { to: '/assistant', label: 'Assistant' },
+    { to: '/activity', label: 'Activity' },
+  ] },
 ];
 
 export function NavShell({ user, onLogout }: { user: User; onLogout: () => void }) {
@@ -51,20 +63,27 @@ export function NavShell({ user, onLogout }: { user: User; onLogout: () => void 
         </div>
 
         <nav className="app-nav">
-          {NAV_LINKS.map((link) => {
-            const gated = ANALYST_ONLY_PATHS.has(link.to) && !isAnalyst;
-            return (
-              <NavLink
-                key={link.to}
-                to={link.to}
-                className={({ isActive }) => `app-nav-link${isActive ? ' app-nav-link-active' : ''}${gated ? ' app-nav-link-gated' : ''}`}
-                title={gated ? 'Requires the analyst role' : undefined}
-              >
-                {link.label}
-                {gated && <span className="app-nav-lock" aria-hidden="true">🔒</span>}
-              </NavLink>
-            );
-          })}
+          {NAV_GROUPS.map((group, i) => (
+            <div className="app-nav-group" key={group.label}>
+              {i > 0 && <span className="app-nav-sep" aria-hidden="true" />}
+              <span className="app-nav-group-label">{group.label}</span>
+              {group.links.map((link) => {
+                const gated = ANALYST_ONLY_PATHS.has(link.to) && !isAnalyst;
+                return (
+                  <NavLink
+                    key={link.to}
+                    to={link.to}
+                    end={link.to === '/'}
+                    className={({ isActive }) => `app-nav-link${isActive ? ' app-nav-link-active' : ''}${gated ? ' app-nav-link-gated' : ''}`}
+                    title={gated ? 'Requires the analyst role' : undefined}
+                  >
+                    {link.label}
+                    {gated && <span className="app-nav-lock" aria-hidden="true">🔒</span>}
+                  </NavLink>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         <BankSearch onSelect={(c) => navigate(`/bank/${c}`)} />
