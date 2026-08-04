@@ -272,3 +272,105 @@ export interface MarketSnapshot {
   week52_high: number | null;
   week52_low: number | null;
 }
+
+// ---- population-wide metric groups (earnings/credit/funding/capital/concentration) ----
+
+export type MetricGroup = 'earnings' | 'credit' | 'funding' | 'capital' | 'concentration';
+
+// Identity columns plus every metric (and percentile_rank_<metric> where computed)
+// for the requested group — the exact key set varies by group, so this is an index
+// signature over the identity fields rather than an exhaustive interface.
+export interface PopulationMetricRow {
+  cert_number: number;
+  name: string;
+  state: string | null;
+  total_assets: number | null;
+  peer_cluster_label: string | null;
+  [metric: string]: number | string | null;
+}
+
+export interface PopulationMetricsResult {
+  group: MetricGroup;
+  quarter: string;
+  metrics: string[];
+  count: number;
+  banks: PopulationMetricRow[];
+}
+
+export interface DataQualityExclusion {
+  cert: number;
+  name: string;
+  quarter: string;
+  rule: string;
+  reason: string;
+  deposits_to_assets_pct?: number | null;
+  total_assets?: number | null;
+  total_deposits?: number | null;
+  threshold_pct?: number;
+}
+
+export interface DataQualityDisclosure {
+  threshold_pct: number;
+  rule: string;
+  excluded_count: number;
+  total_considered: number;
+  excluded_pct: number;
+  excluded: DataQualityExclusion[];
+}
+
+export interface HistogramBin {
+  lower: number;
+  upper: number;
+  count: number;
+}
+
+export interface HeatmapBank {
+  cert: number;
+  name: string;
+  /** Percentile ranks (0-100), aligned to HeatmapResult.metrics. Null = not computed. */
+  cells: (number | null)[];
+}
+
+export interface HeatmapResult {
+  quarter: string;
+  metrics: string[];
+  banks: HeatmapBank[];
+}
+
+export interface TreemapNode {
+  cert: number;
+  name: string;
+  value: number;
+  cet1_ratio: number | null;
+  overall_risk: 'low' | 'elevated' | 'high';
+  uninsured_deposit_pct: number | null;
+  npl_ratio_pct: number | null;
+}
+
+export interface TreemapGroup {
+  name: string;
+  children: TreemapNode[];
+}
+
+export interface TreemapResult {
+  quarter: string;
+  group_by: 'peer_cluster_label' | 'state';
+  groups: TreemapGroup[];
+}
+
+export interface MetricDistributionResult {
+  metric: string;
+  quarter: string;
+  count: number;
+  min: number;
+  max: number;
+  mean: number;
+  p10: number;
+  p25: number;
+  median: number;
+  p75: number;
+  p90: number;
+  histogram_range: { lower: number; upper: number; note: string };
+  histogram: HistogramBin[];
+  exclusions: DataQualityDisclosure;
+}

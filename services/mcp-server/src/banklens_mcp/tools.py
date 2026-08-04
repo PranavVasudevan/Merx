@@ -11,7 +11,7 @@ from banklens_transforms.filing_diff import build_quarters, diff
 from banklens_transforms.ma_fit import rank_partners
 from banklens_transforms.market import price_snapshot
 from banklens_transforms.stress import Shock, run_stress_test, starting_position
-from banklens_transforms.data_quality import capital_basis
+from banklens_transforms.data_quality import capital_basis, exclusion_for, summarize
 from banklens_transforms.xray import evaluate_xray
 
 from . import data
@@ -228,6 +228,202 @@ def compare_banks(certs: list[int], metrics: list[str] = None) -> dict:
     return {"metrics": metrics, "banks": out}
 
 
+# Named slices of the Gold layer. One tool serves several pages rather than a
+# near-identical tool per page — "build Gold once, every consumer reads it": these are
+# projections of the same feature row, not new analysis.
+METRIC_GROUPS: dict[str, list[str]] = {
+    "earnings": ["net_interest_margin_pct", "roa_pct", "roe_pct", "efficiency_ratio_pct",
+                 "noninterest_income_share_pct", "net_interest_income"],
+    "credit": ["npl_ratio_pct", "net_charge_off_rate_pct", "allowance_to_loans_pct",
+               "allowance_coverage_pct", "texas_ratio_pct", "noncurrent_assets_ratio_pct"],
+    "funding": ["uninsured_deposit_pct", "core_deposit_pct", "brokered_deposit_pct",
+                "large_denomination_deposit_pct", "time_deposit_pct",
+                "volatile_liability_pct", "loans_to_core_deposits_pct",
+                "loan_to_deposit_pct"],
+    "capital": ["cet1_ratio", "tier1_rbc_ratio", "total_rbc_ratio", "leverage_ratio",
+                "cre_to_total_capital_pct", "construction_to_total_capital_pct"],
+    "concentration": ["concentration_ratio_construction", "concentration_ratio_multifamily",
+                      "concentration_ratio_nonfarm_nonres",
+                      "concentration_ratio_residential_mortgage",
+                      "concentration_ratio_farmland", "concentration_ratio_agricultural",
+                      "concentration_ratio_c_and_i", "concentration_ratio_consumer",
+                      "concentration_ratio_cre", "max_loan_concentration_pct",
+                      "max_loan_concentration_category"],
+}
+
+_IDENTITY = ["cert_number", "name", "state", "total_assets", "peer_cluster_label"]
+
+
+def get_population_metrics(group: str, limit: int = 2000, sort_by: str = None,
+                           descending: bool = True) -> dict:
+    """One named metric group across the whole population, with peer percentiles.
+
+    Powers the earnings / credit / funding / capital / concentration views. Returns
+    identity columns plus the group's metrics and any `percentile_rank_*` already
+    computed for them, so a page never has to re-derive a rank the Gold layer holds.
+    """
+    metrics = METRIC_GROUPS.get(group)
+    if metrics is None:
+        raise ValueError(f"unknown metric group '{group}' — choose one of {sorted(METRIC_GROUPS)}")
+    pop = data.population()
+    if sort_by is not None and sort_by not in metrics:
+        raise ValueError(f"cannot sort '{group}' by '{sort_by}' — not in that group")
+
+    rows = []
+    for g in pop["gold"]:
+        row = {k: g.get(k) for k in _IDENTITY}
+        for m in metrics:
+            row[m] = g.get(m)
+            pr = g.get(f"percentile_rank_{m}")
+            if pr is not None:
+                row[f"percentile_rank_{m}"] = pr
+        rows.append(row)
+
+    if sort_by:
+        rows = [r for r in rows if r.get(sort_by) is not None]
+        rows.sort(key=lambda r: r[sort_by], reverse=descending)
+    else:
+        rows.sort(key=lambda r: r.get("total_assets") or 0, reverse=True)
+    return {"group": group, "quarter": pop["quarter"], "metrics": metrics,
+            "count": len(rows), "banks": rows[:limit]}
+
+
+# A curated cross-group set for the heatmap — one glance across risk, credit, and
+# earnings rather than 17 columns nobody can scan. Every one already has a computed
+# percentile rank (peers.RANK_METRICS), so this is a projection, not new analysis.
+HEATMAP_METRICS = [
+    "uninsured_deposit_pct", "loan_to_deposit_pct", "max_loan_concentration_pct",
+    "cre_to_total_capital_pct", "cet1_ratio", "leverage_ratio", "roa_pct",
+    "net_interest_margin_pct", "npl_ratio_pct", "texas_ratio_pct",
+]
+
+
+def get_percentile_heatmap(top_n: int = 40, sort_by: str = "total_assets") -> dict:
+    """A bank x metric percentile matrix for `top_n` banks (by `sort_by`, default the
+    largest by assets). Powers /heatmap. Cells are `percentile_rank_<metric>`
+    (0-100), not the raw value — that is the point of a heatmap like this: it reads
+    across metrics on one shared scale instead of mixing percent, ratio, and dollar
+    units in the same row.
+    """
+    pop = data.population()
+    rows = [g for g in pop["gold"] if g.get(sort_by) is not None]
+    rows.sort(key=lambda g: g[sort_by], reverse=True)
+    rows = rows[:top_n]
+    return {
+        "quarter": pop["quarter"], "metrics": HEATMAP_METRICS,
+        "banks": [{
+            "cert": g["cert_number"], "name": g["name"],
+            "cells": [g.get(f"percentile_rank_{m}") for m in HEATMAP_METRICS],
+        } for g in rows],
+    }
+
+
+def get_asset_treemap(group_by: str = "peer_cluster_label") -> dict:
+    """Every bank in the population, sized by assets and grouped for a treemap —
+    `group_by` in {"peer_cluster_label", "state"}. Colored client-side by whichever
+    risk metric the user picks (X-Ray severity, risk score, a percentile rank), since
+    baking one color choice in here would make this three tools instead of one.
+    """
+    if group_by not in ("peer_cluster_label", "state"):
+        raise ValueError(f"group_by must be 'peer_cluster_label' or 'state', got '{group_by}'")
+    pop = data.population()
+    groups: dict[str, list[dict]] = {}
+    for g in pop["gold"]:
+        key = g.get(group_by) or "Unclassified"
+        assets = g.get("total_assets")
+        if not assets:
+            continue
+        silver = pop["silver_by_cert"].get(g["cert_number"]) or {}
+        overall_risk = evaluate_xray(g, capital_basis=capital_basis(silver))["overall_risk"]
+        groups.setdefault(key, []).append({
+            "cert": g["cert_number"], "name": g["name"], "value": assets,
+            "cet1_ratio": g.get("cet1_ratio"), "overall_risk": overall_risk,
+            "uninsured_deposit_pct": g.get("uninsured_deposit_pct"),
+            "npl_ratio_pct": g.get("npl_ratio_pct"),
+        })
+    return {
+        "quarter": pop["quarter"], "group_by": group_by,
+        "groups": [{"name": k, "children": sorted(v, key=lambda b: b["value"], reverse=True)}
+                  for k, v in sorted(groups.items(), key=lambda kv: sum(b["value"] for b in kv[1]),
+                                     reverse=True)],
+    }
+
+
+def get_metric_distribution(metric: str, bins: int = 30) -> dict:
+    """Histogram + order statistics for one Gold metric across the population.
+
+    Real analysis rather than data shipping, so it belongs server-side: the binning,
+    the percentile cuts, and — importantly — the disclosure of which institutions were
+    excluded and why. A distribution rendered without naming its exclusions would be a
+    quietly misleading chart, which is the thing `data_quality` exists to prevent.
+    """
+    pop = data.population()
+    values, excluded = [], []
+    for g in pop["gold"]:
+        silver = pop["silver_by_cert"].get(g.get("cert_number")) or {}
+        # Exclusion is checked BEFORE the null check: a non-deposit-funded charter's
+        # deposit-sensitive metric is usually None (division by ~zero deposits), which
+        # used to make it silently vanish from BOTH the distribution and the
+        # disclosure — the exact quietly-misleading outcome this function exists to
+        # prevent. Measured on loan_to_deposit_pct: 8 banks are genuinely excluded,
+        # but 7 of them have a null value and were being dropped with no record.
+        exc = exclusion_for(silver) if metric in _DEPOSIT_SENSITIVE else None
+        if exc is not None:
+            excluded.append(exc)
+            continue
+        v = g.get(metric)
+        if v is None:
+            continue
+        values.append(v)
+    if not values:
+        raise ValueError(f"no values for metric '{metric}' in {pop['quarter']}")
+
+    vals = sorted(values)
+    n = len(vals)
+    def q(p):
+        return vals[min(int(n * p), n - 1)]
+    lo, hi = vals[0], vals[-1]
+
+    # Equal-width bins over the FULL range collapse to one bin for any heavy-tailed
+    # metric — measured on texas_ratio_pct (median 4.1%, max 162.4%): 991 of 1,035
+    # banks landed in a single bin. Bin the BODY of the distribution (p1-p99) at full
+    # resolution and fold the tails into the first/last bin instead — every value is
+    # still counted (sum of histogram counts always equals n), just not spread thin
+    # across dozens of empty tail bins.
+    p_lo, p_hi = q(0.01), q(0.99)
+    if p_hi <= p_lo:
+        p_lo, p_hi = lo, hi
+    width = (p_hi - p_lo) / bins if p_hi > p_lo else 1.0
+    counts = [0] * bins
+    for v in vals:
+        idx = 0 if v <= p_lo else (bins - 1 if v >= p_hi else int((v - p_lo) / width))
+        counts[min(max(idx, 0), bins - 1)] += 1
+    assert sum(counts) == n, "histogram must account for every value"
+
+    return {
+        "metric": metric, "quarter": pop["quarter"], "count": n,
+        "min": lo, "max": hi, "mean": round(sum(vals) / n, 4),
+        "p10": q(0.10), "p25": q(0.25), "median": q(0.50), "p75": q(0.75), "p90": q(0.90),
+        "histogram_range": {"lower": p_lo, "upper": p_hi,
+                            "note": "first/last bin includes everything at or beyond "
+                                    "the 1st/99th percentile, not just that bin's width"},
+        "histogram": [{"lower": round(p_lo + i * width, 4),
+                       "upper": round(p_lo + (i + 1) * width, 4),
+                       "count": c} for i, c in enumerate(counts)],
+        "exclusions": summarize(excluded, n + len(excluded)),
+    }
+
+
+# Metrics whose denominator is deposits — the only ones where a non-deposit-funded
+# charter distorts the distribution (see data_quality). Capital or loan-mix metrics are
+# perfectly meaningful for a trust company, so they are not filtered.
+_DEPOSIT_SENSITIVE = {
+    "loan_to_deposit_pct", "uninsured_deposit_pct", "core_deposit_pct",
+    "brokered_deposit_pct", "large_denomination_deposit_pct", "time_deposit_pct",
+    "loans_to_core_deposits_pct",
+}
+
+
 # ---- registry ------------------------------------------------------------
 _CERT = {"type": "integer", "description": "FDIC certificate number"}
 
@@ -284,6 +480,33 @@ TOOLS = [
          "certs": {"type": "array", "items": {"type": "integer"}},
          "metrics": {"type": "array", "items": {"type": "string"}}}, "required": ["certs"]},
      "handler": compare_banks},
+    {"name": "get_population_metrics",
+     "description": "One named metric group (earnings, credit, funding, capital, "
+                    "concentration) across the whole population, with peer percentiles.",
+     "inputSchema": {"type": "object", "properties": {
+         "group": {"type": "string", "enum": sorted(METRIC_GROUPS)},
+         "limit": {"type": "integer"}, "sort_by": {"type": "string"},
+         "descending": {"type": "boolean"}}, "required": ["group"]},
+     "handler": get_population_metrics},
+    {"name": "get_percentile_heatmap",
+     "description": "Bank x metric percentile matrix (top N by a sort metric, default "
+                    "assets) — cells are percentile ranks, not raw values.",
+     "inputSchema": {"type": "object", "properties": {
+         "top_n": {"type": "integer"}, "sort_by": {"type": "string"}}},
+     "handler": get_percentile_heatmap},
+    {"name": "get_asset_treemap",
+     "description": "Every bank sized by assets, grouped by behavioral cluster or "
+                    "state, with X-Ray risk severity for client-side coloring.",
+     "inputSchema": {"type": "object", "properties": {
+         "group_by": {"type": "string", "enum": ["peer_cluster_label", "state"]}}},
+     "handler": get_asset_treemap},
+    {"name": "get_metric_distribution",
+     "description": "Histogram, order statistics and disclosed data-quality exclusions "
+                    "for one Gold metric across the population.",
+     "inputSchema": {"type": "object", "properties": {
+         "metric": {"type": "string"}, "bins": {"type": "integer"}},
+         "required": ["metric"]},
+     "handler": get_metric_distribution},
     {"name": "get_price_candles",
      "description": "Real EOD OHLCV candlestick data for a bank's crosswalk-matched ticker "
                     "(needs scripts/land_market_data.ps1 to have landed it first).",

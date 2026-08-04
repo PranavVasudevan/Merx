@@ -1,0 +1,69 @@
+.metric-group-page { display: flex; flex-direction: column; gap: var(--space-4); }
+.metric-group-subtitle { margin: 0 0 var(--space-1); font-size: var(--text-sm); }
+.metric-group-meta { margin: 0; font-size: var(--text-xs); }
+
+/* top-N highlight rail, same idiom as OverviewPage's leaderboard */
+.metric-rank-list { display: flex; flex-direction: column; gap: var(--space-2); }
+.metric-rank-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+  text-decoration: none;
+  color: inherit;
+  padding: var(--space-1) var(--space-2);
+  margin: 0 calc(var(--space-2) * -1);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--duration-fast) var(--ease-organic);
+}
+.metric-rank-row:hover { background: var(--surface-2); }
+.metric-rank-index { width: 18px; flex-shrink: 0; }
+.metric-rank-name { flex: 0 0 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.metric-rank-track { flex: 1; height: 8px; background: var(--gridline); border-radius: 4px; overflow: hidden; }
+.metric-rank-fill { height: 100%; background: var(--seq-450); border-radius: 4px; }
+.metric-rank-value { width: 70px; text-align: right; }
+
+/* data table */
+.metric-group-filters { display: flex; gap: var(--space-3); margin-bottom: var(--space-4); }
+.metric-group-input {
+  flex: 1;
+  max-width: 360px;
+  padding: 9px var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  outline: none;
+  transition: border-color var(--duration-fast) var(--ease-organic),
+              box-shadow var(--duration-fast) var(--ease-organic);
+}
+.metric-group-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.metric-group-table-wrap { overflow-x: auto; }
+.metric-group-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.metric-group-th {
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 1px solid var(--gridline);
+  user-select: none;
+  white-space: nowrap;
+}
+.metric-group-th:hover { color: var(--text-primary); }
+.metric-group-th-right { text-align: right; }
+
+.metric-group-row td { padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--gridline); }
+.metric-group-td-name a { color: var(--text-primary); text-decoration: none; font-weight: 600; }
+.metric-group-td-name a:hover { text-decoration: underline; }
+.metric-group-td-right { text-align: right; }
+
+.metric-group-empty { text-align: center; padding: var(--space-5) 0; }

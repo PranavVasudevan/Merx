@@ -1,7 +1,9 @@
 import type {
   AgentRunEntry, AssistantResult, AuditLogEntry, BankProfile, CandlesResult, CompareResult,
-  FilingDiffResult, MaFitResult, MarketSnapshot, PeerClusterResult, PopulationBank,
-  RiskLeaderboardResult, RiskScoreResult, StressResult, WatchlistItem, XrayResult,
+  FilingDiffResult, HeatmapResult, MaFitResult, MarketSnapshot, MetricDistributionResult,
+  MetricGroup, PeerClusterResult, PopulationBank, PopulationMetricsResult,
+  RiskLeaderboardResult, RiskScoreResult, StressResult, TreemapResult, WatchlistItem,
+  XrayResult,
 } from './types';
 import { getCurrentUser } from './auth';
 
@@ -97,4 +99,15 @@ export const api = {
     post<AssistantResult>('/assistant/ask', { persona, question }),
   agentRuns: (limit = 50) => get<{ items: AgentRunEntry[] }>('/activity/agent-runs', { limit }),
   auditLog: (limit = 50) => get<{ items: AuditLogEntry[] }>('/activity/audit-log', { limit }),
+  populationMetrics: (group: MetricGroup, opts: { limit?: number; sortBy?: string; descending?: boolean } = {}) =>
+    get<PopulationMetricsResult>('/population-metrics', {
+      group, limit: opts.limit ?? 2000, sort_by: opts.sortBy,
+      descending: opts.descending === false ? 'false' : undefined,
+    }),
+  metricDistribution: (metric: string, bins = 30) =>
+    get<MetricDistributionResult>('/metric-distribution', { metric, bins }),
+  percentileHeatmap: (top_n = 40, sort_by = 'total_assets') =>
+    get<HeatmapResult>('/percentile-heatmap', { top_n, sort_by }),
+  assetTreemap: (group_by: 'peer_cluster_label' | 'state' = 'peer_cluster_label') =>
+    get<TreemapResult>('/asset-treemap', { group_by }),
 };

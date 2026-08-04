@@ -43,6 +43,28 @@ PERSONAS: dict[str, Persona] = {
         tool_names=("list_banks", "get_bank_profile", "get_bank_xray", "get_risk_score",
                    "get_risk_leaderboard", "compare_banks"),
     ),
+    "financial_analyst": Persona(
+        key="financial_analyst",
+        label="Financial Analyst",
+        system_prompt=_COMMON + (
+            "\n\nYour focus: profitability, credit quality, funding mix, and capital "
+            "adequacy, across a single bank or the whole population. Use "
+            "get_population_metrics with group='earnings'|'credit'|'funding'|"
+            "'capital'|'concentration' to rank or screen many banks by these metrics — "
+            "it returns peer percentiles alongside each value. Use "
+            "get_metric_distribution to characterize how a metric is spread across the "
+            "population (median, percentiles, histogram) rather than guessing at what "
+            "'normal' looks like. FDIC's own ratio fields (NIM, ROA, ROE, efficiency) "
+            "are YEAR-TO-DATE ANNUALIZED — say so if comparing across quarters. "
+            "get_metric_distribution's 'exclusions' block names institutions dropped "
+            "from a deposit-based metric (trust/clearing/card charters that aren't "
+            "meaningfully deposit-funded) — mention them if asked why a count is lower "
+            "than the full population."
+        ),
+        tool_names=("list_banks", "get_bank_profile", "get_population_metrics",
+                   "get_metric_distribution", "get_percentile_heatmap",
+                   "get_asset_treemap", "compare_banks"),
+    ),
     "filings_analyst": Persona(
         key="filings_analyst",
         label="Filings Analyst",
@@ -87,6 +109,8 @@ PERSONAS: dict[str, Persona] = {
         tool_names=("list_banks", "get_bank_profile", "get_bank_xray", "diff_filings",
                    "get_peer_cluster", "find_ma_matches", "run_stress_test",
                    "get_risk_score", "get_risk_leaderboard", "compare_banks",
-                   "get_price_candles", "get_market_snapshot"),
+                   "get_price_candles", "get_market_snapshot",
+                   "get_population_metrics", "get_metric_distribution",
+                   "get_percentile_heatmap", "get_asset_treemap"),
     ),
 }

@@ -25,6 +25,16 @@ const NAV_GROUPS: NavGroup[] = [
     { to: '/screener', label: 'Screener' },
     { to: '/compare', label: 'Compare' },
   ] },
+  { label: 'Analyze', links: [
+    { to: '/earnings', label: 'Earnings' },
+    { to: '/credit', label: 'Credit' },
+    { to: '/funding', label: 'Funding' },
+  ] },
+  { label: 'Visualize', links: [
+    { to: '/heatmap', label: 'Heatmap' },
+    { to: '/treemap', label: 'Treemap' },
+    { to: '/distributions', label: 'Distributions' },
+  ] },
   { label: 'My work', links: [
     { to: '/watchlist', label: 'Watchlist' },
   ] },

@@ -89,6 +89,10 @@ ROUTE_TIERS: dict[str, str] = {
     "/api/risk-leaderboard": "viewer",
     "/api/compare": "viewer",
     "/api/watchlist": "viewer",
+    "/api/population-metrics": "viewer",
+    "/api/metric-distribution": "viewer",
+    "/api/percentile-heatmap": "viewer",
+    "/api/asset-treemap": "viewer",
     "/api/banks/stress-test": "analyst",
     "/api/assistant/ask": "analyst",
     "/api/activity/agent-runs": "analyst",
@@ -123,6 +127,15 @@ ROUTES = [
         _certs(q["certs"]), metrics=q["metrics"].split(",") if q.get("metrics") else None)),
     ("GET", "/api/watchlist", lambda q, claims: {
         "items": common_db.fetch_watchlist(_require_sub(claims))}),
+    ("GET", "/api/population-metrics", lambda q, claims: tools.get_population_metrics(
+        q["group"], limit=int(q.get("limit", 2000)), sort_by=q.get("sort_by"),
+        descending=q.get("descending", "true").lower() != "false")),
+    ("GET", "/api/metric-distribution", lambda q, claims: tools.get_metric_distribution(
+        q["metric"], bins=int(q.get("bins", 30)))),
+    ("GET", "/api/percentile-heatmap", lambda q, claims: tools.get_percentile_heatmap(
+        top_n=int(q.get("top_n", 40)), sort_by=q.get("sort_by", "total_assets"))),
+    ("GET", "/api/asset-treemap", lambda q, claims: tools.get_asset_treemap(
+        group_by=q.get("group_by", "peer_cluster_label"))),
     ("GET", "/api/activity/agent-runs", lambda q, claims: {
         "items": common_db.fetch_recent_agent_runs(int(q.get("limit", 50)))}),
     ("GET", "/api/activity/audit-log", lambda q, claims: {

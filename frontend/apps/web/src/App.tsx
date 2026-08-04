@@ -15,6 +15,12 @@ const WatchlistPage = lazy(() => import('./pages/WatchlistPage').then(m => ({ de
 const AssistantPage = lazy(() => import('./pages/AssistantPage').then(m => ({ default: m.AssistantPage })));
 const ActivityPage = lazy(() => import('./pages/ActivityPage').then(m => ({ default: m.ActivityPage })));
 const BankPage = lazy(() => import('./pages/BankPage').then(m => ({ default: m.BankPage })));
+const EarningsPage = lazy(() => import('./pages/EarningsPage').then(m => ({ default: m.EarningsPage })));
+const CreditPage = lazy(() => import('./pages/CreditPage').then(m => ({ default: m.CreditPage })));
+const FundingPage = lazy(() => import('./pages/FundingPage').then(m => ({ default: m.FundingPage })));
+const HeatmapPage = lazy(() => import('./pages/HeatmapPage').then(m => ({ default: m.HeatmapPage })));
+const TreemapPage = lazy(() => import('./pages/TreemapPage').then(m => ({ default: m.TreemapPage })));
+const DistributionsPage = lazy(() => import('./pages/DistributionsPage').then(m => ({ default: m.DistributionsPage })));
 
 function RouteFallback() {
   return <div className="route-loading muted">Loading…</div>;
@@ -27,6 +33,12 @@ export default function App({ user, onLogout }: { user: User; onLogout: () => vo
         <Route index element={<Suspense fallback={<RouteFallback />}><OverviewPage /></Suspense>} />
         <Route path="/screener" element={<Suspense fallback={<RouteFallback />}><ScreenerPage /></Suspense>} />
         <Route path="/compare" element={<Suspense fallback={<RouteFallback />}><ComparePage /></Suspense>} />
+        <Route path="/earnings" element={<Suspense fallback={<RouteFallback />}><EarningsPage /></Suspense>} />
+        <Route path="/credit" element={<Suspense fallback={<RouteFallback />}><CreditPage /></Suspense>} />
+        <Route path="/funding" element={<Suspense fallback={<RouteFallback />}><FundingPage /></Suspense>} />
+        <Route path="/heatmap" element={<Suspense fallback={<RouteFallback />}><HeatmapPage /></Suspense>} />
+        <Route path="/treemap" element={<Suspense fallback={<RouteFallback />}><TreemapPage /></Suspense>} />
+        <Route path="/distributions" element={<Suspense fallback={<RouteFallback />}><DistributionsPage /></Suspense>} />
         <Route path="/watchlist" element={<Suspense fallback={<RouteFallback />}><WatchlistPage /></Suspense>} />
         <Route path="/assistant" element={<Suspense fallback={<RouteFallback />}><AssistantPage /></Suspense>} />
         <Route path="/activity" element={<Suspense fallback={<RouteFallback />}><ActivityPage /></Suspense>} />

@@ -1,0 +1,21 @@
+.treemap-page { display: flex; flex-direction: column; gap: var(--space-4); }
+.treemap-subtitle { margin: 0 0 var(--space-3); font-size: var(--text-sm); max-width: 720px; }
+.treemap-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+}
+.treemap-select {
+  padding: 7px var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+}
+.treemap-legend { display: flex; gap: var(--space-3); font-size: var(--text-xs); }
+.treemap-legend-item { display: inline-flex; align-items: center; gap: 5px; color: var(--text-muted); }
+.treemap-legend-item i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }

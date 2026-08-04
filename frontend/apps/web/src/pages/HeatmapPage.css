@@ -1,0 +1,11 @@
+.heatmap-page { display: flex; flex-direction: column; gap: var(--space-4); }
+.heatmap-subtitle { margin: 0 0 var(--space-3); font-size: var(--text-sm); max-width: 720px; }
+.heatmap-controls { display: flex; gap: var(--space-3); margin-bottom: var(--space-4); }
+.heatmap-select {
+  padding: 7px var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+}

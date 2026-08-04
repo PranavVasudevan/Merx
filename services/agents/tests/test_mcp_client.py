@@ -34,7 +34,10 @@ def test_list_tools_returns_all_features():
     with MCPStdioClient() as client:
         tools = client.list_tools()
     names = {t["name"] for t in tools}
-    assert len(tools) == 12   # 9 feature tools + get_price_candles + get_market_snapshot + get_risk_leaderboard
+    assert len(tools) == 16   # 9 feature tools + get_price_candles + get_market_snapshot
+                              # + get_risk_leaderboard + get_population_metrics
+                              # + get_metric_distribution + get_percentile_heatmap
+                              # + get_asset_treemap
     assert "get_bank_xray" in names and "get_risk_score" in names
     assert "get_price_candles" in names and "get_market_snapshot" in names
 

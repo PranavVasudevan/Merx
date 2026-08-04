@@ -11,7 +11,9 @@ a LOW `percentile_rank_cet1_ratio` means unusually thin capital.
 
 from __future__ import annotations
 
-# Metrics we rank a bank against its peers on.
+# Metrics we rank a bank against its peers on. Computed ONCE here and reused by every
+# consumer (profile percentiles, X-Ray peer context, the metric-group tables, the
+# heatmap) — the same "build Gold once" contract the rest of this layer follows.
 RANK_METRICS = [
     "uninsured_deposit_pct",
     "loan_to_deposit_pct",
@@ -20,9 +22,19 @@ RANK_METRICS = [
     "concentration_ratio_residential_mortgage",
     "max_loan_concentration_pct",
     "cre_to_equity_pct",
+    "cre_to_total_capital_pct",
     "cet1_ratio",
     "leverage_ratio",
     "core_deposit_pct",
+    # earnings
+    "roa_pct",
+    "net_interest_margin_pct",
+    "efficiency_ratio_pct",
+    # credit quality
+    "npl_ratio_pct",
+    "texas_ratio_pct",
+    # funding composition
+    "brokered_deposit_pct",
 ]
 
 
