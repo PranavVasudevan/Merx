@@ -15,7 +15,7 @@ from pathlib import Path
 import duckdb
 
 from banklens_transforms import clustering
-from banklens_transforms.footprint import build_footprints
+from banklens_transforms.footprint import build_footprints, county_deposit_table
 from banklens_transforms.gold import gold_features
 from banklens_transforms.market import to_price_bar
 from banklens_transforms.peers import add_percentile_ranks
@@ -247,12 +247,45 @@ def footprints() -> dict[int, dict]:
     dict if SOD hasn't been landed (see scripts/land_sod.ps1)."""
     if "footprints" in _cache:
         return _cache["footprints"]
-    if not _SOD.exists():
-        _cache["footprints"] = {}
-    else:
-        raw = json.loads(_SOD.read_text(encoding="utf-8-sig"))
-        _cache["footprints"] = build_footprints(raw)
+    _cache["footprints"] = build_footprints(sod_raw())
     return _cache["footprints"]
+
+
+# Not projectable on a contiguous-US Albers canvas without a real inset (which needs
+# boundary data this app doesn't have landed) — 634 of 76,120 branches (0.83%), see
+# geography tool docstrings for the disclosed count.
+NON_CONTIGUOUS_STATES = {"AK", "HI", "PR", "GU", "VI", "AS", "MP"}
+
+
+def sod_raw() -> list[dict]:
+    """Every landed SOD branch row, unfiltered — the full ~4,431-cert universe (every
+    FDIC-insured bank), not just the $1B-$250B analytical slice. Market-share and
+    branch-map both need the full universe: a share or HHI computed against only the
+    population slice as denominator would overstate every number in it."""
+    if "sod_raw" not in _cache:
+        _cache["sod_raw"] = json.loads(_SOD.read_text(encoding="utf-8-sig")) if _SOD.exists() else []
+    return _cache["sod_raw"]
+
+
+def county_table() -> dict[str, dict]:
+    """{fips: county_deposit_table entry} over the FULL landed SOD — real input to
+    Feature 15's county-level HHI, cached the same way population()'s clustering is."""
+    if "county_table" not in _cache:
+        _cache["county_table"] = county_deposit_table(sod_raw())
+    return _cache["county_table"]
+
+
+def bank_name_by_cert() -> dict[int, str]:
+    """Institution name for EVERY landed cert (not just the $1B-$250B population) —
+    SOD's per-row NAMEBR is the BRANCH's own name (wrong for a multi-branch bank), but
+    the BRNUM==0 row is FDIC's own head-office branch, whose NAMEBR is the institution's
+    registered name. Verified live: all 4,431 landed certs carry a BRNUM==0 row."""
+    if "bank_name_by_cert" not in _cache:
+        _cache["bank_name_by_cert"] = {
+            int(r["CERT"]): r.get("NAMEBR") for r in sod_raw()
+            if r.get("BRNUM") == 0 and r.get("CERT") is not None
+        }
+    return _cache["bank_name_by_cert"]
 
 
 def bank_quarters(cert: int) -> list[dict] | None:

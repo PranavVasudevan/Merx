@@ -13,6 +13,7 @@ from banklens_transforms.deposit_flight import (
     EXCLUDED_CANDIDATES, POSITIVE_CERTS, features_from, load_card, score_vector,
 )
 from banklens_transforms.filing_diff import build_quarters, diff
+from banklens_transforms.footprint import county_concentration, county_key
 from banklens_transforms.ma_fit import rank_partners
 from banklens_transforms.market import price_snapshot
 from banklens_transforms.stress import Shock, run_stress_test, starting_position
@@ -677,6 +678,103 @@ def get_model_card() -> dict:
     }
 
 
+# The Federal Reserve's own Bank Merger Competitive Review screening threshold — see
+# footprint.herfindahl's docstring. This is the bank-specific figure, not the general
+# DOJ/FTC 2500 threshold used for the wider economy.
+BANK_MERGER_HHI_CONCENTRATED = 1800.0
+
+
+def _full_universe_names() -> dict[int, str]:
+    """Name for ANY landed cert, not just the $1B-$250B population — county
+    concentration and the branch map both span the full ~4,431-cert SOD universe,
+    most of which never enters the analytical population at all."""
+    names = dict(data.bank_name_by_cert())
+    names.update({c: g["name"] for c, g in data.population()["by_cert"].items()})
+    return names
+
+
+def get_county_concentration(state: str = None, top_n: int = 100) -> dict:
+    """Feature 15 — real county-level deposit HHI computed over the FULL landed SOD
+    universe (~4,431 certs, $18.1T in branch deposits), not just the $1B-$250B
+    analytical slice — a share computed against the slice alone would overstate every
+    number in it. County (FIPS state+county) is the market definition the Federal
+    Reserve and DOJ actually use for bank-merger competitive review, so the HHI here
+    means something a real regulator would recognize, unlike an invented coordinate
+    grid.
+    """
+    names = _full_universe_names()
+    rows = []
+    for fips, entry in data.county_table().items():
+        if state and (entry.get("state") or "").upper() != state.upper():
+            continue
+        c = county_concentration(entry)
+        if c["hhi"] is None:
+            continue
+        c["concentrated"] = c["hhi"] >= BANK_MERGER_HHI_CONCENTRATED
+        c["shares"] = [{**s, "name": names.get(s["cert"], f"CERT {s['cert']}")}
+                       for s in c["shares"][:8]]
+        rows.append(c)
+    rows.sort(key=lambda r: r["hhi"], reverse=True)
+    return {
+        "as_of": "SOD 2025", "hhi_concentrated_threshold": BANK_MERGER_HHI_CONCENTRATED,
+        "county_count": len(rows), "concentrated_count": sum(1 for r in rows if r["concentrated"]),
+        "counties": rows[:top_n],
+    }
+
+
+# A generous contiguous-US bounding box (Census CONUS extent + margin). Needed
+# because a handful of SOD rows carry a nominally-domestic STALPBR alongside a
+# corrupt or foreign coordinate — verified live: 13 rows tagged with Pacific
+# freely-associated-state codes (PW/FM/MH — Palau, Micronesia, Marshall Islands,
+# not covered by NON_CONTIGUOUS_STATES) carry latitudes above 90 (impossible) or
+# longitudes near 150-160, and one row tagged "NJ" carries a UK-area coordinate
+# (50.4, -4.4) — an FDIC source data error, not this app's bug. Rendering these
+# on an Albers-fit-to-bounds canvas silently squashed the whole contiguous US into
+# a sliver: the fit stretches to whatever the data's extremes are.
+_CONUS_LAT_RANGE = (20.0, 50.0)
+_CONUS_LON_RANGE = (-130.0, -60.0)
+
+
+def get_branch_map(state: str = None) -> dict:
+    """Feature 15 map data — every landed branch's real coordinates, deposits and
+    county, for a hand-rolled canvas projection (no tiles, no map-provider network
+    calls). Restricted to the contiguous 48 states + DC: Albers USA's Alaska/Hawaii/
+    territory insets need real boundary data this app doesn't have landed, so those
+    branches (plus a handful of corrupt-coordinate rows, see _CONUS_LAT_RANGE) are
+    counted and disclosed (excluded_non_contiguous), not silently dropped.
+    """
+    raw = data.sod_raw()
+    names = _full_universe_names()
+
+    def in_conus(r: dict) -> bool:
+        if r.get("STALPBR") in data.NON_CONTIGUOUS_STATES:
+            return False
+        lat, lon = r.get("SIMS_LATITUDE"), r.get("SIMS_LONGITUDE")
+        if lat is None or lon is None:
+            return False
+        return _CONUS_LAT_RANGE[0] <= lat <= _CONUS_LAT_RANGE[1] and _CONUS_LON_RANGE[0] <= lon <= _CONUS_LON_RANGE[1]
+
+    excluded = sum(1 for r in raw if not in_conus(r))
+    branches = []
+    for r in raw:
+        if not in_conus(r):
+            continue
+        st = r.get("STALPBR")
+        if state and (st or "").upper() != state.upper():
+            continue
+        branches.append({
+            "cert": r.get("CERT"), "lat": round(float(r["SIMS_LATITUDE"]), 3),
+            "lon": round(float(r["SIMS_LONGITUDE"]), 3),
+            "deposits": round((r.get("DEPSUMBR") or 0) * 1000), "fips": county_key(r),
+        })
+    certs_present = {b["cert"] for b in branches if b["cert"] is not None}
+    return {
+        "branch_count": len(branches), "excluded_non_contiguous": excluded,
+        "bank_names": {c: names.get(c, f"CERT {c}") for c in certs_present},
+        "branches": branches,
+    }
+
+
 # ---- registry ------------------------------------------------------------
 _CERT = {"type": "integer", "description": "FDIC certificate number"}
 
@@ -796,6 +894,18 @@ TOOLS = [
                     "contributions for the live population.",
      "inputSchema": {"type": "object", "properties": {}},
      "handler": get_model_card},
+    {"name": "get_county_concentration",
+     "description": "Feature 15 — real county-level deposit HHI over the full "
+                    "~4,431-cert SOD universe, against the Fed's bank-merger "
+                    "screening threshold (HHI >= 1800).",
+     "inputSchema": {"type": "object", "properties": {
+         "state": {"type": "string"}, "top_n": {"type": "integer"}}},
+     "handler": get_county_concentration},
+    {"name": "get_branch_map",
+     "description": "Feature 15 — every landed branch's real lat/lon, deposits and "
+                    "county, for a hand-rolled US branch map (contiguous states only).",
+     "inputSchema": {"type": "object", "properties": {"state": {"type": "string"}}},
+     "handler": get_branch_map},
 ]
 
 TOOL_BY_NAME = {t["name"]: t for t in TOOLS}

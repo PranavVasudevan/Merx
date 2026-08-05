@@ -94,10 +94,13 @@ PERSONAS: dict[str, Persona] = {
             "geography) and get_peer_cluster for behavioral context on the target. Use "
             "get_cluster_diagnostics when asked how the behavioral clustering itself "
             "was chosen (silhouette by k) or where size-based peer groups disagree "
-            "with actual behavior."
+            "with actual behavior. Use get_county_concentration for real county-level "
+            "deposit HHI (the Fed/DOJ bank-merger market definition) and "
+            "get_branch_map for real branch coordinates/counts by state — both span "
+            "the full ~4,431-bank FDIC universe, not just the $1B-$250B slice."
         ),
         tool_names=("list_banks", "get_bank_profile", "find_ma_matches", "get_peer_cluster",
-                   "get_cluster_diagnostics"),
+                   "get_cluster_diagnostics", "get_county_concentration", "get_branch_map"),
     ),
     "macro_stress": Persona(
         key="macro_stress",
@@ -125,6 +128,7 @@ PERSONAS: dict[str, Persona] = {
                    "compare_banks", "get_price_candles", "get_market_snapshot",
                    "get_population_metrics", "get_metric_distribution",
                    "get_percentile_heatmap", "get_asset_treemap",
-                   "get_cluster_diagnostics", "get_model_card"),
+                   "get_cluster_diagnostics", "get_model_card",
+                   "get_county_concentration", "get_branch_map"),
     ),
 }

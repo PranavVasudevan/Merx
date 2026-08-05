@@ -26,6 +26,8 @@ const BriefingPage = lazy(() => import('./pages/BriefingPage').then(m => ({ defa
 const FilingDiffPage = lazy(() => import('./pages/FilingDiffPage').then(m => ({ default: m.FilingDiffPage })));
 const ClustersPage = lazy(() => import('./pages/ClustersPage').then(m => ({ default: m.ClustersPage })));
 const ModelPage = lazy(() => import('./pages/ModelPage').then(m => ({ default: m.ModelPage })));
+const GeographyPage = lazy(() => import('./pages/GeographyPage').then(m => ({ default: m.GeographyPage })));
+const MarketSharePage = lazy(() => import('./pages/MarketSharePage').then(m => ({ default: m.MarketSharePage })));
 
 function RouteFallback() {
   return <div className="route-loading muted">Loading…</div>;
@@ -49,6 +51,8 @@ export default function App({ user, onLogout }: { user: User; onLogout: () => vo
         <Route path="/filing-diff" element={<Suspense fallback={<RouteFallback />}><FilingDiffPage /></Suspense>} />
         <Route path="/clusters" element={<Suspense fallback={<RouteFallback />}><ClustersPage /></Suspense>} />
         <Route path="/model" element={<Suspense fallback={<RouteFallback />}><ModelPage /></Suspense>} />
+        <Route path="/geography" element={<Suspense fallback={<RouteFallback />}><GeographyPage /></Suspense>} />
+        <Route path="/market-share" element={<Suspense fallback={<RouteFallback />}><MarketSharePage /></Suspense>} />
         <Route path="/watchlist" element={<Suspense fallback={<RouteFallback />}><WatchlistPage /></Suspense>} />
         <Route path="/assistant" element={<Suspense fallback={<RouteFallback />}><AssistantPage /></Suspense>} />
         <Route path="/activity" element={<Suspense fallback={<RouteFallback />}><ActivityPage /></Suspense>} />

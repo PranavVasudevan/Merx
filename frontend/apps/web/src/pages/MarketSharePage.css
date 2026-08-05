@@ -1,0 +1,48 @@
+.market-share-page { display: flex; flex-direction: column; gap: var(--space-4); }
+.market-share-subtitle { margin: 0 0 var(--space-3); font-size: var(--text-sm); max-width: 760px; }
+.market-share-select {
+  padding: 7px var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  min-width: 220px;
+}
+
+.market-share-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2); margin-bottom: var(--space-3); }
+.market-share-stat { display: flex; flex-direction: column; gap: 2px; padding: var(--space-2); border-radius: var(--radius-sm); background: var(--surface-2); text-align: center; }
+.market-share-stat span:first-child { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: .04em; }
+.market-share-stat span:last-child { font-size: var(--text-base); font-weight: 650; }
+@media (max-width: 700px) { .market-share-stats { grid-template-columns: 1fr; } }
+.market-share-caveat { margin: 0 0 var(--space-3); max-width: 760px; }
+
+.market-share-table-wrap { overflow-x: auto; }
+.market-share-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.ms-th { text-align: left; padding: 6px var(--space-2); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); border-bottom: 1px solid var(--gridline); white-space: nowrap; }
+.ms-th-right { text-align: right; }
+.ms-row { cursor: pointer; }
+.ms-row:hover { background: var(--surface-2); }
+.ms-row-concentrated .ms-hhi { color: var(--status-critical); font-weight: 650; }
+.ms-td-name { padding: 7px var(--space-2); border-bottom: 1px solid var(--gridline); font-weight: 600; white-space: nowrap; }
+.ms-td-right { text-align: right; padding: 7px var(--space-2); border-bottom: 1px solid var(--gridline); }
+.ms-td-top { padding: 7px var(--space-2); border-bottom: 1px solid var(--gridline); font-size: var(--text-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
+.ms-td-top a { color: var(--text-primary); font-weight: 600; text-decoration: none; }
+.ms-td-top a:hover { text-decoration: underline; }
+
+.ms-expand-row td { padding: var(--space-2) var(--space-3); background: var(--surface-2); border-bottom: 1px solid var(--gridline); }
+.ms-shares { display: flex; flex-direction: column; gap: 2px; }
+.ms-share-row {
+  display: grid;
+  grid-template-columns: 1fr 100px 70px;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 5px var(--space-2);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  color: var(--text-primary);
+  font-size: var(--text-xs);
+}
+.ms-share-row:hover { background: var(--surface); }
+.ms-share-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ms-share-pct { text-align: right; font-weight: 650; }

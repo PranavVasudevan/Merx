@@ -97,6 +97,8 @@ ROUTE_TIERS: dict[str, str] = {
     "/api/briefing": "viewer",
     "/api/cluster-diagnostics": "viewer",
     "/api/model-card": "viewer",
+    "/api/county-concentration": "viewer",
+    "/api/branch-map": "viewer",
     "/api/banks/stress-test": "analyst",
     "/api/assistant/ask": "analyst",
     "/api/activity/agent-runs": "analyst",
@@ -145,6 +147,9 @@ ROUTES = [
         top_n=int(q.get("top_n", 8)))),
     ("GET", "/api/cluster-diagnostics", lambda q, claims: tools.get_cluster_diagnostics()),
     ("GET", "/api/model-card", lambda q, claims: tools.get_model_card()),
+    ("GET", "/api/county-concentration", lambda q, claims: tools.get_county_concentration(
+        state=q.get("state"), top_n=int(q.get("top_n", 100)))),
+    ("GET", "/api/branch-map", lambda q, claims: tools.get_branch_map(state=q.get("state"))),
     ("GET", "/api/activity/agent-runs", lambda q, claims: {
         "items": common_db.fetch_recent_agent_runs(int(q.get("limit", 50)))}),
     ("GET", "/api/activity/audit-log", lambda q, claims: {

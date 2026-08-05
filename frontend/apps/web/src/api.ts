@@ -1,9 +1,10 @@
 import type {
-  AgentRunEntry, AssistantResult, AuditLogEntry, BankProfile, BankTrendsResult, CandlesResult,
-  ClusterDiagnosticsResult, CompareResult, FilingDiffResult, HeatmapResult, MaFitResult,
-  MarketSnapshot, MetricDistributionResult, MetricGroup, ModelCardResult, PeerClusterResult,
-  PopulationBank, PopulationMetricsResult, QuarterlyBriefingResult, RiskLeaderboardResult,
-  RiskScoreResult, StressResult, TreemapResult, WatchlistItem, XrayResult,
+  AgentRunEntry, AssistantResult, AuditLogEntry, BankProfile, BankTrendsResult, BranchMapResult,
+  CandlesResult, ClusterDiagnosticsResult, CompareResult, CountyConcentrationResult,
+  FilingDiffResult, HeatmapResult, MaFitResult, MarketSnapshot, MetricDistributionResult,
+  MetricGroup, ModelCardResult, PeerClusterResult, PopulationBank, PopulationMetricsResult,
+  QuarterlyBriefingResult, RiskLeaderboardResult, RiskScoreResult, StressResult, TreemapResult,
+  WatchlistItem, XrayResult,
 } from './types';
 import { getCurrentUser } from './auth';
 
@@ -115,4 +116,7 @@ export const api = {
   quarterlyBriefing: (top_n = 8) => get<QuarterlyBriefingResult>('/briefing', { top_n }),
   clusterDiagnostics: () => get<ClusterDiagnosticsResult>('/cluster-diagnostics'),
   modelCard: () => get<ModelCardResult>('/model-card'),
+  countyConcentration: (opts: { state?: string; top_n?: number } = {}) =>
+    get<CountyConcentrationResult>('/county-concentration', { state: opts.state, top_n: opts.top_n ?? 100 }),
+  branchMap: (state?: string) => get<BranchMapResult>('/branch-map', { state }),
 };

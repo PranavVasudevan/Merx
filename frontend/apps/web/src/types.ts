@@ -529,3 +529,46 @@ export interface ModelCardResult {
   scored_quarter: string;
   driver_points: ModelCardDriverPoint[];
 }
+
+// ---- geography + market share ----
+
+export interface CountyShare {
+  cert: number;
+  name: string;
+  deposits: number;
+  share_pct: number;
+}
+
+export interface CountyConcentration {
+  fips: string;
+  name: string | null;
+  state: string | null;
+  branch_count: number;
+  total_deposits: number;
+  hhi: number | null;
+  concentrated: boolean;
+  shares: CountyShare[];
+}
+
+export interface CountyConcentrationResult {
+  as_of: string;
+  hhi_concentrated_threshold: number;
+  county_count: number;
+  concentrated_count: number;
+  counties: CountyConcentration[];
+}
+
+export interface BranchPoint {
+  cert: number;
+  lat: number;
+  lon: number;
+  deposits: number;
+  fips: string | null;
+}
+
+export interface BranchMapResult {
+  branch_count: number;
+  excluded_non_contiguous: number;
+  bank_names: Record<number, string>;
+  branches: BranchPoint[];
+}

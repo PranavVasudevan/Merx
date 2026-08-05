@@ -42,6 +42,10 @@ const NAV_GROUPS: NavGroup[] = [
     { to: '/clusters', label: 'Clusters' },
     { to: '/model', label: 'Model' },
   ] },
+  { label: 'Geography', links: [
+    { to: '/geography', label: 'Branch Map' },
+    { to: '/market-share', label: 'Market Share' },
+  ] },
   { label: 'My work', links: [
     { to: '/watchlist', label: 'Watchlist' },
   ] },
