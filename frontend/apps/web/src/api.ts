@@ -1,10 +1,10 @@
 import type {
   AgentRunEntry, AssistantResult, AuditLogEntry, BankProfile, BankTrendsResult, BranchMapResult,
-  CandlesResult, ClusterDiagnosticsResult, CompareResult, CountyConcentrationResult,
-  FilingDiffResult, HeatmapResult, MaFitResult, MarketSnapshot, MetricDistributionResult,
-  MetricGroup, ModelCardResult, PeerClusterResult, PopulationBank, PopulationMetricsResult,
-  QuarterlyBriefingResult, RiskLeaderboardResult, RiskScoreResult, StressResult, TreemapResult,
-  WatchlistItem, XrayResult,
+  BulkStressResult, CandlesResult, ClusterDiagnosticsResult, CompareResult,
+  CountyConcentrationResult, FilingDiffResult, HeatmapResult, MaFitResult, MarketSnapshot,
+  MetricDistributionResult, MetricGroup, ModelCardResult, NetworkGraphResult, PeerClusterResult,
+  PopulationBank, PopulationMetricsResult, QuarterlyBriefingResult, RiskLeaderboardResult,
+  RiskScoreResult, StressComparisonResult, StressResult, TreemapResult, WatchlistItem, XrayResult,
 } from './types';
 import { getCurrentUser } from './auth';
 
@@ -119,4 +119,13 @@ export const api = {
   countyConcentration: (opts: { state?: string; top_n?: number } = {}) =>
     get<CountyConcentrationResult>('/county-concentration', { state: opts.state, top_n: opts.top_n ?? 100 }),
   branchMap: (state?: string) => get<BranchMapResult>('/branch-map', { state }),
+  network: (top_n = 150) => get<NetworkGraphResult>('/network', { top_n }),
+  bulkStressTest: (certs: number[], loan_loss_pct: number, deposit_outflow_pct: number, rate_shock_bps: number) =>
+    get<BulkStressResult>('/banks/stress-test-bulk', {
+      certs: certs.join(','), loan_loss_pct, deposit_outflow_pct, rate_shock_bps,
+    }),
+  stressComparison: (cert: number, loan_loss_pct: number, deposit_outflow_pct: number, rate_shock_bps: number) =>
+    get<StressComparisonResult>('/banks/stress-test-compare', {
+      cert, loan_loss_pct, deposit_outflow_pct, rate_shock_bps,
+    }),
 };

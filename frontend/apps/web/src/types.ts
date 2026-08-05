@@ -572,3 +572,53 @@ export interface BranchMapResult {
   bank_names: Record<number, string>;
   branches: BranchPoint[];
 }
+
+// ---- M&A network + stress lab ----
+
+export interface NetworkNode {
+  cert: number;
+  name: string;
+  assets_b: number;
+  cluster_id: number | null;
+  cluster_label: string | null;
+  is_seed: boolean;
+}
+
+export interface NetworkEdge {
+  source: number;
+  target: number;
+  fit_score: number;
+}
+
+export interface NetworkGraphResult {
+  quarter: string;
+  seed_count: number;
+  nodes: NetworkNode[];
+  edges: NetworkEdge[];
+}
+
+export interface BulkStressSkip {
+  cert: number;
+  name: string | null;
+  reason: string;
+}
+
+export interface BulkStressBankResult extends StressResult {
+  cert: number;
+}
+
+export interface BulkStressResult {
+  shock: Record<string, number | boolean>;
+  requested: number;
+  tested: number;
+  skipped: BulkStressSkip[];
+  fail_count: number;
+  results: BulkStressBankResult[];
+}
+
+export interface StressComparisonResult {
+  cert: number;
+  name: string;
+  linear: StressResult & { pricing_engine: string };
+  quantlib: StressResult & { pricing_engine: string };
+}

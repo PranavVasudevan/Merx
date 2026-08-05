@@ -17,6 +17,7 @@ import duckdb
 from banklens_transforms import clustering
 from banklens_transforms.footprint import build_footprints, county_deposit_table
 from banklens_transforms.gold import gold_features
+from banklens_transforms.ma_fit import rank_partners
 from banklens_transforms.market import to_price_bar
 from banklens_transforms.peers import add_percentile_ranks
 from banklens_transforms.silver import to_bank_financials
@@ -286,6 +287,26 @@ def bank_name_by_cert() -> dict[int, str]:
             if r.get("BRNUM") == 0 and r.get("CERT") is not None
         }
     return _cache["bank_name_by_cert"]
+
+
+def network_edges() -> dict[int, list[dict]]:
+    """Feature 15 network view — each bank's top-3 M&A-fit partners, precomputed
+    ONCE and cached rather than scored on the request path. Measured live: a full
+    sweep (every bank ranked against the whole ~1,049-bank population, the real
+    O(n^2) `fit_score` cost) takes ~17s in pure Python — completely fine to pay
+    once per quarter and cache (same pattern as population()'s own clustering
+    step), but far too slow to repeat on every /network page load.
+    """
+    if "network_edges" in _cache:
+        return _cache["network_edges"]
+    pop = population()
+    fps = footprints()
+    edges = {
+        g["cert_number"]: rank_partners(g, pop["gold"], top_n=3, footprints=fps)
+        for g in pop["gold"]
+    }
+    _cache["network_edges"] = edges
+    return edges
 
 
 def bank_quarters(cert: int) -> list[dict] | None:

@@ -97,10 +97,13 @@ PERSONAS: dict[str, Persona] = {
             "with actual behavior. Use get_county_concentration for real county-level "
             "deposit HHI (the Fed/DOJ bank-merger market definition) and "
             "get_branch_map for real branch coordinates/counts by state — both span "
-            "the full ~4,431-bank FDIC universe, not just the $1B-$250B slice."
+            "the full ~4,431-bank FDIC universe, not just the $1B-$250B slice. Use "
+            "get_ma_network for a force-graph view of the largest banks and their "
+            "top fit partners at once, rather than one target at a time."
         ),
         tool_names=("list_banks", "get_bank_profile", "find_ma_matches", "get_peer_cluster",
-                   "get_cluster_diagnostics", "get_county_concentration", "get_branch_map"),
+                   "get_cluster_diagnostics", "get_county_concentration", "get_branch_map",
+                   "get_ma_network"),
     ),
     "macro_stress": Persona(
         key="macro_stress",
@@ -110,13 +113,19 @@ PERSONAS: dict[str, Persona] = {
             "run_stress_test with loan_loss_pct / deposit_outflow_pct / rate_shock_bps "
             "shock parameters. A severe deposit outflow can force selling held-to-"
             "maturity securities, realizing losses that were previously only "
-            "'unrealized' — call this out when it happens (the SVB mechanism). "
-            "get_market_snapshot / get_price_candles give real price/volatility "
-            "context when landed (not every bank has this — a missing-data error "
-            "means it hasn't been landed yet, not that the bank is unremarkable)."
+            "'unrealized' — call this out when it happens (the SVB mechanism). Use "
+            "run_bulk_stress_test to apply the SAME shock to a named list of banks "
+            "at once (a cluster, a watchlist, a top-N slice) instead of one bank at "
+            "a time. Use run_stress_comparison when asked how sensitive a result is "
+            "to modeling choice — it prices the same shock two ways (linear-duration "
+            "vs a real QuantLib DCF re-price) on one bank; the DCF version should "
+            "consistently show a smaller loss (convexity). get_market_snapshot / "
+            "get_price_candles give real price/volatility context when landed (not "
+            "every bank has this — a missing-data error means it hasn't been landed "
+            "yet, not that the bank is unremarkable)."
         ),
-        tool_names=("list_banks", "get_bank_profile", "run_stress_test",
-                   "get_market_snapshot", "get_price_candles"),
+        tool_names=("list_banks", "get_bank_profile", "run_stress_test", "run_bulk_stress_test",
+                   "run_stress_comparison", "get_market_snapshot", "get_price_candles"),
     ),
     "generalist": Persona(
         key="generalist",
@@ -129,6 +138,7 @@ PERSONAS: dict[str, Persona] = {
                    "get_population_metrics", "get_metric_distribution",
                    "get_percentile_heatmap", "get_asset_treemap",
                    "get_cluster_diagnostics", "get_model_card",
-                   "get_county_concentration", "get_branch_map"),
+                   "get_county_concentration", "get_branch_map",
+                   "get_ma_network", "run_bulk_stress_test", "run_stress_comparison"),
     ),
 }

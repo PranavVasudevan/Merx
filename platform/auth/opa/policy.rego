@@ -52,6 +52,7 @@ viewer_routes := {
     "/api/model-card",
     "/api/county-concentration",
     "/api/branch-map",
+    "/api/network",
     # GET/POST/DELETE all need the same role (managing your own watchlist
     # isn't analyst-gated) — this set format can't express per-method rules
     # on the same path, but the bridge only ever calls authorize() with the
@@ -64,6 +65,8 @@ viewer_routes := {
 # user-triggered sliders/API call, not bundled into the core profile load.
 analyst_routes := {
     "/api/banks/stress-test",
+    "/api/banks/stress-test-bulk",
+    "/api/banks/stress-test-compare",
     # The MCP server has NO authorization of its own (OPA is only enforced
     # here, at the REST bridge) — a persona can call run_stress_test or any
     # other tool directly through the agent loop with no secondary check.

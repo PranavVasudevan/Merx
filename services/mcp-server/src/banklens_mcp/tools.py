@@ -7,6 +7,7 @@ same functions power the CLI. See docs/api/mcp-tools.md.
 from __future__ import annotations
 
 from collections import Counter, defaultdict
+from dataclasses import asdict
 
 from banklens_transforms import clustering
 from banklens_transforms.deposit_flight import (
@@ -16,7 +17,9 @@ from banklens_transforms.filing_diff import build_quarters, diff
 from banklens_transforms.footprint import county_concentration, county_key
 from banklens_transforms.ma_fit import rank_partners
 from banklens_transforms.market import price_snapshot
-from banklens_transforms.stress import Shock, run_stress_test, starting_position
+from banklens_transforms.stress import (
+    Shock, run_stress_test, run_stress_test_quantlib, starting_position,
+)
 from banklens_transforms.data_quality import capital_basis, exclusion_for, summarize
 from banklens_transforms.xray import evaluate_xray
 
@@ -775,6 +778,99 @@ def get_branch_map(state: str = None) -> dict:
     }
 
 
+def get_ma_network(top_n: int = 150) -> dict:
+    """Feature 15 network view — the `top_n` largest banks by assets, plus every
+    bank that appears among their top-3 M&A-fit partners, as a force-graph-ready
+    node/edge list. Built from data.network_edges() (precomputed once per quarter,
+    NOT scored on this request path — see that function's docstring for why: a
+    live full sweep measured at ~17s).
+    """
+    pop = data.population()
+    ranked = sorted(pop["gold"], key=lambda g: g.get("total_assets") or 0, reverse=True)
+    seed_certs = [g["cert_number"] for g in ranked[:top_n]]
+    edges_by_cert = data.network_edges()
+
+    node_certs = set(seed_certs)
+    edges = []
+    for cert in seed_certs:
+        for e in edges_by_cert.get(cert, []):
+            node_certs.add(e["cert_number"])
+            edges.append({"source": cert, "target": e["cert_number"], "fit_score": e["fit_score"]})
+
+    nodes = []
+    for cert in node_certs:
+        g = pop["by_cert"].get(cert)
+        if g is None:
+            continue
+        nodes.append({
+            "cert": cert, "name": g["name"], "assets_b": round((g.get("total_assets") or 0) / 1e9, 1),
+            "cluster_id": g.get("peer_cluster_id"), "cluster_label": g.get("peer_cluster_label"),
+            "is_seed": cert in seed_certs,
+        })
+    return {"quarter": pop["quarter"], "seed_count": len(seed_certs),
+            "nodes": nodes, "edges": edges}
+
+
+MAX_BULK_STRESS_CERTS = 150   # a readable cross-bank chart, not an unbounded scan
+
+
+def run_bulk_stress_test(certs: list[int], loan_loss_pct: float = 3.0,
+                         deposit_outflow_pct: float = 15.0, rate_shock_bps: float = 200.0) -> dict:
+    """Feature 16, cross-bank — the SAME shock applied to every named bank at once,
+    so a cluster, a watchlist, or a top-N slice can be compared side by side under
+    one scenario instead of clicking through banks individually. Scope resolution
+    (which certs make up "this cluster" / "my watchlist" / "top N by assets") is
+    the caller's job — the frontend already holds that population/watchlist data,
+    so this tool does one thing: stress-test a named list.
+    """
+    if not certs:
+        raise ValueError("certs must be a non-empty list")
+    if len(certs) > MAX_BULK_STRESS_CERTS:
+        raise ValueError(f"at most {MAX_BULK_STRESS_CERTS} banks per bulk stress test, got {len(certs)}")
+    pop = data.population()
+    shock = Shock(loan_loss_pct=loan_loss_pct, deposit_outflow_pct=deposit_outflow_pct,
+                 rate_shock_bps=rate_shock_bps)
+    results, skipped = [], []
+    for cert in certs:
+        silver = pop["silver_by_cert"].get(cert)
+        if silver is None:
+            skipped.append({"cert": cert, "name": None, "reason": "not in the $1B-$250B population slice"})
+            continue
+        pos = starting_position(silver)
+        if pos.get("tier1_capital") is None or pos.get("rwa") is None:
+            skipped.append({"cert": cert, "name": silver.get("name"), "reason": "missing capital-dollar fields"})
+            continue
+        results.append({"cert": cert, **run_stress_test(pos, shock)})
+    results.sort(key=lambda r: r["after"]["cet1"])
+    return {
+        "shock": asdict(shock), "requested": len(certs), "tested": len(results),
+        "skipped": skipped, "fail_count": sum(1 for r in results if not r["passes_all"]),
+        "results": results,
+    }
+
+
+def run_stress_comparison(cert: int, loan_loss_pct: float = 3.0,
+                          deposit_outflow_pct: float = 15.0, rate_shock_bps: float = 200.0) -> dict:
+    """Feature 16 — the SAME shock priced two ways on the SAME bank: run_stress_test's
+    modified-duration approximation vs run_stress_test_quantlib's real QuantLib DCF
+    re-price. The DCF version captures bond convexity, so it consistently reports a
+    SMALLER loss for the same rate shock (see stress.py's module docstring) — shown
+    side by side rather than asserted in prose only.
+    """
+    silver = data.population()["silver_by_cert"].get(cert)
+    if silver is None:
+        raise ValueError(f"CERT {cert} not in the population slice.")
+    pos = starting_position(silver)
+    if pos.get("tier1_capital") is None or pos.get("rwa") is None:
+        raise ValueError(f"CERT {cert} is missing capital-dollar fields; cannot stress test.")
+    shock = Shock(loan_loss_pct=loan_loss_pct, deposit_outflow_pct=deposit_outflow_pct,
+                 rate_shock_bps=rate_shock_bps)
+    linear = run_stress_test(pos, shock)
+    linear["pricing_engine"] = "linear_duration"
+    dcf = run_stress_test_quantlib(pos, shock)
+    return {"cert": cert, "name": pos["name"], "linear": linear, "quantlib": dcf}
+
+
 # ---- registry ------------------------------------------------------------
 _CERT = {"type": "integer", "description": "FDIC certificate number"}
 
@@ -906,6 +1002,27 @@ TOOLS = [
                     "county, for a hand-rolled US branch map (contiguous states only).",
      "inputSchema": {"type": "object", "properties": {"state": {"type": "string"}}},
      "handler": get_branch_map},
+    {"name": "get_ma_network",
+     "description": "Feature 15 — force-graph nodes/edges of the largest banks and "
+                    "their top M&A-fit partners, colored by behavioral cluster.",
+     "inputSchema": {"type": "object", "properties": {"top_n": {"type": "integer"}}},
+     "handler": get_ma_network},
+    {"name": "run_bulk_stress_test",
+     "description": "Feature 16, cross-bank — the same shock applied to a named "
+                    "list of banks (a cluster, watchlist, or top-N slice) at once.",
+     "inputSchema": {"type": "object", "properties": {
+         "certs": {"type": "array", "items": {"type": "integer"}},
+         "loan_loss_pct": {"type": "number"}, "deposit_outflow_pct": {"type": "number"},
+         "rate_shock_bps": {"type": "number"}}, "required": ["certs"]},
+     "handler": run_bulk_stress_test},
+    {"name": "run_stress_comparison",
+     "description": "Feature 16 — the same shock priced two ways on one bank: "
+                    "linear-duration approximation vs a real QuantLib DCF re-price.",
+     "inputSchema": {"type": "object", "properties": {
+         "cert": _CERT, "loan_loss_pct": {"type": "number"},
+         "deposit_outflow_pct": {"type": "number"}, "rate_shock_bps": {"type": "number"}},
+         "required": ["cert"]},
+     "handler": run_stress_comparison},
 ]
 
 TOOL_BY_NAME = {t["name"]: t for t in TOOLS}

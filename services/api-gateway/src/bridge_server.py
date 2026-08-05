@@ -99,7 +99,10 @@ ROUTE_TIERS: dict[str, str] = {
     "/api/model-card": "viewer",
     "/api/county-concentration": "viewer",
     "/api/branch-map": "viewer",
+    "/api/network": "viewer",
     "/api/banks/stress-test": "analyst",
+    "/api/banks/stress-test-bulk": "analyst",
+    "/api/banks/stress-test-compare": "analyst",
     "/api/assistant/ask": "analyst",
     "/api/activity/agent-runs": "analyst",
     "/api/activity/audit-log": "analyst",
@@ -150,6 +153,15 @@ ROUTES = [
     ("GET", "/api/county-concentration", lambda q, claims: tools.get_county_concentration(
         state=q.get("state"), top_n=int(q.get("top_n", 100)))),
     ("GET", "/api/branch-map", lambda q, claims: tools.get_branch_map(state=q.get("state"))),
+    ("GET", "/api/network", lambda q, claims: tools.get_ma_network(top_n=int(q.get("top_n", 150)))),
+    ("GET", "/api/banks/stress-test-bulk", lambda q, claims: tools.run_bulk_stress_test(
+        _certs(q["certs"]), loan_loss_pct=_f(q.get("loan_loss_pct"), 3.0),
+        deposit_outflow_pct=_f(q.get("deposit_outflow_pct"), 15.0),
+        rate_shock_bps=_f(q.get("rate_shock_bps"), 200.0))),
+    ("GET", "/api/banks/stress-test-compare", lambda q, claims: tools.run_stress_comparison(
+        _cap(q["cert"]), loan_loss_pct=_f(q.get("loan_loss_pct"), 3.0),
+        deposit_outflow_pct=_f(q.get("deposit_outflow_pct"), 15.0),
+        rate_shock_bps=_f(q.get("rate_shock_bps"), 200.0))),
     ("GET", "/api/activity/agent-runs", lambda q, claims: {
         "items": common_db.fetch_recent_agent_runs(int(q.get("limit", 50)))}),
     ("GET", "/api/activity/audit-log", lambda q, claims: {

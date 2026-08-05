@@ -11,7 +11,7 @@ import './NavShell.css';
 // actions are analyst-gated, plain reads are viewer-level). Kept here as a
 // single source of truth so the nav can grey out links a viewer can't use
 // instead of only failing after the click.
-const ANALYST_ONLY_PATHS = new Set(['/assistant', '/activity']);
+const ANALYST_ONLY_PATHS = new Set(['/assistant', '/activity', '/stress-lab']);
 
 // Grouped, not a flat bar: the expansion takes this well past the half-dozen links a
 // single row can hold. Groups are the user's mental model (find banks / analyse them /
@@ -45,6 +45,10 @@ const NAV_GROUPS: NavGroup[] = [
   { label: 'Geography', links: [
     { to: '/geography', label: 'Branch Map' },
     { to: '/market-share', label: 'Market Share' },
+  ] },
+  { label: 'Simulate', links: [
+    { to: '/network', label: 'Network' },
+    { to: '/stress-lab', label: 'Stress Lab' },
   ] },
   { label: 'My work', links: [
     { to: '/watchlist', label: 'Watchlist' },
