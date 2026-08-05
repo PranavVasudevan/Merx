@@ -48,6 +48,8 @@ viewer_routes := {
     "/api/asset-treemap",
     "/api/banks/trends",
     "/api/briefing",
+    "/api/cluster-diagnostics",
+    "/api/model-card",
     # GET/POST/DELETE all need the same role (managing your own watchlist
     # isn't analyst-gated) — this set format can't express per-method rules
     # on the same path, but the bridge only ever calls authorize() with the

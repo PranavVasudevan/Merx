@@ -445,3 +445,87 @@ export interface MetricDistributionResult {
   histogram: HistogramBin[];
   exclusions: DataQualityDisclosure;
 }
+
+// ---- cluster + model governance ----
+
+export interface SilhouetteByK {
+  k: number;
+  silhouette: number;
+  max_share: number;
+}
+
+export interface ClusterCentroid {
+  cluster_id: number;
+  label: string;
+  size: number;
+  centroid: Record<string, number>;
+}
+
+export interface SizeBucketSummary {
+  bucket: string;
+  size: number;
+  modal_behavioral_cluster: string;
+  modal_share: number;
+  mismatch_count: number;
+}
+
+export interface ClusterMismatch {
+  cert: number;
+  name: string;
+  conventional_bucket: string;
+  bucket_modal_cluster: string;
+  behavioral_cluster: string;
+  assets_b: number;
+}
+
+export interface ClusterDiagnosticsResult {
+  quarter: string;
+  served_k: number;
+  silhouette_by_k: SilhouetteByK[];
+  centroids: ClusterCentroid[];
+  size_bucket_summary: SizeBucketSummary[];
+  sample_mismatches: ClusterMismatch[];
+}
+
+export interface ModelCardPositive {
+  cert: number;
+  name: string;
+}
+
+export interface ModelCardExcludedCandidate {
+  cert: number;
+  name: string;
+  reason: string;
+}
+
+export interface ModelCardLeaveOneOut {
+  cert: number;
+  name: string;
+  risk: number;
+  rank: number;
+  n: number;
+  percentile: number;
+}
+
+export interface ModelCardDriverPoint {
+  cert: number;
+  name: string;
+  feature: string;
+  value: number;
+  contribution: number;
+  risk_score: number;
+}
+
+export interface ModelCardResult {
+  features: string[];
+  weights: number[];
+  bias: number;
+  auc: number;
+  trained_on: string;
+  positives: ModelCardPositive[];
+  excluded_candidates: ModelCardExcludedCandidate[];
+  training_exclusions: DataQualityDisclosure;
+  leave_one_out: ModelCardLeaveOneOut[];
+  scored_quarter: string;
+  driver_points: ModelCardDriverPoint[];
+}

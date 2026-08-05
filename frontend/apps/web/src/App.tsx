@@ -24,6 +24,8 @@ const DistributionsPage = lazy(() => import('./pages/DistributionsPage').then(m 
 const TrendsPage = lazy(() => import('./pages/TrendsPage').then(m => ({ default: m.TrendsPage })));
 const BriefingPage = lazy(() => import('./pages/BriefingPage').then(m => ({ default: m.BriefingPage })));
 const FilingDiffPage = lazy(() => import('./pages/FilingDiffPage').then(m => ({ default: m.FilingDiffPage })));
+const ClustersPage = lazy(() => import('./pages/ClustersPage').then(m => ({ default: m.ClustersPage })));
+const ModelPage = lazy(() => import('./pages/ModelPage').then(m => ({ default: m.ModelPage })));
 
 function RouteFallback() {
   return <div className="route-loading muted">Loading…</div>;
@@ -45,6 +47,8 @@ export default function App({ user, onLogout }: { user: User; onLogout: () => vo
         <Route path="/trends" element={<Suspense fallback={<RouteFallback />}><TrendsPage /></Suspense>} />
         <Route path="/briefing" element={<Suspense fallback={<RouteFallback />}><BriefingPage /></Suspense>} />
         <Route path="/filing-diff" element={<Suspense fallback={<RouteFallback />}><FilingDiffPage /></Suspense>} />
+        <Route path="/clusters" element={<Suspense fallback={<RouteFallback />}><ClustersPage /></Suspense>} />
+        <Route path="/model" element={<Suspense fallback={<RouteFallback />}><ModelPage /></Suspense>} />
         <Route path="/watchlist" element={<Suspense fallback={<RouteFallback />}><WatchlistPage /></Suspense>} />
         <Route path="/assistant" element={<Suspense fallback={<RouteFallback />}><AssistantPage /></Suspense>} />
         <Route path="/activity" element={<Suspense fallback={<RouteFallback />}><ActivityPage /></Suspense>} />

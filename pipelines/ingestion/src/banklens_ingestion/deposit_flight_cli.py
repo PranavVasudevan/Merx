@@ -41,6 +41,10 @@ def run(data_dir: Path) -> None:
     exclusions = exc_2022 + exc_2008
     card, fit = train(rows, trained_on="2022Q4 + 2008Q1")
     card["exclusions"] = summarize(exclusions, len(rows) + len(exclusions))
+    # Persisted at train time, not recomputed per-request: leave_one_out retrains
+    # the model once per positive (4x), which is fine for a one-off CLI run but not
+    # something a /model page load should pay for on every request.
+    card["leave_one_out"] = leave_one_out(rows)
     save_card(card)
 
     W = 84

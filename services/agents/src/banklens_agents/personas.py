@@ -41,10 +41,13 @@ PERSONAS: dict[str, Persona] = {
             "instead, use list_banks to get candidates first. Use "
             "get_quarterly_briefing for 'what changed this quarter across the "
             "population' — population churn, biggest movers, cluster migrations, "
-            "and new risk-leaderboard entrants vs the prior landed quarter."
+            "and new risk-leaderboard entrants vs the prior landed quarter. Use "
+            "get_model_card when asked how the deposit-flight model was validated "
+            "(leave-one-out backtest against real failures) or what it excludes."
         ),
         tool_names=("list_banks", "get_bank_profile", "get_bank_xray", "get_risk_score",
-                   "get_risk_leaderboard", "get_quarterly_briefing", "compare_banks"),
+                   "get_risk_leaderboard", "get_quarterly_briefing", "compare_banks",
+                   "get_model_card"),
     ),
     "financial_analyst": Persona(
         key="financial_analyst",
@@ -88,9 +91,13 @@ PERSONAS: dict[str, Persona] = {
         system_prompt=_COMMON + (
             "\n\nYour focus: acquisition/partnership fit. Use find_ma_matches for "
             "ranked candidates (funding complementarity, business similarity, size, "
-            "geography) and get_peer_cluster for behavioral context on the target."
+            "geography) and get_peer_cluster for behavioral context on the target. Use "
+            "get_cluster_diagnostics when asked how the behavioral clustering itself "
+            "was chosen (silhouette by k) or where size-based peer groups disagree "
+            "with actual behavior."
         ),
-        tool_names=("list_banks", "get_bank_profile", "find_ma_matches", "get_peer_cluster"),
+        tool_names=("list_banks", "get_bank_profile", "find_ma_matches", "get_peer_cluster",
+                   "get_cluster_diagnostics"),
     ),
     "macro_stress": Persona(
         key="macro_stress",
@@ -117,6 +124,7 @@ PERSONAS: dict[str, Persona] = {
                    "get_risk_score", "get_risk_leaderboard", "get_quarterly_briefing",
                    "compare_banks", "get_price_candles", "get_market_snapshot",
                    "get_population_metrics", "get_metric_distribution",
-                   "get_percentile_heatmap", "get_asset_treemap"),
+                   "get_percentile_heatmap", "get_asset_treemap",
+                   "get_cluster_diagnostics", "get_model_card"),
     ),
 }

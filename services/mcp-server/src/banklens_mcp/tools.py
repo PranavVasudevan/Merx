@@ -6,7 +6,12 @@ same functions power the CLI. See docs/api/mcp-tools.md.
 
 from __future__ import annotations
 
-from banklens_transforms.deposit_flight import features_from, load_card, score_vector
+from collections import Counter, defaultdict
+
+from banklens_transforms import clustering
+from banklens_transforms.deposit_flight import (
+    EXCLUDED_CANDIDATES, POSITIVE_CERTS, features_from, load_card, score_vector,
+)
 from banklens_transforms.filing_diff import build_quarters, diff
 from banklens_transforms.ma_fit import rank_partners
 from banklens_transforms.market import price_snapshot
@@ -562,6 +567,116 @@ _DEPOSIT_SENSITIVE = {
 }
 
 
+# Standard call-report-style asset tiers for the $1B-$250B population band — the
+# "conventional" (size-based) peer grouping every bank already gets compared against
+# elsewhere (regulatory peer groups, most vendor benchmarking tools), as opposed to
+# the BEHAVIORAL clustering above. Comparing the two is the actual point of Feature
+# 14: a size bucket says nothing about whether a bank funds itself or lends like its
+# size-based "peers" do.
+_SIZE_BUCKETS = [(10e9, "Community ($1B-$10B)"), (50e9, "Regional ($10B-$50B)"),
+                 (float("inf"), "Super-regional ($50B-$250B)")]
+
+
+def _size_bucket(assets: float | None) -> str | None:
+    if assets is None:
+        return None
+    for cutoff, label in _SIZE_BUCKETS:
+        if assets < cutoff:
+            return label
+    return _SIZE_BUCKETS[-1][1]
+
+
+def get_cluster_diagnostics() -> dict:
+    """Feature 14 governance — the real k-selection evidence behind the behavioral
+    clustering every other page consumes (which always serves k=7, for stable
+    cluster ids across quarters), plus where the SIZE-based "conventional" peer
+    group a bank would normally get compared against disagrees with how it actually
+    behaves.
+
+    silhouette_by_k over k=2..7 is rendered here rather than hidden: k=4 can score
+    higher on raw silhouette than the k=7 the app serves — that trade (stability/
+    interpretability vs a marginally tighter k) is a real modeling choice a user
+    should be able to see and judge, not something to quietly assert.
+    """
+    pop = data.population()
+    diag = data.cluster_diagnostics()
+    silhouette_by_k = [{"k": k, **v} for k, v in sorted(diag.items())]
+
+    centroids = []
+    for sid, certs in sorted(pop["cluster_members"].items(), key=lambda kv: -len(kv[1])):
+        rows = [pop["by_cert"][c] for c in certs]
+        centroids.append({
+            "cluster_id": sid, "label": pop["cluster_labels"][sid], "size": len(rows),
+            "centroid": {f: round(sum((r.get(f) or 0) for r in rows) / len(rows), 2)
+                        for f in clustering.FEATURES},
+        })
+
+    by_bucket: dict[str, list[dict]] = defaultdict(list)
+    for g in pop["gold"]:
+        b = _size_bucket(g.get("total_assets"))
+        if b and g.get("peer_cluster_label"):
+            by_bucket[b].append(g)
+
+    bucket_summary, mismatches = [], []
+    for bucket, rows in by_bucket.items():
+        counts = Counter(r["peer_cluster_label"] for r in rows)
+        modal_label, modal_count = counts.most_common(1)[0]
+        mismatched = [r for r in rows if r["peer_cluster_label"] != modal_label]
+        bucket_summary.append({
+            "bucket": bucket, "size": len(rows), "modal_behavioral_cluster": modal_label,
+            "modal_share": round(modal_count / len(rows), 3), "mismatch_count": len(mismatched),
+        })
+        for r in sorted(mismatched, key=lambda r: r.get("total_assets") or 0, reverse=True)[:8]:
+            mismatches.append({
+                "cert": r["cert_number"], "name": r["name"], "conventional_bucket": bucket,
+                "bucket_modal_cluster": modal_label, "behavioral_cluster": r["peer_cluster_label"],
+                "assets_b": round((r.get("total_assets") or 0) / 1e9, 1),
+            })
+
+    return {
+        "quarter": pop["quarter"], "served_k": 7,
+        "silhouette_by_k": silhouette_by_k,
+        "centroids": centroids,
+        "size_bucket_summary": sorted(bucket_summary, key=lambda b: -b["size"]),
+        "sample_mismatches": sorted(mismatches, key=lambda m: -m["assets_b"])[:25],
+    }
+
+
+def get_model_card() -> dict:
+    """Feature 13 governance — the deposit-flight model card: coefficients, in-sample
+    AUC, the leave-one-out backtest against BOTH real crises it trains on (persisted
+    at train time by deposit_flight_cli, not retrained per-request), the documented
+    Washington Mutual exclusion (previously visible only in a source docstring, not
+    to any UI user), the data-quality exclusions applied before training, and per-
+    bank driver contributions for the live population — the beeswarm's raw data.
+    """
+    card = load_card()
+    if card is None:
+        raise ValueError("Deposit-flight model not trained yet; run deposit_flight_cli.")
+    pop = data.population()
+    driver_points = []
+    for g in pop["gold"]:
+        cert = g.get("cert_number")
+        silver = pop["silver_by_cert"].get(cert)
+        if silver is None:
+            continue
+        res = score_vector(card, features_from(silver, g, None))
+        for d in res["drivers"]:
+            driver_points.append({"cert": cert, "name": g["name"], "feature": d["feature"],
+                                  "value": d["value"], "contribution": d["contribution"],
+                                  "risk_score": res["risk_score"]})
+    return {
+        "features": card["features"], "weights": card["weights"], "bias": card["bias"],
+        "auc": card["auc"], "trained_on": card["trained_on"],
+        "positives": [{"cert": c, "name": n} for c, n in POSITIVE_CERTS.items()],
+        "excluded_candidates": [{"cert": c, **info} for c, info in EXCLUDED_CANDIDATES.items()],
+        "training_exclusions": card.get("exclusions"),
+        "leave_one_out": card.get("leave_one_out", []),
+        "scored_quarter": pop["quarter"],
+        "driver_points": driver_points,
+    }
+
+
 # ---- registry ------------------------------------------------------------
 _CERT = {"type": "integer", "description": "FDIC certificate number"}
 
@@ -668,6 +783,19 @@ TOOLS = [
      "description": "Latest price, 1-day change, 30-day realized volatility, 52-week range.",
      "inputSchema": {"type": "object", "properties": {"cert": _CERT}, "required": ["cert"]},
      "handler": get_market_snapshot},
+    {"name": "get_cluster_diagnostics",
+     "description": "Feature 14 governance — silhouette-by-k evidence for the behavioral "
+                    "clustering, cluster centroids, and where size-based 'conventional' "
+                    "peer groups disagree with actual balance-sheet behavior.",
+     "inputSchema": {"type": "object", "properties": {}},
+     "handler": get_cluster_diagnostics},
+    {"name": "get_model_card",
+     "description": "Feature 13 governance — deposit-flight model coefficients, AUC, "
+                    "leave-one-out backtest against both real crises, documented "
+                    "exclusions (incl. Washington Mutual), and per-bank driver "
+                    "contributions for the live population.",
+     "inputSchema": {"type": "object", "properties": {}},
+     "handler": get_model_card},
 ]
 
 TOOL_BY_NAME = {t["name"]: t for t in TOOLS}

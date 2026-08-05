@@ -1,9 +1,9 @@
 import type {
   AgentRunEntry, AssistantResult, AuditLogEntry, BankProfile, BankTrendsResult, CandlesResult,
-  CompareResult, FilingDiffResult, HeatmapResult, MaFitResult, MarketSnapshot,
-  MetricDistributionResult, MetricGroup, PeerClusterResult, PopulationBank,
-  PopulationMetricsResult, QuarterlyBriefingResult, RiskLeaderboardResult, RiskScoreResult,
-  StressResult, TreemapResult, WatchlistItem, XrayResult,
+  ClusterDiagnosticsResult, CompareResult, FilingDiffResult, HeatmapResult, MaFitResult,
+  MarketSnapshot, MetricDistributionResult, MetricGroup, ModelCardResult, PeerClusterResult,
+  PopulationBank, PopulationMetricsResult, QuarterlyBriefingResult, RiskLeaderboardResult,
+  RiskScoreResult, StressResult, TreemapResult, WatchlistItem, XrayResult,
 } from './types';
 import { getCurrentUser } from './auth';
 
@@ -113,4 +113,6 @@ export const api = {
   assetTreemap: (group_by: 'peer_cluster_label' | 'state' = 'peer_cluster_label') =>
     get<TreemapResult>('/asset-treemap', { group_by }),
   quarterlyBriefing: (top_n = 8) => get<QuarterlyBriefingResult>('/briefing', { top_n }),
+  clusterDiagnostics: () => get<ClusterDiagnosticsResult>('/cluster-diagnostics'),
+  modelCard: () => get<ModelCardResult>('/model-card'),
 };

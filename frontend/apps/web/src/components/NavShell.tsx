@@ -38,6 +38,10 @@ const NAV_GROUPS: NavGroup[] = [
     { to: '/treemap', label: 'Treemap' },
     { to: '/distributions', label: 'Distributions' },
   ] },
+  { label: 'Governance', links: [
+    { to: '/clusters', label: 'Clusters' },
+    { to: '/model', label: 'Model' },
+  ] },
   { label: 'My work', links: [
     { to: '/watchlist', label: 'Watchlist' },
   ] },

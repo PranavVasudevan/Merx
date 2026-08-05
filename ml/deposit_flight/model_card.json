@@ -304,5 +304,39 @@
         "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
       }
     ]
-  }
+  },
+  "leave_one_out": [
+    {
+      "cert": 24735,
+      "name": "Silicon Valley Bank",
+      "risk": 0.977,
+      "rank": 33,
+      "n": 1632,
+      "percentile": 98.0
+    },
+    {
+      "cert": 57053,
+      "name": "Signature Bank",
+      "risk": 0.8728,
+      "rank": 56,
+      "n": 1632,
+      "percentile": 96.6
+    },
+    {
+      "cert": 59017,
+      "name": "First Republic Bank",
+      "risk": 0.7114,
+      "rank": 104,
+      "n": 1632,
+      "percentile": 93.7
+    },
+    {
+      "cert": 29730,
+      "name": "IndyMac Bank",
+      "risk": 0.0001,
+      "rank": 1462,
+      "n": 1632,
+      "percentile": 10.5
+    }
+  ]
 }

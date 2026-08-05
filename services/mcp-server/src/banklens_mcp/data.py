@@ -138,6 +138,31 @@ def population(repdte: str | None = None) -> dict:
     return _cache[key]
 
 
+def cluster_diagnostics(repdte: str | None = None) -> dict:
+    """Feature 14 governance — silhouette + largest-cluster-share for k=2..7 on the
+    SAME behavioral feature matrix `population()` clusters with, cached the same way.
+
+    `population()` always serves k=7 (a fixed k is required for the stable-cluster-id
+    scheme other pages depend on), but which k actually scores best on silhouette has
+    only ever been visible via a CLI. This computes it once per quarter — 6 extra
+    k-means runs (k=2..7, silhouette_by_k already reuses one `kmeans` call per k) is
+    cheap at ~1k rows/7 features in pure Python, but still real work worth caching
+    rather than repeating on every request.
+    """
+    repdte = repdte or latest_quarter()
+    if repdte is None:
+        raise FileNotFoundError(f"no landed population quarters under {_POP_DIR}")
+    key = f"cluster_diag:{repdte}"
+    if key in _cache:
+        return _cache[key]
+    pop = population(repdte)
+    _, X = clustering.build_matrix(pop["gold"])
+    diag = clustering.silhouette_by_k(X, k_range=range(2, 8))
+    _cache[key] = {k: {"silhouette": v["silhouette"], "max_share": v["max_share"]}
+                   for k, v in diag.items()}
+    return _cache[key]
+
+
 def bank_history(cert: int) -> list[dict]:
     """One bank's Silver rows across every landed population quarter, newest first.
 
