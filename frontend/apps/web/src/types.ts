@@ -154,6 +154,20 @@ export interface FilingDiffFlag {
   note: string;
 }
 
+export interface FilingDiffLineItem {
+  item: string;
+  metric: string;
+  kind: 'dollar' | 'ratio';
+  quarter_a_value: number | null;
+  quarter_b_value: number | null;
+  unit: string;
+  change: number | null;
+  z: number | null;
+  direction: 'up' | 'down' | null;
+  flagged: boolean;
+  note: string;
+}
+
 export interface FilingDiffResult {
   name: string;
   from_quarter: string;
@@ -161,6 +175,63 @@ export interface FilingDiffResult {
   span_quarters: number;
   n_flags: number;
   flags: FilingDiffFlag[];
+  line_items: FilingDiffLineItem[];
+}
+
+// ---- trends + quarterly briefing ----
+
+export interface BankTrendPoint {
+  quarter: string;
+  peer_cluster_label: string | null;
+  [metric: string]: number | string | null;
+}
+
+export interface BankTrendsResult {
+  cert: number;
+  name: string;
+  metrics: string[];
+  quarters: string[];
+  series: BankTrendPoint[];
+}
+
+export interface BriefingMover {
+  cert: number;
+  name: string;
+  metric: string;
+  label: string;
+  from: number;
+  to: number;
+  change: number;
+}
+
+export interface ClusterMigration {
+  cert: number;
+  name: string;
+  from: string;
+  to: string;
+}
+
+export interface RiskLeaderboardEntrant {
+  cert: number;
+  name: string;
+  risk_score: number;
+}
+
+export interface QuarterlyBriefingResult {
+  quarter: string;
+  prior_quarter: string;
+  population_count: number;
+  prior_population_count: number;
+  entered: string[];
+  exited: string[];
+  top_movers: BriefingMover[];
+  cluster_migrations: {
+    count: number;
+    by_transition: Record<string, number>;
+    sample: ClusterMigration[];
+  };
+  risk_leaderboard_entrants: RiskLeaderboardEntrant[];
+  risk_model_trained: boolean;
 }
 
 export interface PopulationBank {

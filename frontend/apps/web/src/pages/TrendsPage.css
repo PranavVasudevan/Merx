@@ -1,0 +1,74 @@
+.trends-page { display: flex; flex-direction: column; gap: var(--space-4); }
+.trends-subtitle { margin: 0 0 var(--space-3); font-size: var(--text-sm); max-width: 680px; }
+
+.trends-picker { position: relative; max-width: 360px; }
+.trends-picker-input {
+  width: 100%;
+  padding: 9px var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  outline: none;
+  transition: border-color var(--duration-fast) var(--ease-organic),
+              box-shadow var(--duration-fast) var(--ease-organic);
+}
+.trends-picker-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+.trends-picker-results {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-float);
+  overflow: hidden;
+  z-index: 20;
+}
+.trends-picker-result {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 9px var(--space-3);
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--gridline);
+  cursor: pointer;
+  text-align: left;
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  transition: background-color var(--duration-fast) var(--ease-organic);
+}
+.trends-picker-result:last-child { border-bottom: none; }
+.trends-picker-result:hover { background: var(--surface-2); }
+
+.trends-cluster-strip { display: flex; gap: 6px; flex-wrap: wrap; margin: var(--space-3) 0 var(--space-1); }
+.trends-cluster-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  min-width: 90px;
+}
+.trends-cluster-q { font-size: var(--text-xs); }
+.trends-cluster-label { font-size: 10px; line-height: 1.3; }
+.trends-cluster-caveat { margin: 0 0 var(--space-4); max-width: 720px; }
+
+.trends-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4);
+}
+@media (max-width: 780px) {
+  .trends-grid { grid-template-columns: 1fr; }
+}
+.trends-chart-box { padding: var(--space-3); border-radius: var(--radius-sm); background: var(--surface-2); }
+.trends-chart-title { font-size: var(--text-sm); margin: 0 0 var(--space-2); font-weight: 650; }

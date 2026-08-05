@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { stagger } from 'motion';
 import { motion } from 'motion/react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { CandlestickChart } from '../components/CandlestickChart';
 import { CapitalChart } from '../components/CapitalChart';
@@ -20,7 +20,7 @@ import type {
 } from '../types';
 import './BankPage.css';
 
-const DEFAULT_CERT = 6976; // Dime Community Bank — has multi-quarter Bronze for filing-diff
+const DEFAULT_CERT = 6976; // Dime Community Bank — a well-exercised, real example bank
 
 // Same stagger/entrance pattern as the rest of the app (motion.dev/docs/stagger
 // + Bklit UI's organic easing) — see theme.css / App.tsx for the shared story.
@@ -67,7 +67,10 @@ export function BankPage() {
         <motion.div className="app-content" initial="hidden" animate="show" variants={containerVariants}>
           <motion.div className="bank-page-header" variants={itemVariants}>
             <h1 className="bank-page-title">{profile.name}</h1>
-            <WatchlistButton cert={cert} />
+            <div className="bank-page-header-actions">
+              <Link className="bank-page-header-link" to={`/trends?cert=${cert}`}>Trends →</Link>
+              <WatchlistButton cert={cert} />
+            </div>
           </motion.div>
           <motion.div variants={itemVariants}>
             <KpiTiles profile={profile} />
@@ -83,12 +86,13 @@ export function BankPage() {
               <motion.div variants={itemVariants}><CapitalChart profile={profile} /></motion.div>
               <motion.div variants={itemVariants}>
                 {filingDiff ? (
-                  <FilingDiffPanel diff={filingDiff} />
+                  <FilingDiffPanel diff={filingDiff} cert={cert} />
                 ) : (
                   <div className="panel">
                     <h2>Feature 12 · Filing Diff</h2>
-                    <p className="muted">Multi-quarter history not landed for this bank yet
-                      (available for Wells Fargo 3511 and Dime Community Bank 6976).</p>
+                    <p className="muted">This bank appears in fewer than two landed
+                      quarters (it may have just entered the $1B–$250B slice), so
+                      there's nothing to compare yet.</p>
                   </div>
                 )}
               </motion.div>

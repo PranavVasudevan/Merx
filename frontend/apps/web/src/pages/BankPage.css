@@ -16,6 +16,9 @@
   letter-spacing: -0.015em;
   margin: 0;
 }
+.bank-page-header-actions { display: flex; align-items: center; gap: var(--space-3); }
+.bank-page-header-link { font-size: var(--text-sm); color: var(--accent); text-decoration: none; }
+.bank-page-header-link:hover { text-decoration: underline; }
 
 .app-grid {
   display: grid;

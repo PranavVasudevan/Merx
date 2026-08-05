@@ -1,9 +1,9 @@
 import type {
-  AgentRunEntry, AssistantResult, AuditLogEntry, BankProfile, CandlesResult, CompareResult,
-  FilingDiffResult, HeatmapResult, MaFitResult, MarketSnapshot, MetricDistributionResult,
-  MetricGroup, PeerClusterResult, PopulationBank, PopulationMetricsResult,
-  RiskLeaderboardResult, RiskScoreResult, StressResult, TreemapResult, WatchlistItem,
-  XrayResult,
+  AgentRunEntry, AssistantResult, AuditLogEntry, BankProfile, BankTrendsResult, CandlesResult,
+  CompareResult, FilingDiffResult, HeatmapResult, MaFitResult, MarketSnapshot,
+  MetricDistributionResult, MetricGroup, PeerClusterResult, PopulationBank,
+  PopulationMetricsResult, QuarterlyBriefingResult, RiskLeaderboardResult, RiskScoreResult,
+  StressResult, TreemapResult, WatchlistItem, XrayResult,
 } from './types';
 import { getCurrentUser } from './auth';
 
@@ -81,7 +81,9 @@ export const api = {
   maFit: (cert: number, top_n = 8) => get<MaFitResult>('/banks/ma-fit', { cert, top_n }),
   stressTest: (cert: number, loan_loss_pct: number, deposit_outflow_pct: number, rate_shock_bps: number) =>
     get<StressResult>('/banks/stress-test', { cert, loan_loss_pct, deposit_outflow_pct, rate_shock_bps }),
-  filingDiff: (cert: number) => get<FilingDiffResult>('/banks/filing-diff', { cert }),
+  filingDiff: (cert: number, quarter_a?: string, quarter_b?: string) =>
+    get<FilingDiffResult>('/banks/filing-diff', { cert, quarter_a, quarter_b }),
+  bankTrends: (cert: number) => get<BankTrendsResult>('/banks/trends', { cert }),
   riskScore: (cert: number) => get<RiskScoreResult>('/banks/risk-score', { cert }),
   candles: (cert: number, limit_days = 180) => get<CandlesResult>('/banks/candles', { cert, limit_days }),
   marketSnapshot: (cert: number) => get<MarketSnapshot>('/banks/market-snapshot', { cert }),
@@ -110,4 +112,5 @@ export const api = {
     get<HeatmapResult>('/percentile-heatmap', { top_n, sort_by }),
   assetTreemap: (group_by: 'peer_cluster_label' | 'state' = 'peer_cluster_label') =>
     get<TreemapResult>('/asset-treemap', { group_by }),
+  quarterlyBriefing: (top_n = 8) => get<QuarterlyBriefingResult>('/briefing', { top_n }),
 };

@@ -112,11 +112,19 @@ def run_stress(cert: int, loan_loss_pct: float = 3.0, deposit_outflow_pct: float
 
 
 def diff_filings(cert: int, quarter_a: str = None, quarter_b: str = None) -> dict:
-    # Prefer the per-bank Bronze partition where one exists (it can run deeper than the
-    # population history), and otherwise reassemble the series from the population
-    # quarters — which is what makes this work for all ~1,000 banks instead of only
-    # the handful that were individually landed.
-    rows = data.bank_quarters(cert) or data.bank_history(cert)
+    # Prefer the population-based history (data.bank_history — Wave 0d's 8 landed
+    # quarters) over the legacy per-bank Bronze partition. This used to be the other
+    # way around on the assumption the per-bank land "can run deeper than the
+    # population history" — measured, that's now backwards: all 4 individually-landed
+    # certs (2270, 3511, 6672, 6976) cap at 6 quarters (2024Q4-2026Q1), strictly
+    # SHALLOWER than the 8-quarter population land (2024Q2-2026Q1). Worse, the
+    # frontend's quarter picker is built from get_bank_trends, which always reads
+    # bank_history — so preferring the shorter source here silently disagreed with
+    # what the UI offered, live-verified as `ValueError: '2024Q2' is not in list`
+    # when a user picked a quarter the UI itself listed as available. Falling back to
+    # bank_quarters only covers a cert that somehow isn't in ANY landed population
+    # quarter but was individually landed some other way.
+    rows = data.bank_history(cert) or data.bank_quarters(cert)
     if not rows:
         raise ValueError(
             f"No multi-quarter data for CERT {cert}. Landed population quarters: "
@@ -318,6 +326,136 @@ def get_percentile_heatmap(top_n: int = 40, sort_by: str = "total_assets") -> di
     }
 
 
+# Curated for /trends line charts. Every one is a Gold field already computed by
+# gold_features — this is a projection, not new analysis.
+TREND_METRICS = [
+    "total_assets", "uninsured_deposit_pct", "loan_to_deposit_pct", "cet1_ratio",
+    "roa_pct", "net_interest_margin_pct", "npl_ratio_pct", "texas_ratio_pct",
+    "brokered_deposit_pct", "max_loan_concentration_pct",
+]
+
+
+def get_bank_trends(cert: int) -> dict:
+    """One bank's Gold-derived metrics across every landed quarter, oldest first —
+    the real trajectory Wave 0d's 8-quarter land makes possible for the whole
+    population, not just the 4 individually-landed certs.
+
+    Reuses `data.population(q)` per quarter rather than a parallel per-bank
+    pipeline: same Gold computation, same peer percentiles, same stable cluster ids
+    the rest of the app already uses, and the same cache — a second bank's trends
+    request pays nothing for a quarter this one already warmed.
+    """
+    quarters = list(reversed(data.available_quarters()))  # oldest first, for charting
+    series = []
+    for q in quarters:
+        g = data.population(q)["by_cert"].get(cert)
+        if g is not None:
+            series.append(g)
+    if not series:
+        raise ValueError(
+            f"CERT {cert} has no landed history in any of {', '.join(quarters) or 'no landed quarters'}.")
+    return {
+        "cert": cert, "name": series[-1]["name"], "metrics": TREND_METRICS,
+        "quarters": [s["quarter"] for s in series],
+        "series": [{**{"quarter": s["quarter"]}, **{m: s.get(m) for m in TREND_METRICS},
+                   "peer_cluster_label": s.get("peer_cluster_label")} for s in series],
+    }
+
+
+# The set of headline metrics /briefing screens for "biggest movers". Each maps to
+# whether a HIGHER value is the more concerning direction, purely for how a mover is
+# framed in the summary text — both directions are always reported.
+_BRIEFING_METRICS = {
+    "roa_pct": "Return on assets", "npl_ratio_pct": "NPL ratio",
+    "texas_ratio_pct": "Texas Ratio", "cet1_ratio": "CET1 ratio",
+    "uninsured_deposit_pct": "Uninsured deposits", "brokered_deposit_pct": "Brokered deposits",
+}
+
+
+def get_quarterly_briefing(top_n: int = 8) -> dict:
+    """Population-wide "what changed this quarter" — real QoQ analysis across the
+    latest two landed quarters, not a per-bank drill-down (that's /trends and
+    /filing-diff). Four real signals:
+
+      - population churn: certs present in one quarter's $1B-$250B slice but not
+        the other (crossed a size threshold, or a data-landing gap)
+      - biggest movers on headline metrics, both directions
+      - behavioral cluster migrations, using the STABLE cluster ids Wave 0d added
+        (without those, every k-means run assigns different arbitrary integers to
+        the same behavioral group, and this would report fake migration)
+      - risk-leaderboard churn: banks newly in the top `top_n` riskiest this
+        quarter that weren't last quarter, scored with the SAME deposit-flight
+        model card against both quarters' populations
+
+    Raises if fewer than 2 quarters are landed — there is nothing to compare.
+    """
+    quarters = data.available_quarters()
+    if len(quarters) < 2:
+        raise ValueError(
+            f"need at least 2 landed quarters to brief, have {len(quarters)}: {quarters}")
+    cur_q, prev_q = quarters[0], quarters[1]
+    cur, prev = data.population(cur_q), data.population(prev_q)
+
+    cur_certs, prev_certs = set(cur["by_cert"]), set(prev["by_cert"])
+    entered = sorted(cur["by_cert"][c]["name"] for c in (cur_certs - prev_certs))
+    exited = sorted(prev["by_cert"][c]["name"] for c in (prev_certs - cur_certs))
+
+    movers = []
+    for c in cur_certs & prev_certs:
+        g_cur, g_prev = cur["by_cert"][c], prev["by_cert"][c]
+        for key, label in _BRIEFING_METRICS.items():
+            a, b = g_prev.get(key), g_cur.get(key)
+            if a is None or b is None:
+                continue
+            movers.append({"cert": c, "name": g_cur["name"], "metric": key, "label": label,
+                           "from": round(a, 2), "to": round(b, 2), "change": round(b - a, 2)})
+    movers.sort(key=lambda m: abs(m["change"]), reverse=True)
+
+    migrations = []
+    for c in cur_certs & prev_certs:
+        a = prev["by_cert"][c].get("peer_cluster_label")
+        b = cur["by_cert"][c].get("peer_cluster_label")
+        if a and b and a != b:
+            migrations.append({"cert": c, "name": cur["by_cert"][c]["name"], "from": a, "to": b})
+    migration_pairs: dict[str, int] = {}
+    for m in migrations:
+        key = f"{m['from']} -> {m['to']}"
+        migration_pairs[key] = migration_pairs.get(key, 0) + 1
+
+    risk_entrants: list[dict] = []
+    card = load_card()
+    if card is not None:
+        def _top_certs(pop: dict) -> dict[int, float]:
+            scored = {}
+            for g in pop["gold"]:
+                c = g.get("cert_number")
+                silver = pop["silver_by_cert"].get(c)
+                if silver is None:
+                    continue
+                scored[c] = score_vector(card, features_from(silver, g, None))["risk_score"]
+            top = sorted(scored.items(), key=lambda t: t[1], reverse=True)[:top_n]
+            return dict(top)
+        cur_top, prev_top = _top_certs(cur), _top_certs(prev)
+        for c, score in cur_top.items():
+            if c not in prev_top:
+                risk_entrants.append({"cert": c, "name": cur["by_cert"][c]["name"],
+                                      "risk_score": round(score, 4)})
+        risk_entrants.sort(key=lambda r: r["risk_score"], reverse=True)
+
+    return {
+        "quarter": cur_q, "prior_quarter": prev_q,
+        "population_count": len(cur_certs), "prior_population_count": len(prev_certs),
+        "entered": entered, "exited": exited,
+        "top_movers": movers[:top_n * 2],
+        "cluster_migrations": {
+            "count": len(migrations), "by_transition": migration_pairs,
+            "sample": migrations[:top_n],
+        },
+        "risk_leaderboard_entrants": risk_entrants,
+        "risk_model_trained": card is not None,
+    }
+
+
 def get_asset_treemap(group_by: str = "peer_cluster_label") -> dict:
     """Every bank in the population, sized by assets and grouped for a treemap —
     `group_by` in {"peer_cluster_label", "state"}. Colored client-side by whichever
@@ -469,11 +607,24 @@ TOOLS = [
      "inputSchema": {"type": "object", "properties": {"top_n": {"type": "integer"}}},
      "handler": get_risk_leaderboard},
     {"name": "diff_filings",
-     "description": "Feature 12 — flag line-item moves that are unusual vs the bank's own history.",
+     "description": "Feature 12 — side-by-side quarter comparison for every tracked "
+                    "line item, flagging moves that are unusual vs the bank's own history.",
      "inputSchema": {"type": "object", "properties": {
          "cert": _CERT, "quarter_a": {"type": "string"}, "quarter_b": {"type": "string"}},
          "required": ["cert"]},
      "handler": diff_filings},
+    {"name": "get_bank_trends",
+     "description": "One bank's headline Gold metrics across every landed quarter, "
+                    "oldest first — real QoQ trajectories for earnings, credit, "
+                    "funding and capital.",
+     "inputSchema": {"type": "object", "properties": {"cert": _CERT}, "required": ["cert"]},
+     "handler": get_bank_trends},
+    {"name": "get_quarterly_briefing",
+     "description": "Population-wide 'what changed this quarter': population churn, "
+                    "biggest movers, behavioral-cluster migrations, and risk-"
+                    "leaderboard entrants vs the prior landed quarter.",
+     "inputSchema": {"type": "object", "properties": {"top_n": {"type": "integer"}}},
+     "handler": get_quarterly_briefing},
     {"name": "compare_banks",
      "description": "Side-by-side comparison of banks across chosen metrics.",
      "inputSchema": {"type": "object", "properties": {

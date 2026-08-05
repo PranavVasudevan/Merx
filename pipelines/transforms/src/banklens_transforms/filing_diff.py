@@ -67,10 +67,23 @@ def diff(quarters_desc: list[dict], quarter_a: str | None = None,
     span = ia - ib or 1
 
     flags = []
+    line_items = []
     for key, kind, label, note in TRACKED:
-        change = _change(kind, quarters_desc[ia].get(key), quarters_desc[ib].get(key))
+        val_a, val_b = quarters_desc[ia].get(key), quarters_desc[ib].get(key)
+        change = _change(kind, val_a, val_b)
+
+        entry = {
+            "item": label, "metric": key, "kind": kind,
+            "quarter_a_value": val_a, "quarter_b_value": val_b,
+            "unit": "%" if kind == "dollar" else "pp",
+            "change": None, "z": None, "direction": None, "flagged": False, "note": note,
+        }
         if change is None:
+            # Still listed — a "side-by-side" view must show a line item exists even
+            # when one side is unreported, not silently omit the row.
+            line_items.append(entry)
             continue
+
         # the bank's own distribution of same-span changes for this item,
         # EXCLUDING the transition being evaluated (don't let it damp its own z)
         hist = []
@@ -88,6 +101,13 @@ def diff(quarters_desc: list[dict], quarter_a: str | None = None,
         material = abs(change) >= _FLOOR[kind]
         flagged = ((z is not None and abs(z) >= z_threshold and material)
                    or (z is None and abs(change) >= _BIG[kind]))
+
+        entry.update({
+            "change": round(change, 2), "z": round(z, 2) if z is not None else None,
+            "direction": "up" if change > 0 else "down", "flagged": flagged,
+        })
+        line_items.append(entry)
+
         if flagged:
             flags.append({
                 "item": label, "metric": key, "kind": kind,
@@ -103,4 +123,9 @@ def diff(quarters_desc: list[dict], quarter_a: str | None = None,
         "name": quarters_desc[0].get("name"),
         "from_quarter": labels[ia], "to_quarter": labels[ib], "span_quarters": span,
         "n_flags": len(flags), "flags": flags,
+        # The side-by-side view roadmap section 9 specifies: EVERY tracked line item
+        # with both quarters' raw values, not just the ones that cleared the z-score
+        # bar — a "side-by-side" comparison that only shows outliers isn't side-by-side,
+        # it's just the flag list with extra steps.
+        "line_items": line_items,
     }

@@ -29,6 +29,9 @@ const NAV_GROUPS: NavGroup[] = [
     { to: '/earnings', label: 'Earnings' },
     { to: '/credit', label: 'Credit' },
     { to: '/funding', label: 'Funding' },
+    { to: '/trends', label: 'Trends' },
+    { to: '/filing-diff', label: 'Filing Diff' },
+    { to: '/briefing', label: 'Briefing' },
   ] },
   { label: 'Visualize', links: [
     { to: '/heatmap', label: 'Heatmap' },

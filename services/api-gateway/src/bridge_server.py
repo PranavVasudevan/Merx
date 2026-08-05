@@ -93,6 +93,8 @@ ROUTE_TIERS: dict[str, str] = {
     "/api/metric-distribution": "viewer",
     "/api/percentile-heatmap": "viewer",
     "/api/asset-treemap": "viewer",
+    "/api/banks/trends": "viewer",
+    "/api/briefing": "viewer",
     "/api/banks/stress-test": "analyst",
     "/api/assistant/ask": "analyst",
     "/api/activity/agent-runs": "analyst",
@@ -136,6 +138,9 @@ ROUTES = [
         top_n=int(q.get("top_n", 40)), sort_by=q.get("sort_by", "total_assets"))),
     ("GET", "/api/asset-treemap", lambda q, claims: tools.get_asset_treemap(
         group_by=q.get("group_by", "peer_cluster_label"))),
+    ("GET", "/api/banks/trends", lambda q, claims: tools.get_bank_trends(_cap(q["cert"]))),
+    ("GET", "/api/briefing", lambda q, claims: tools.get_quarterly_briefing(
+        top_n=int(q.get("top_n", 8)))),
     ("GET", "/api/activity/agent-runs", lambda q, claims: {
         "items": common_db.fetch_recent_agent_runs(int(q.get("limit", 50)))}),
     ("GET", "/api/activity/audit-log", lambda q, claims: {

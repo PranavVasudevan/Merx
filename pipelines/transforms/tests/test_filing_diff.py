@@ -51,6 +51,34 @@ def test_default_compares_two_newest():
     assert res["to_quarter"] == "2026Q1" and res["from_quarter"] == "2025Q4"
 
 
+def test_line_items_cover_every_tracked_item_side_by_side():
+    """The side-by-side view roadmap section 9 specifies needs BOTH quarters' raw
+    values for every tracked line, not just the ones that cleared the z-score bar —
+    that used to be all `flags` gave you, which is the flag list with extra steps,
+    not a real side-by-side comparison."""
+    from banklens_transforms.filing_diff import TRACKED
+    quarters = [
+        _q("2026Q1", uninsured_deposits=130, total_deposits=200),
+        _q("2025Q4", uninsured_deposits=101, total_deposits=200),
+        _q("2025Q3", uninsured_deposits=100, total_deposits=200),
+    ]
+    res = diff(quarters)
+    assert len(res["line_items"]) == len(TRACKED)
+    by_metric = {li["metric"]: li for li in res["line_items"]}
+    # a flagged item: both raw values present, change/z/direction populated
+    ud = by_metric["uninsured_deposits"]
+    assert ud["quarter_a_value"] == 101 and ud["quarter_b_value"] == 130
+    assert ud["flagged"] is True and ud["change"] is not None
+    # an item with no data anywhere in these synthetic quarters: still listed, not
+    # silently dropped, with an explicit "no verdict" shape rather than a crash
+    cet1 = by_metric["cet1_ratio"]
+    assert cet1["quarter_a_value"] is None and cet1["change"] is None
+    assert cet1["flagged"] is False
+    # flagged line_items must be exactly the flags list, just not filtered out
+    assert {li["metric"] for li in res["line_items"] if li["flagged"]} == \
+           {f["metric"] for f in res["flags"]}
+
+
 if __name__ == "__main__":
     failures = 0
     for name, fn in sorted(globals().items()):

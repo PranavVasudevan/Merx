@@ -1,10 +1,14 @@
+import { Link } from 'react-router-dom';
 import type { FilingDiffResult } from '../types';
 import './FilingDiffPanel.css';
 
-export function FilingDiffPanel({ diff }: { diff: FilingDiffResult }) {
+export function FilingDiffPanel({ diff, cert }: { diff: FilingDiffResult; cert: number }) {
   return (
     <div className="panel">
-      <h2>Feature 12 · Filing Diff — {diff.from_quarter} → {diff.to_quarter}</h2>
+      <div className="fdiff-head">
+        <h2>Feature 12 · Filing Diff — {diff.from_quarter} → {diff.to_quarter}</h2>
+        <Link className="fdiff-full-link" to={`/filing-diff?cert=${cert}`}>Full side-by-side →</Link>
+      </div>
       {diff.flags.length === 0 ? (
         <p className="muted">No unusual line-item shifts — steady vs this bank's own norm.</p>
       ) : (

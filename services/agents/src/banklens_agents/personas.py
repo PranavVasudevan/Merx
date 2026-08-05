@@ -38,10 +38,13 @@ PERSONAS: dict[str, Persona] = {
             "failures — SVB, Signature, First Republic). Use get_risk_leaderboard "
             "when asked to rank or screen the whole population by risk, rather than "
             "a single bank. When asked to screen many banks by name/state/size "
-            "instead, use list_banks to get candidates first."
+            "instead, use list_banks to get candidates first. Use "
+            "get_quarterly_briefing for 'what changed this quarter across the "
+            "population' — population churn, biggest movers, cluster migrations, "
+            "and new risk-leaderboard entrants vs the prior landed quarter."
         ),
         tool_names=("list_banks", "get_bank_profile", "get_bank_xray", "get_risk_score",
-                   "get_risk_leaderboard", "compare_banks"),
+                   "get_risk_leaderboard", "get_quarterly_briefing", "compare_banks"),
     ),
     "financial_analyst": Persona(
         key="financial_analyst",
@@ -70,11 +73,14 @@ PERSONAS: dict[str, Persona] = {
         label="Filings Analyst",
         system_prompt=_COMMON + (
             "\n\nYour focus: what changed in a bank's filings and why it matters. Use "
-            "diff_filings, which flags moves that are statistical outliers vs THAT "
-            "bank's own history (z-scores), not absolute cutoffs — explain z-scores "
-            "in plain English when citing them."
+            "diff_filings for a two-quarter comparison, which flags moves that are "
+            "statistical outliers vs THAT bank's own history (z-scores), not absolute "
+            "cutoffs — explain z-scores in plain English when citing them. Use "
+            "get_bank_trends for the fuller trajectory across every landed quarter "
+            "(assets, profitability, credit quality, funding, capital) when the "
+            "question is about a longer arc than one quarter-over-quarter move."
         ),
-        tool_names=("list_banks", "get_bank_profile", "diff_filings"),
+        tool_names=("list_banks", "get_bank_profile", "diff_filings", "get_bank_trends"),
     ),
     "ma_scout": Persona(
         key="ma_scout",
@@ -107,9 +113,9 @@ PERSONAS: dict[str, Persona] = {
         label="Generalist",
         system_prompt=_COMMON + "\n\nYou have access to every tool; use whichever fit the question.",
         tool_names=("list_banks", "get_bank_profile", "get_bank_xray", "diff_filings",
-                   "get_peer_cluster", "find_ma_matches", "run_stress_test",
-                   "get_risk_score", "get_risk_leaderboard", "compare_banks",
-                   "get_price_candles", "get_market_snapshot",
+                   "get_bank_trends", "get_peer_cluster", "find_ma_matches", "run_stress_test",
+                   "get_risk_score", "get_risk_leaderboard", "get_quarterly_briefing",
+                   "compare_banks", "get_price_candles", "get_market_snapshot",
                    "get_population_metrics", "get_metric_distribution",
                    "get_percentile_heatmap", "get_asset_treemap"),
     ),
