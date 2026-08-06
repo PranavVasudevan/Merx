@@ -5,6 +5,7 @@ export interface BankSummary {
   cert: number;
   name: string;
   state: string | null;
+  country: string | null;
   assets_b: number;
   cluster: string | null;
 }
@@ -18,6 +19,7 @@ export interface BankProfile {
   cert: number;
   name: string;
   state: string | null;
+  country: string | null;
   quarter: string;
   assets_b: number;
   uninsured_deposit_pct: number | null;
@@ -434,7 +436,7 @@ export interface TreemapGroup {
 
 export interface TreemapResult {
   quarter: string;
-  group_by: 'peer_cluster_label' | 'state';
+  group_by: 'peer_cluster_label' | 'state' | 'country';
   groups: TreemapGroup[];
 }
 

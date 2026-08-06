@@ -21,12 +21,16 @@ from banklens_transforms.ma_fit import rank_partners
 from banklens_transforms.market import to_price_bar
 from banklens_transforms.peers import add_percentile_ranks
 from banklens_transforms.silver import to_bank_financials
+from banklens_transforms.silver_eba import to_bank_financials_eba
 
 REPO = Path(__file__).resolve().parents[4]
 DATA = REPO / "data"
 _POP_DIR = DATA / "bronze" / "source=fdic" / "population"
 _CROSSWALK = DATA / "silver" / "crosswalk.json"
 _SOD = DATA / "bronze" / "source=fdic" / "sod" / "year=2025" / "records.json"
+_EBA_INSTITUTIONS = DATA / "bronze" / "source=eba" / "institutions" / "records.json"
+_EBA_FINANCIALS = DATA / "bronze" / "source=eba" / "financials" / "records.json"
+_FX_EUR_USD = DATA / "bronze" / "source=fx" / "eur_usd" / "records.json"
 
 _CLUSTER_METRICS = ["concentration_ratio_cre", "concentration_ratio_c_and_i",
                     "concentration_ratio_residential_mortgage", "uninsured_deposit_pct",
@@ -75,6 +79,43 @@ def _silver_for(repdte: str) -> list[dict]:
     return _cache[key]
 
 
+def _eu_silver() -> list[dict]:
+    """One Silver row per landed EBA bank, at its own latest available filing
+    period, converted to USD. Empty list if EBA/FX haven't been landed (see
+    scripts/land_eba.ps1) — the app degrades to US-only rather than crashing when
+    this data is absent, same as footprints()/sod_raw() degrade when SOD isn't
+    landed.
+
+    EU periods don't line up with US REPDTEs (EBA publishes with its own lag,
+    currently 2025Q2 vs a 2026Q1 US population) — each bank's own `quarter`/
+    `filing_date` in the returned row is the honest source of truth for what's
+    actually being shown, not the US repdte this function is indifferent to.
+    """
+    if "eu_silver" not in _cache:
+        if not (_EBA_INSTITUTIONS.exists() and _EBA_FINANCIALS.exists() and _FX_EUR_USD.exists()):
+            _cache["eu_silver"] = []
+            return _cache["eu_silver"]
+        institutions = {i["lei"]: i for i in
+                        json.loads(_EBA_INSTITUTIONS.read_text(encoding="utf-8-sig"))}
+        financials = json.loads(_EBA_FINANCIALS.read_text(encoding="utf-8-sig"))
+        fx = json.loads(_FX_EUR_USD.read_text(encoding="utf-8-sig"))[0]
+
+        latest_by_lei: dict[str, dict] = {}
+        for row in financials:
+            lei = row["lei"]
+            if lei not in latest_by_lei or row["period"] > latest_by_lei[lei]["period"]:
+                latest_by_lei[lei] = row
+
+        out = []
+        for lei, row in latest_by_lei.items():
+            inst = institutions.get(lei)
+            if inst is None:          # a financials row with no matching institution row
+                continue
+            out.append(to_bank_financials_eba(row, inst, fx_rate=fx["rate"], fx_date=fx["date"]))
+        _cache["eu_silver"] = out
+    return _cache["eu_silver"]
+
+
 def population(repdte: str | None = None) -> dict:
     """Return {gold, by_cert, silver_by_cert, cluster_members, cluster_labels} for one
     quarter. Defaults to the most recent landed quarter, so every existing caller is
@@ -98,18 +139,44 @@ def population(repdte: str | None = None) -> dict:
     prev_by_cert = ({s.get("cert_number"): s for s in _silver_for(prev_q)}
                     if prev_q else {})
     gold = [gold_features(s, prev_by_cert.get(s.get("cert_number"))) for s in silver]
-    add_percentile_ranks(gold)
+
+    # EU banks (EBA Transparency Exercise), if landed. No QoQ history landed yet for
+    # EBA (only the latest period per bank), so prev=None — every qoq_* and
+    # growth_rate_3yr_pct field is honestly None for these rows, not fabricated.
+    eu_silver = _eu_silver()
+    eu_gold = [gold_features(s) for s in eu_silver]
+
+    # Percentiles ARE computed across the combined US+EU population now that EBA
+    # amounts are converted to USD (see silver_eba.py) — but this mixes IFRS (EBA)
+    # and US-GAAP (FDIC) accounting bases, and EU banks' filing period doesn't match
+    # the US repdte. Directionally real, not a precise apples-to-apples rank.
+    combined_gold = gold + eu_gold
+    add_percentile_ranks(combined_gold)
 
     silver_by_cert = {}
     for s, g in zip(silver, gold, strict=True):
         g["state"] = s.get("state")
+        g["country"] = s.get("country")
+        cert = s.get("cert_number")
+        if cert is not None:
+            silver_by_cert[cert] = s
+    for s, g in zip(eu_silver, eu_gold, strict=True):
+        g["state"] = s.get("state")         # always None — no EU equivalent
+        g["country"] = s.get("country")
+        g["lei"] = s.get("lei")
         cert = s.get("cert_number")
         if cert is not None:
             silver_by_cert[cert] = s
 
-    # Behavioral clusters (k=7, deterministic seed). Cluster IDs come from the label,
-    # not from k-means' arbitrary integer, so the same behavioral group keeps the same
-    # id across quarters — otherwise a multi-quarter view renders fake migration.
+    # Behavioral clusters (k=7, deterministic seed) — US banks ONLY. EBA doesn't
+    # disclose the loan-mix/deposit fields these clusters are built on
+    # (concentration_ratio_*, uninsured_deposit_pct, core_deposit_pct); imputing
+    # them to the population mean would silently place every EU bank in whichever
+    # cluster sits closest to "average", a fabricated assignment. EU banks simply
+    # carry no peer_cluster_id/label — see get_peer_cluster's handling of that.
+    # Cluster IDs come from the label, not from k-means' arbitrary integer, so the
+    # same behavioral group keeps the same id across quarters — otherwise a
+    # multi-quarter view renders fake migration.
     kept, X = clustering.build_matrix(gold)
     labels, _, _ = clustering.kmeans(X, 7)
     raw_members = defaultdict(list)
@@ -130,8 +197,8 @@ def population(repdte: str | None = None) -> dict:
 
     _cache[key] = {
         "quarter": repdte,
-        "gold": gold,
-        "by_cert": {g["cert_number"]: g for g in gold},
+        "gold": combined_gold,
+        "by_cert": {g["cert_number"]: g for g in combined_gold},
         "silver_by_cert": silver_by_cert,
         "cluster_members": {lab: [g["cert_number"] for g in ms] for lab, ms in members.items()},
         "cluster_labels": cluster_labels,
@@ -216,6 +283,7 @@ def duckdb_gold() -> duckdb.DuckDBPyConnection:
 
 
 def query_banks(query: str | None = None, state: str | None = None,
+                country: str | None = None,
                 min_assets_b: float | None = None, max_assets_b: float | None = None,
                 limit: int = 20) -> list[dict]:
     """Filter/sort the Gold population via real SQL, replacing what used to be
@@ -228,6 +296,9 @@ def query_banks(query: str | None = None, state: str | None = None,
     if state:
         clauses.append("upper(state) = ?")
         params.append(state.upper())
+    if country:
+        clauses.append("upper(country) = ?")
+        params.append(country.upper())
     if min_assets_b is not None:
         clauses.append("total_assets / 1e9 >= ?")
         params.append(min_assets_b)

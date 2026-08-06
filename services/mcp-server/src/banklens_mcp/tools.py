@@ -36,18 +36,20 @@ def _need_bank(cert: int) -> dict:
 
 
 # ---- handlers ------------------------------------------------------------
-def list_banks(query: str = None, state: str = None, min_assets_b: float = None,
-               max_assets_b: float = None, limit: int = 20) -> dict:
+def list_banks(query: str = None, state: str = None, country: str = None,
+               min_assets_b: float = None, max_assets_b: float = None,
+               limit: int = 20) -> dict:
     """Search/filter the Gold population — real SQL via data.query_banks()
     (DuckDB), not a hand-rolled Python filter/sort."""
-    hits = data.query_banks(query=query, state=state, min_assets_b=min_assets_b,
-                            max_assets_b=max_assets_b, limit=limit)
+    hits = data.query_banks(query=query, state=state, country=country,
+                            min_assets_b=min_assets_b, max_assets_b=max_assets_b, limit=limit)
     # query_banks already SELECT *s every Gold column — these three profitability/
     # credit/capital fields were sitting right there unused because this dict
     # comprehension only ever picked out the original 5. The Screener page never
     # showed anything beyond name/state/assets/cluster as a result.
     return {"count": len(hits), "banks": [{
         "cert": g["cert_number"], "name": g["name"], "state": g.get("state"),
+        "country": g.get("country"),
         "assets_b": round((g.get("total_assets") or 0) / 1e9, 1),
         "cluster": g.get("peer_cluster_label"),
         "roa_pct": g.get("roa_pct"), "npl_ratio_pct": g.get("npl_ratio_pct"),
@@ -75,7 +77,8 @@ def get_bank_profile(cert: int) -> dict:
         }
 
     return {
-        "cert": cert, "name": g["name"], "state": g.get("state"), "quarter": g["quarter"],
+        "cert": cert, "name": g["name"], "state": g.get("state"),
+        "country": g.get("country"), "quarter": g["quarter"],
         "assets_b": round((g.get("total_assets") or 0) / 1e9, 1),
         "uninsured_deposit_pct": g.get("uninsured_deposit_pct"),
         "loan_to_deposit_pct": g.get("loan_to_deposit_pct"),
@@ -306,7 +309,7 @@ METRIC_GROUPS: dict[str, list[str]] = {
                       "max_loan_concentration_category"],
 }
 
-_IDENTITY = ["cert_number", "name", "state", "total_assets", "peer_cluster_label"]
+_IDENTITY = ["cert_number", "name", "state", "country", "total_assets", "peer_cluster_label"]
 
 
 def get_population_metrics(group: str, limit: int = 2000, sort_by: str = None,
@@ -505,12 +508,16 @@ def get_quarterly_briefing(top_n: int = 8) -> dict:
 
 def get_asset_treemap(group_by: str = "peer_cluster_label") -> dict:
     """Every bank in the population, sized by assets and grouped for a treemap —
-    `group_by` in {"peer_cluster_label", "state"}. Colored client-side by whichever
-    risk metric the user picks (X-Ray severity, risk score, a percentile rank), since
-    baking one color choice in here would make this three tools instead of one.
+    `group_by` in {"peer_cluster_label", "state", "country"}. Colored client-side by
+    whichever risk metric the user picks (X-Ray severity, risk score, a percentile
+    rank), since baking one color choice in here would make this three tools
+    instead of one. "country" is the one grouping that actually spans the full
+    US+EU population — "state" only ever produces boxes for US banks (EU rows
+    have `state=None`, landing in the single "Unclassified" box), so pick
+    "country" for a genuinely pan-European view.
     """
-    if group_by not in ("peer_cluster_label", "state"):
-        raise ValueError(f"group_by must be 'peer_cluster_label' or 'state', got '{group_by}'")
+    if group_by not in ("peer_cluster_label", "state", "country"):
+        raise ValueError(f"group_by must be 'peer_cluster_label', 'state' or 'country', got '{group_by}'")
     pop = data.population()
     groups: dict[str, list[dict]] = {}
     for g in pop["gold"]:
@@ -948,13 +955,17 @@ def get_filings_coverage() -> dict:
 
 
 # ---- registry ------------------------------------------------------------
-_CERT = {"type": "integer", "description": "FDIC certificate number"}
+_CERT = {"type": "integer",
+        "description": "FDIC certificate number (US banks), or the synthetic "
+                       "cert_number BankLens assigns EU banks (see silver_eba.py) "
+                       "— both are ordinary ints returned by list_banks/get_bank_profile."}
 
 TOOLS = [
     {"name": "list_banks",
-     "description": "Search/filter banks in the $1B-$250B slice by name, state, or asset range.",
+     "description": "Search/filter banks (US + EU) by name, state, country, or asset range.",
      "inputSchema": {"type": "object", "properties": {
          "query": {"type": "string"}, "state": {"type": "string"},
+         "country": {"type": "string", "description": "ISO-2 country code, e.g. 'US', 'DE', 'FR'"},
          "min_assets_b": {"type": "number"}, "max_assets_b": {"type": "number"},
          "limit": {"type": "integer"}}},
      "handler": list_banks},

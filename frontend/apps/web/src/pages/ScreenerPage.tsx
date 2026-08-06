@@ -4,7 +4,7 @@ import { motion } from 'motion/react';
 import { api, type BankSearchResult } from '../api';
 import './ScreenerPage.css';
 
-type SortKey = 'name' | 'state' | 'assets_b' | 'cluster' | 'roa_pct' | 'npl_ratio_pct' | 'cet1_ratio';
+type SortKey = 'name' | 'state' | 'country' | 'assets_b' | 'cluster' | 'roa_pct' | 'npl_ratio_pct' | 'cet1_ratio';
 
 function fmtPct(v: number | null): string {
   return v === null || v === undefined ? '—' : `${v.toFixed(2)}%`;
@@ -14,6 +14,7 @@ export function ScreenerPage() {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [state, setState] = useState('');
+  const [country, setCountry] = useState('');
   const [minAssets, setMinAssets] = useState('');
   const [maxAssets, setMaxAssets] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('assets_b');
@@ -28,6 +29,7 @@ export function ScreenerPage() {
       api.screenBanks({
         query: query || undefined,
         state: state || undefined,
+        country: country || undefined,
         min_assets_b: minAssets ? Number(minAssets) : undefined,
         max_assets_b: maxAssets ? Number(maxAssets) : undefined,
         limit: 200,
@@ -37,7 +39,7 @@ export function ScreenerPage() {
         .finally(() => setLoading(false));
     }, 250);
     return () => clearTimeout(t);
-  }, [query, state, minAssets, maxAssets]);
+  }, [query, state, country, minAssets, maxAssets]);
 
   const rows = [...(result?.banks ?? [])].sort((a, b) => {
     const dir = sortDir === 'asc' ? 1 : -1;
@@ -59,7 +61,7 @@ export function ScreenerPage() {
   return (
     <div className="screener-page">
       <div className="panel">
-        <h2>Screener — {result?.count ?? '…'} banks in the $1B–$250B population</h2>
+        <h2>Screener — {result?.count ?? '…'} banks (US $1B–$250B population + EU significant institutions)</h2>
         <div className="screener-filters">
           <input
             className="screener-input"
@@ -73,6 +75,13 @@ export function ScreenerPage() {
             maxLength={2}
             value={state}
             onChange={(e) => setState(e.target.value.toUpperCase())}
+          />
+          <input
+            className="screener-input screener-input-narrow"
+            placeholder="Country (e.g. DE)"
+            maxLength={2}
+            value={country}
+            onChange={(e) => setCountry(e.target.value.toUpperCase())}
           />
           <input
             className="screener-input screener-input-narrow"
@@ -100,7 +109,7 @@ export function ScreenerPage() {
                   Bank{sortKey === 'name' && (sortDir === 'asc' ? ' ▲' : ' ▼')}
                 </th>
                 <th onClick={() => toggleSort('state')} className="screener-th">
-                  State{sortKey === 'state' && (sortDir === 'asc' ? ' ▲' : ' ▼')}
+                  Loc.{sortKey === 'state' && (sortDir === 'asc' ? ' ▲' : ' ▼')}
                 </th>
                 <th onClick={() => toggleSort('assets_b')} className="screener-th screener-th-right">
                   Assets{sortKey === 'assets_b' && (sortDir === 'asc' ? ' ▲' : ' ▼')}
@@ -129,7 +138,7 @@ export function ScreenerPage() {
                   animate={{ opacity: 1, transition: { delay: Math.min(i, 20) * 0.012 } }}
                 >
                   <td className="screener-td-name">{b.name}</td>
-                  <td>{b.state ?? '—'}</td>
+                  <td>{b.country === 'US' ? (b.state ?? '—') : (b.country ?? '—')}</td>
                   <td className="tabular screener-td-right">${b.assets_b.toFixed(1)}B</td>
                   <td className="muted">{b.cluster ?? '—'}</td>
                   <td className="tabular screener-td-right">{fmtPct(b.roa_pct)}</td>

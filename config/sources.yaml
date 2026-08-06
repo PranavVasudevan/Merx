@@ -85,10 +85,21 @@ sources:
     status: active           # implemented in Phase 2a; landing requires the user's own free key
 
   eba_transparency:
-    name: "EBA EU-wide Transparency Exercise / EUCLID"
+    name: "EBA EU-wide Transparency Exercise"
     kind: bulk_download
     base_url: "https://www.eba.europa.eu"
     auth: none
-    cadence: semiannual/annual
+    cadence: semiannual
+    entities: ~120           # significant EU/EEA supervised banks
+    docs: "https://www.eba.europa.eu/eu-wide-transparency-exercise-0"
     license: { tag: eba-open, redistributable: true }
-    status: stretch
+    status: active            # implemented in Phase 1 (pan-European expansion)
+    data_quality_note: >
+      Coarser than FDIC's Call Reports: no loan-category concentration, no
+      uninsured-deposit split, no branch-level geography (EBA doesn't publish
+      either). CET1/Tier1/Total-capital/leverage ratios are reported as raw
+      fractions (0.1841 = 18.41%), NOT already-percentages like FDIC's
+      IDT1CER/RBCRWAJ/RBC1AAJ — scaled at fetch time, see sources/eba.py.
+      Credit-risk/NPL data (tr_cre.csv) deliberately not parsed yet — its
+      exposure-class x NACE-sector x performing-status cube needs the SDD.xlsx
+      data dictionary to decode correctly.

@@ -136,6 +136,8 @@ def to_bank_financials(raw: dict) -> dict:
         "cert_number": int(raw["CERT"]) if raw.get("CERT") is not None else None,
         "name": raw.get("NAMEFULL"),
         "state": raw.get("STALP"),
+        "country": "US",
+        "currency": "USD",
         "quarter": quarter,
         "filing_date": iso_date,
         "restated_flag": False,

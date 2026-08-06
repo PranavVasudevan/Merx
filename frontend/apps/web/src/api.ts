@@ -59,7 +59,8 @@ async function del<T>(path: string, params: Record<string, string | number | und
 export interface BankSearchResult {
   count: number;
   banks: {
-    cert: number; name: string; state: string | null; assets_b: number; cluster: string | null;
+    cert: number; name: string; state: string | null; country: string | null;
+    assets_b: number; cluster: string | null;
     roa_pct: number | null; npl_ratio_pct: number | null; cet1_ratio: number | null;
   }[];
 }
@@ -67,6 +68,7 @@ export interface BankSearchResult {
 export interface ScreenerFilters {
   query?: string;
   state?: string;
+  country?: string;
   min_assets_b?: number;
   max_assets_b?: number;
   limit?: number;
@@ -119,7 +121,7 @@ export const api = {
     get<MetricDistributionResult>('/metric-distribution', { metric, bins }),
   percentileHeatmap: (top_n = 40, sort_by = 'total_assets') =>
     get<HeatmapResult>('/percentile-heatmap', { top_n, sort_by }),
-  assetTreemap: (group_by: 'peer_cluster_label' | 'state' = 'peer_cluster_label') =>
+  assetTreemap: (group_by: 'peer_cluster_label' | 'state' | 'country' = 'peer_cluster_label') =>
     get<TreemapResult>('/asset-treemap', { group_by }),
   quarterlyBriefing: (top_n = 8) => get<QuarterlyBriefingResult>('/briefing', { top_n }),
   clusterDiagnostics: () => get<ClusterDiagnosticsResult>('/cluster-diagnostics'),

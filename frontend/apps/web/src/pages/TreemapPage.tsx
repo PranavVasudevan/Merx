@@ -20,7 +20,7 @@ export function TreemapPage() {
   const navigate = useNavigate();
   const [result, setResult] = useState<TreemapResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [groupBy, setGroupBy] = useState<'peer_cluster_label' | 'state'>('peer_cluster_label');
+  const [groupBy, setGroupBy] = useState<'peer_cluster_label' | 'state' | 'country'>('peer_cluster_label');
 
   useEffect(() => {
     api.assetTreemap(groupBy)
@@ -86,17 +86,21 @@ export function TreemapPage() {
       <div className="panel">
         <h2>Population by assets</h2>
         <p className="muted treemap-subtitle">
-          Every bank in the $1B–$250B slice, sized by assets, grouped by behavioral
-          cluster or state, and colored by X-Ray severity. Click a bank to open it.
+          Every bank in the population (US $1B–$250B slice + EU significant
+          institutions), sized by assets, colored by X-Ray severity where available.
+          Click a bank to open it. Group by country for the full US+EU view — behavioral
+          cluster and state are US-only groupings (EU banks land in one "Unclassified"
+          box under either, since EBA doesn't disclose the loan-mix data clusters need).
         </p>
         <div className="treemap-controls">
           <select
             className="treemap-select"
             value={groupBy}
-            onChange={(e) => setGroupBy(e.target.value as 'peer_cluster_label' | 'state')}
+            onChange={(e) => setGroupBy(e.target.value as 'peer_cluster_label' | 'state' | 'country')}
           >
-            <option value="peer_cluster_label">Group by behavioral cluster</option>
-            <option value="state">Group by state</option>
+            <option value="peer_cluster_label">Group by behavioral cluster (US only)</option>
+            <option value="state">Group by state (US only)</option>
+            <option value="country">Group by country (US + EU)</option>
           </select>
           <div className="treemap-legend">
             <span className="treemap-legend-item"><i style={{ background: colors.good }} />Low risk</span>

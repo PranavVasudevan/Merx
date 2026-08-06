@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { BranchMapCanvas } from '../components/BranchMapCanvas';
 import { CONTIGUOUS_STATES } from '../usStates';
@@ -28,7 +29,9 @@ export function GeographyPage() {
           the $1B–$250B analytical slice) — real coordinates, projected with a
           hand-rolled Albers Equal-Area Conic (no map tiles, no network calls).
           Overlapping dots compound into real density, darkest where branches
-          cluster.
+          cluster. US-only: no public branch-level dataset exists for EU banks the
+          way FDIC's Summary of Deposits does — for the EU angle, see the{' '}
+          <Link to="/treemap">population treemap</Link>'s "group by country" view.
         </p>
         <select className="geography-select" value={state} onChange={(e) => setState(e.target.value)}>
           <option value="">All contiguous states</option>

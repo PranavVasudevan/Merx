@@ -114,7 +114,7 @@ ROUTES = [
     ("GET", "/api/health", lambda q, claims: {"status": "ok"}),
     ("GET", "/api/population", lambda q, claims: _population_summary()),
     ("GET", "/api/banks", lambda q, claims: tools.list_banks(
-        query=q.get("query"), state=q.get("state"),
+        query=q.get("query"), state=q.get("state"), country=q.get("country"),
         min_assets_b=_f(q.get("min_assets_b")), max_assets_b=_f(q.get("max_assets_b")),
         limit=int(q.get("limit", 20)))),
     ("GET", "/api/banks/profile", lambda q, claims: tools.get_bank_profile(_cap(q["cert"]))),
