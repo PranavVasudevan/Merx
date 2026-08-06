@@ -9,6 +9,8 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 from dataclasses import asdict
 
+from banklens_common import embeddings
+from banklens_common.db import DbUnavailable, filing_coverage_stats, search_filing_chunks
 from banklens_transforms import clustering
 from banklens_transforms.deposit_flight import (
     EXCLUDED_CANDIDATES, POSITIVE_CERTS, features_from, load_card, score_vector,
@@ -871,6 +873,44 @@ def run_stress_comparison(cert: int, loan_loss_pct: float = 3.0,
     return {"cert": cert, "name": pos["name"], "linear": linear, "quantlib": dcf}
 
 
+def search_filings_text(query: str, top_n: int = 8) -> dict:
+    """Feature 17 (Tier 6 capstone) — real semantic search over landed SEC 10-K
+    Item 1A risk-factor text: the query is embedded with the same nomic-embed-text
+    model used at land time, matched by cosine similarity in pgvector. Only
+    filers that (a) have a confident CERT<->CIK crosswalk match and (b) had a
+    HIGH-confidence Item 1A extraction are searchable — see get_filings_coverage
+    for the honest real coverage, and cite the exact returned text, not a
+    paraphrase, when answering from a result.
+    """
+    if not query or not query.strip():
+        raise ValueError("query must be a non-empty string")
+    try:
+        vec = embeddings.embed(query)
+    except embeddings.EmbeddingError as exc:
+        raise ValueError(f"Embedding service unavailable: {exc}") from exc
+    try:
+        hits = search_filing_chunks(vec, top_n=top_n)
+    except DbUnavailable as exc:
+        raise ValueError(f"Filings search database unavailable: {exc}") from exc
+    return {
+        "query": query, "count": len(hits),
+        "results": [{**h, "similarity": round(h["similarity"], 4)} for h in hits],
+    }
+
+
+def get_filings_coverage() -> dict:
+    """Honest coverage for Feature 17 — how many filers/chunks are actually
+    landed and searchable right now, by extraction confidence. Bounded and
+    disclosed by design (see filings_cli.py's docstring): only the largest-by-
+    assets population banks with a confident crosswalk match are eligible, and
+    coverage grows only as far as that CLI has been re-run.
+    """
+    try:
+        return filing_coverage_stats()
+    except DbUnavailable as exc:
+        raise ValueError(f"Filings database unavailable: {exc}") from exc
+
+
 # ---- registry ------------------------------------------------------------
 _CERT = {"type": "integer", "description": "FDIC certificate number"}
 
@@ -1023,6 +1063,18 @@ TOOLS = [
          "deposit_outflow_pct": {"type": "number"}, "rate_shock_bps": {"type": "number"}},
          "required": ["cert"]},
      "handler": run_stress_comparison},
+    {"name": "search_filings_text",
+     "description": "Feature 17 — semantic search over landed SEC 10-K Item 1A "
+                    "risk-factor text (pgvector cosine similarity). Cite the "
+                    "returned text exactly, not a paraphrase.",
+     "inputSchema": {"type": "object", "properties": {
+         "query": {"type": "string"}, "top_n": {"type": "integer"}}, "required": ["query"]},
+     "handler": search_filings_text},
+    {"name": "get_filings_coverage",
+     "description": "Feature 17 — how many filers/chunks are actually landed and "
+                    "searchable right now, by extraction confidence.",
+     "inputSchema": {"type": "object", "properties": {}},
+     "handler": get_filings_coverage},
 ]
 
 TOOL_BY_NAME = {t["name"]: t for t in TOOLS}

@@ -1,10 +1,11 @@
 import type {
   AgentRunEntry, AssistantResult, AuditLogEntry, BankProfile, BankTrendsResult, BranchMapResult,
   BulkStressResult, CandlesResult, ClusterDiagnosticsResult, CompareResult,
-  CountyConcentrationResult, FilingDiffResult, HeatmapResult, MaFitResult, MarketSnapshot,
-  MetricDistributionResult, MetricGroup, ModelCardResult, NetworkGraphResult, PeerClusterResult,
-  PopulationBank, PopulationMetricsResult, QuarterlyBriefingResult, RiskLeaderboardResult,
-  RiskScoreResult, StressComparisonResult, StressResult, TreemapResult, WatchlistItem, XrayResult,
+  CountyConcentrationResult, FilingDiffResult, FilingSearchResponse, FilingsCoverageResult,
+  HeatmapResult, MaFitResult, MarketSnapshot, MetricDistributionResult, MetricGroup,
+  ModelCardResult, NetworkGraphResult, PeerClusterResult, PopulationBank,
+  PopulationMetricsResult, QuarterlyBriefingResult, RiskLeaderboardResult, RiskScoreResult,
+  StressComparisonResult, StressResult, TreemapResult, WatchlistItem, XrayResult,
 } from './types';
 import { getCurrentUser } from './auth';
 
@@ -128,4 +129,7 @@ export const api = {
     get<StressComparisonResult>('/banks/stress-test-compare', {
       cert, loan_loss_pct, deposit_outflow_pct, rate_shock_bps,
     }),
+  searchFilings: (query: string, top_n = 8) =>
+    get<FilingSearchResponse>('/filings/search', { query, top_n }),
+  filingsCoverage: () => get<FilingsCoverageResult>('/filings/coverage'),
 };

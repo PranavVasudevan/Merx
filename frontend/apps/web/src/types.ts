@@ -622,3 +622,31 @@ export interface StressComparisonResult {
   linear: StressResult & { pricing_engine: string };
   quantlib: StressResult & { pricing_engine: string };
 }
+
+// ---- filings RAG search ----
+
+export interface FilingSearchResult {
+  cik: number;
+  cert: number | null;
+  ticker: string | null;
+  name: string;
+  accession: string;
+  filing_date: string;
+  report_date: string;
+  extraction_confidence: string;
+  chunk_index: number;
+  chunk_text: string;
+  similarity: number;
+}
+
+export interface FilingSearchResponse {
+  query: string;
+  count: number;
+  results: FilingSearchResult[];
+}
+
+export interface FilingsCoverageResult {
+  filers: number;
+  chunks: number;
+  by_confidence: Record<string, number>;
+}

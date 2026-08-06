@@ -81,9 +81,15 @@ PERSONAS: dict[str, Persona] = {
             "cutoffs — explain z-scores in plain English when citing them. Use "
             "get_bank_trends for the fuller trajectory across every landed quarter "
             "(assets, profitability, credit quality, funding, capital) when the "
-            "question is about a longer arc than one quarter-over-quarter move."
+            "question is about a longer arc than one quarter-over-quarter move. Use "
+            "search_filings_text for the bank's own real SEC 10-K risk-factor "
+            "language on a topic — quote the returned text exactly, never "
+            "paraphrase it as if it were your own summary. Only a bounded, "
+            "disclosed subset of banks have a landed filing (get_filings_coverage "
+            "shows exactly how many) — say so if a search returns nothing."
         ),
-        tool_names=("list_banks", "get_bank_profile", "diff_filings", "get_bank_trends"),
+        tool_names=("list_banks", "get_bank_profile", "diff_filings", "get_bank_trends",
+                   "search_filings_text", "get_filings_coverage"),
     ),
     "ma_scout": Persona(
         key="ma_scout",
@@ -139,6 +145,7 @@ PERSONAS: dict[str, Persona] = {
                    "get_percentile_heatmap", "get_asset_treemap",
                    "get_cluster_diagnostics", "get_model_card",
                    "get_county_concentration", "get_branch_map",
-                   "get_ma_network", "run_bulk_stress_test", "run_stress_comparison"),
+                   "get_ma_network", "run_bulk_stress_test", "run_stress_comparison",
+                   "search_filings_text", "get_filings_coverage"),
     ),
 }

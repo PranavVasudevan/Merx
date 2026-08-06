@@ -1,0 +1,48 @@
+.filings-page { display: flex; flex-direction: column; gap: var(--space-4); }
+.filings-subtitle { margin: 0 0 var(--space-3); font-size: var(--text-sm); max-width: 760px; }
+
+.filings-coverage { margin: 0 0 var(--space-3); font-size: var(--text-sm); padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); background: var(--surface-2); }
+
+.filings-search-form { display: flex; gap: var(--space-2); margin-bottom: var(--space-2); }
+.filings-search-input {
+  flex: 1;
+  padding: 9px var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+}
+.filings-search-btn {
+  padding: 9px var(--space-4);
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--accent);
+  color: var(--surface);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+.filings-search-btn:disabled { opacity: 0.6; cursor: default; }
+
+.filings-examples { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); font-size: var(--text-xs); }
+.filings-example-chip {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-primary);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+.filings-example-chip:hover { background: var(--gridline); }
+
+.filings-results { display: flex; flex-direction: column; gap: var(--space-3); }
+.filings-result { padding: var(--space-3); border-radius: var(--radius-sm); background: var(--surface-2); }
+.filings-result-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); margin-bottom: 6px; font-size: var(--text-sm); }
+.filings-result-name { color: var(--text-primary); font-weight: 650; text-decoration: none; }
+.filings-result-name:hover { text-decoration: underline; }
+.filings-result-ticker { font-size: var(--text-xs); }
+.filings-result-date { font-size: var(--text-xs); margin-left: auto; }
+.filings-result-sim { font-weight: 650; color: var(--accent); }
+.filings-result-text { margin: 0; font-size: var(--text-sm); line-height: 1.6; font-style: italic; }

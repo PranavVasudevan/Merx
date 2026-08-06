@@ -28,6 +28,8 @@ from pathlib import Path
 
 import psycopg
 
+from . import embeddings
+
 REPO = Path(__file__).resolve().parents[5]
 
 _SCHEMA = """
@@ -62,6 +64,34 @@ CREATE TABLE IF NOT EXISTS watchlists (
     PRIMARY KEY (user_sub, cert)
 );
 """
+
+# Feature 17 (Tier 6 capstone) — real SEC 10-K Item 1A chunks + embeddings.
+# Separate from _SCHEMA: this is the one statement in the whole schema that can
+# fail on a Postgres role without CREATE-extension privilege, and every OTHER
+# caller of get_conn() (audit log, agent runs, watchlist) has nothing to do with
+# pgvector — they shouldn't fail to connect just because this one feature can't
+# install its extension. Applied lazily, on first filings-specific call only.
+_FILINGS_SCHEMA = """
+CREATE EXTENSION IF NOT EXISTS vector;
+CREATE TABLE IF NOT EXISTS filing_chunks (
+    id BIGSERIAL PRIMARY KEY,
+    cik BIGINT NOT NULL,
+    cert INTEGER,
+    ticker TEXT,
+    name TEXT NOT NULL,
+    accession TEXT NOT NULL,
+    filing_date TEXT NOT NULL,
+    report_date TEXT NOT NULL,
+    extraction_confidence TEXT NOT NULL,
+    chunk_index INTEGER NOT NULL,
+    chunk_text TEXT NOT NULL,
+    embedding VECTOR(768) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL
+);
+CREATE INDEX IF NOT EXISTS filing_chunks_cik_idx ON filing_chunks (cik);
+CREATE INDEX IF NOT EXISTS filing_chunks_cert_idx ON filing_chunks (cert);
+"""
+_filings_schema_applied = False
 
 _lock = threading.Lock()
 _conn: psycopg.Connection | None = None
@@ -194,3 +224,73 @@ def fetch_watchlist(user_sub: str) -> list[dict]:
         (user_sub,),
     ).fetchall()
     return [{"cert": cert, "created_at": created_at} for cert, created_at in rows]
+
+
+def _ensure_filings_schema(conn: psycopg.Connection) -> None:
+    global _filings_schema_applied
+    if not _filings_schema_applied:
+        conn.execute(_FILINGS_SCHEMA)
+        _filings_schema_applied = True
+
+
+def delete_filing_chunks_for_cik(cik: int) -> None:
+    """Bronze is append-only, but this derived Postgres table isn't a source of
+    record — re-landing a filer's chunks (a re-run, a fixed extraction) replaces
+    its old rows rather than duplicating them alongside stale ones."""
+    conn = get_conn()
+    _ensure_filings_schema(conn)
+    conn.execute("DELETE FROM filing_chunks WHERE cik = %s", (cik,))
+
+
+def save_filing_chunks(rows: list[dict], ts: datetime.datetime | None = None) -> None:
+    """Each row: {cik, cert, ticker, name, accession, filing_date, report_date,
+    extraction_confidence, chunk_index, chunk_text, embedding (list[float])}."""
+    if not rows:
+        return
+    conn = get_conn()
+    _ensure_filings_schema(conn)
+    now = ts or datetime.datetime.now(datetime.timezone.utc)
+    with conn.cursor() as cur:
+        cur.executemany(
+            "INSERT INTO filing_chunks (cik, cert, ticker, name, accession, filing_date, "
+            "report_date, extraction_confidence, chunk_index, chunk_text, embedding, "
+            "created_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::vector, %s)",
+            [(r["cik"], r.get("cert"), r.get("ticker"), r["name"], r["accession"],
+              r["filing_date"], r["report_date"], r["extraction_confidence"],
+              r["chunk_index"], r["chunk_text"], embeddings.to_vector_literal(r["embedding"]),
+              now) for r in rows],
+        )
+
+
+def search_filing_chunks(embedding: list[float], top_n: int = 8) -> list[dict]:
+    """Cosine-nearest chunks to a query embedding. No approximate index (HNSW/
+    IVFFlat) — at this corpus's real scale (thousands of chunks, not millions),
+    pgvector's brute-force exact search is already fast and needs no tuning; an
+    approximate index would trade correctness for speed this app doesn't need yet.
+    """
+    conn = get_conn()
+    _ensure_filings_schema(conn)
+    lit = embeddings.to_vector_literal(embedding)
+    cols = ("cik", "cert", "ticker", "name", "accession", "filing_date", "report_date",
+            "extraction_confidence", "chunk_index", "chunk_text")
+    rows = conn.execute(
+        f"SELECT {', '.join(cols)}, 1 - (embedding <=> %s::vector) AS similarity "
+        f"FROM filing_chunks ORDER BY embedding <=> %s::vector LIMIT %s",
+        (lit, lit, top_n),
+    ).fetchall()
+    return [dict(zip((*cols, "similarity"), row, strict=True)) for row in rows]
+
+
+def filing_coverage_stats() -> dict:
+    """How many filers/chunks are actually landed, and the confidence breakdown —
+    the honest "what's covered" the /filings page and search results should be
+    able to cite rather than imply full coverage."""
+    conn = get_conn()
+    _ensure_filings_schema(conn)
+    total_filers, total_chunks = conn.execute(
+        "SELECT COUNT(DISTINCT cik), COUNT(*) FROM filing_chunks").fetchone()
+    by_confidence = dict(conn.execute(
+        "SELECT extraction_confidence, COUNT(DISTINCT cik) FROM filing_chunks "
+        "GROUP BY extraction_confidence").fetchall())
+    return {"filers": total_filers or 0, "chunks": total_chunks or 0,
+            "by_confidence": by_confidence}

@@ -50,6 +50,9 @@ const NAV_GROUPS: NavGroup[] = [
     { to: '/network', label: 'Network' },
     { to: '/stress-lab', label: 'Stress Lab' },
   ] },
+  { label: 'Research', links: [
+    { to: '/filings', label: 'Filings' },
+  ] },
   { label: 'My work', links: [
     { to: '/watchlist', label: 'Watchlist' },
   ] },

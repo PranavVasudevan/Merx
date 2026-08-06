@@ -100,6 +100,8 @@ ROUTE_TIERS: dict[str, str] = {
     "/api/county-concentration": "viewer",
     "/api/branch-map": "viewer",
     "/api/network": "viewer",
+    "/api/filings/search": "viewer",
+    "/api/filings/coverage": "viewer",
     "/api/banks/stress-test": "analyst",
     "/api/banks/stress-test-bulk": "analyst",
     "/api/banks/stress-test-compare": "analyst",
@@ -154,6 +156,9 @@ ROUTES = [
         state=q.get("state"), top_n=int(q.get("top_n", 100)))),
     ("GET", "/api/branch-map", lambda q, claims: tools.get_branch_map(state=q.get("state"))),
     ("GET", "/api/network", lambda q, claims: tools.get_ma_network(top_n=int(q.get("top_n", 150)))),
+    ("GET", "/api/filings/search", lambda q, claims: tools.search_filings_text(
+        q["query"], top_n=int(q.get("top_n", 8)))),
+    ("GET", "/api/filings/coverage", lambda q, claims: tools.get_filings_coverage()),
     ("GET", "/api/banks/stress-test-bulk", lambda q, claims: tools.run_bulk_stress_test(
         _certs(q["certs"]), loan_loss_pct=_f(q.get("loan_loss_pct"), 3.0),
         deposit_outflow_pct=_f(q.get("deposit_outflow_pct"), 15.0),

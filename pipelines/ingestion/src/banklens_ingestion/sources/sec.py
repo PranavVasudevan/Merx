@@ -26,6 +26,8 @@ from .base import Source
 
 TICKERS_URL = "https://www.sec.gov/files/company_tickers.json"
 FACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik:010d}.json"
+SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik:010d}.json"
+FILING_DOC_URL = "https://www.sec.gov/Archives/edgar/data/{cik}/{accession_nodash}/{document}"
 
 
 class SecSource(Source):
@@ -44,22 +46,25 @@ class SecSource(Source):
             urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar())
         )
 
-    def _get(self, url: str) -> dict:
-        headers = {"User-Agent": self.user_agent, "Accept": "application/json",
+    def _get_text(self, url: str, *, accept: str = "application/json") -> str:
+        headers = {"User-Agent": self.user_agent, "Accept": accept,
                   "Accept-Encoding": "identity", "Connection": "close"}
         last_err: Exception | None = None
         for attempt in range(1, self.max_retries + 1):
             try:
                 req = urllib.request.Request(url, headers=headers)
                 with self._opener.open(req, timeout=self.timeout) as resp:
-                    body = resp.read().decode("utf-8")
+                    body = resp.read().decode("utf-8", errors="replace")
                 time.sleep(self.delay)
-                return json.loads(body)
+                return body
             except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError,
                     ConnectionError) as err:
                 last_err = err
                 time.sleep(self.delay * (2 ** attempt))
         raise RuntimeError(f"SEC request failed after {self.max_retries} retries: {url}") from last_err
+
+    def _get(self, url: str) -> dict:
+        return json.loads(self._get_text(url))
 
     def fetch_company_tickers(self) -> dict[int, dict]:
         """Return {cik: {"ticker":..., "title":...}} for every SEC filer (dedup by CIK)."""
@@ -73,6 +78,36 @@ class SecSource(Source):
     def fetch_company_facts(self, cik: int) -> dict:
         """Return the raw XBRL companyfacts payload for one filer."""
         return self._get(FACTS_URL.format(cik=cik))
+
+    def fetch_submissions(self, cik: int) -> dict:
+        """Return the filer's submissions index (recent filings: form, accession
+        number, primary document, filing/report dates) — the real, live filing
+        list, not a scrape of the HTML EDGAR search UI."""
+        return self._get(SUBMISSIONS_URL.format(cik=cik))
+
+    def latest_10k(self, cik: int) -> dict | None:
+        """The most recent 10-K's {accession, primary_document, filing_date,
+        report_date} for one filer, or None if it has never filed one (some SEC
+        filers in the crosswalk are non-US or filed under a different form type,
+        e.g. 20-F for foreign private issuers)."""
+        subs = self.fetch_submissions(cik)
+        recent = subs.get("filings", {}).get("recent", {})
+        forms = recent.get("form", [])
+        for i, form in enumerate(forms):
+            if form == "10-K":
+                return {
+                    "accession": recent["accessionNumber"][i],
+                    "primary_document": recent["primaryDocument"][i],
+                    "filing_date": recent["filingDate"][i],
+                    "report_date": recent["reportDate"][i],
+                }
+        return None
+
+    def fetch_filing_document(self, cik: int, accession: str, document: str) -> str:
+        """Return the raw HTML of one filing's primary document."""
+        url = FILING_DOC_URL.format(cik=cik, accession_nodash=accession.replace("-", ""),
+                                    document=document)
+        return self._get_text(url, accept="text/html")
 
     def fetch(self, cik: int) -> list[dict]:  # Source contract
         return [self.fetch_company_facts(cik)]
