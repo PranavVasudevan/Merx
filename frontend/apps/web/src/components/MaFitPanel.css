@@ -1,8 +1,10 @@
+.mafit-subtitle { margin: 0 0 var(--space-3); font-size: var(--text-xs); }
 .mafit-list { display: flex; flex-direction: column; gap: var(--space-2); }
 .mafit-row { display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-sm); }
 .mafit-rank { width: 14px; font-size: var(--text-xs); }
 .mafit-name { flex: 0 0 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mafit-bar-track { flex: 1; height: 8px; background: var(--gridline); border-radius: 4px; overflow: hidden; }
 .mafit-bar-fill { height: 100%; background: var(--seq-450); border-radius: 4px; }
+.mafit-geo { width: 76px; text-align: right; font-size: var(--text-xs); color: var(--text-muted); }
 .mafit-score { width: 34px; text-align: right; color: var(--text-secondary); }
 .mafit-rationale { font-size: var(--text-sm); margin: var(--space-3) 0 0; padding-top: var(--space-2); border-top: 1px dashed var(--gridline); }

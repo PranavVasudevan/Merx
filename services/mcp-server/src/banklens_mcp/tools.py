@@ -42,10 +42,16 @@ def list_banks(query: str = None, state: str = None, min_assets_b: float = None,
     (DuckDB), not a hand-rolled Python filter/sort."""
     hits = data.query_banks(query=query, state=state, min_assets_b=min_assets_b,
                             max_assets_b=max_assets_b, limit=limit)
+    # query_banks already SELECT *s every Gold column — these three profitability/
+    # credit/capital fields were sitting right there unused because this dict
+    # comprehension only ever picked out the original 5. The Screener page never
+    # showed anything beyond name/state/assets/cluster as a result.
     return {"count": len(hits), "banks": [{
         "cert": g["cert_number"], "name": g["name"], "state": g.get("state"),
         "assets_b": round((g.get("total_assets") or 0) / 1e9, 1),
         "cluster": g.get("peer_cluster_label"),
+        "roa_pct": g.get("roa_pct"), "npl_ratio_pct": g.get("npl_ratio_pct"),
+        "cet1_ratio": g.get("cet1_ratio"),
     } for g in hits]}
 
 
@@ -53,6 +59,21 @@ def get_bank_profile(cert: int) -> dict:
     g = _need_bank(cert)
     def pct(key):
         return {"value": g.get(key), "percentile": g.get(f"percentile_rank_{key}")}
+
+    # Real branch footprint (Feature 15, same landed SOD data /geography and
+    # /market-share read) — computed for every bank already, just never reached a
+    # per-bank consumer. ~99% of the population has one; sets aren't JSON-
+    # serialisable so states/counties are flattened to a sorted list / count.
+    fp = data.footprints().get(cert)
+    footprint = None
+    if fp is not None:
+        footprint = {
+            "branch_count": fp["branch_count"], "total_deposits": fp["total_deposits"],
+            "centroid": list(fp["centroid"]) if fp["centroid"] else None,
+            "geo_basis": fp["geo_basis"], "states": sorted(fp["states"]),
+            "county_count": len(fp["counties"]),
+        }
+
     return {
         "cert": cert, "name": g["name"], "state": g.get("state"), "quarter": g["quarter"],
         "assets_b": round((g.get("total_assets") or 0) / 1e9, 1),
@@ -61,17 +82,18 @@ def get_bank_profile(cert: int) -> dict:
         "cre_concentration_pct": g.get("concentration_ratio_cre"),
         "cet1_ratio": g.get("cet1_ratio"), "leverage_ratio": g.get("leverage_ratio"),
         "peer_cluster": g.get("peer_cluster_label"),
+        "footprint": footprint,
         "concentration": {
             "cre": pct("concentration_ratio_cre"),
             "c_and_i": pct("concentration_ratio_c_and_i"),
             "residential_mortgage": pct("concentration_ratio_residential_mortgage"),
-            "consumer": {"value": g.get("concentration_ratio_consumer"), "percentile": None},
-            "agricultural": {"value": g.get("concentration_ratio_agricultural"), "percentile": None},
+            "consumer": pct("concentration_ratio_consumer"),
+            "agricultural": pct("concentration_ratio_agricultural"),
         },
         "capital": {
             "cet1": pct("cet1_ratio"),
-            "tier1_rbc": {"value": g.get("tier1_rbc_ratio"), "percentile": None},
-            "total_rbc": {"value": g.get("total_rbc_ratio"), "percentile": None},
+            "tier1_rbc": pct("tier1_rbc_ratio"),
+            "total_rbc": pct("total_rbc_ratio"),
             "leverage": pct("leverage_ratio"),
         },
         "funding": {
@@ -165,19 +187,27 @@ def get_risk_score(cert: int) -> dict:
     return res
 
 
-def get_risk_leaderboard(top_n: int = 25) -> dict:
+def get_risk_leaderboard(top_n: int = 25, state: str = None, cluster_label: str = None) -> dict:
     """Feature 13, population-wide: score every bank in the $1B-$250B slice
     and rank by deposit-flight resemblance. Same model as get_risk_score
     (score_vector is a handful of multiplications + a sigmoid — verified
     live that scoring the full ~1,049-bank population takes well under a
     second in pure Python, so this needs no caching/precomputation to be
-    viable on every request)."""
+    viable on every request). Optional state/cluster_label narrow the
+    population BEFORE ranking, so top_n picks the riskiest within that slice
+    rather than truncating a global ranking down to whichever of it happens
+    to match.
+    """
     card = load_card()
     if card is None:
         raise ValueError("Deposit-flight model not trained yet; run deposit_flight_cli.")
     pop = data.population()
     scored = []
     for g in pop["gold"]:
+        if state and (g.get("state") or "").upper() != state.upper():
+            continue
+        if cluster_label and g.get("peer_cluster_label") != cluster_label:
+            continue
         cert = g.get("cert_number")
         silver = pop["silver_by_cert"].get(cert)
         if silver is None:
@@ -234,8 +264,14 @@ def get_market_snapshot(cert: int) -> dict:
 
 
 def compare_banks(certs: list[int], metrics: list[str] = None) -> dict:
+    # Was just the original 4 concentration/funding/capital fields — Wave 0c
+    # added real earnings/credit metrics to Gold months after this default was
+    # written, and nothing ever updated it, so /compare silently never showed
+    # them even though every other page (population-metrics, distributions) did.
     metrics = metrics or ["uninsured_deposit_pct", "loan_to_deposit_pct",
-                          "concentration_ratio_cre", "cet1_ratio"]
+                          "concentration_ratio_cre", "cet1_ratio", "leverage_ratio",
+                          "roa_pct", "net_interest_margin_pct", "npl_ratio_pct",
+                          "texas_ratio_pct", "brokered_deposit_pct"]
     by = data.population()["by_cert"]
     out = []
     for c in certs:
@@ -952,8 +988,11 @@ TOOLS = [
      "handler": get_risk_score},
     {"name": "get_risk_leaderboard",
      "description": "Feature 13, population-wide — deposit-flight risk score for every bank in "
-                    "the $1B-$250B slice, ranked descending.",
-     "inputSchema": {"type": "object", "properties": {"top_n": {"type": "integer"}}},
+                    "the $1B-$250B slice, ranked descending. Optional state/cluster_label filter "
+                    "the population before ranking.",
+     "inputSchema": {"type": "object", "properties": {
+         "top_n": {"type": "integer"}, "state": {"type": "string"},
+         "cluster_label": {"type": "string"}}},
      "handler": get_risk_leaderboard},
     {"name": "diff_filings",
      "description": "Feature 12 — side-by-side quarter comparison for every tracked "

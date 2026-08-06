@@ -26,6 +26,14 @@ export interface BankProfile {
   cet1_ratio: number | null;
   leverage_ratio: number | null;
   peer_cluster: string | null;
+  footprint: {
+    branch_count: number;
+    total_deposits: number;
+    centroid: [number, number] | null;
+    geo_basis: 'county' | 'grid';
+    states: string[];
+    county_count: number;
+  } | null;
   concentration: {
     cre: MetricPctile;
     c_and_i: MetricPctile;

@@ -7,12 +7,17 @@ function fmtPct(v: number | null): string {
 }
 
 export function KpiTiles({ profile }: { profile: BankProfile }) {
+  const fp = profile.footprint;
   const tiles = [
     { label: 'Total assets', value: `$${profile.assets_b.toFixed(1)}B`, sub: profile.quarter },
     { label: 'Uninsured deposits', value: fmtPct(profile.uninsured_deposit_pct), sub: 'run-risk signal' },
     { label: 'CRE concentration', value: fmtPct(profile.cre_concentration_pct), sub: 'largest loan bucket?' },
     { label: 'CET1 capital', value: fmtPct(profile.cet1_ratio), sub: 'min + buffer ~10.5%' },
     { label: 'Peer cluster', value: profile.peer_cluster ?? '—', sub: 'behavioral, not size', wide: true },
+    ...(fp ? [{
+      label: 'Branch network', value: `${fp.branch_count} branches`,
+      sub: `${fp.states.join(', ')} · $${(fp.total_deposits / 1e9).toFixed(1)}B deposits`, wide: true,
+    }] : []),
   ];
 
   return (

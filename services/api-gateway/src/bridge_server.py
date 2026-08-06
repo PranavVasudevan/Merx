@@ -133,7 +133,7 @@ ROUTES = [
         _cap(q["cert"]), limit_days=int(q.get("limit_days", 180)))),
     ("GET", "/api/banks/market-snapshot", lambda q, claims: tools.get_market_snapshot(_cap(q["cert"]))),
     ("GET", "/api/risk-leaderboard", lambda q, claims: tools.get_risk_leaderboard(
-        top_n=int(q.get("top_n", 25)))),
+        top_n=int(q.get("top_n", 25)), state=q.get("state"), cluster_label=q.get("cluster_label"))),
     ("GET", "/api/compare", lambda q, claims: tools.compare_banks(
         _certs(q["certs"]), metrics=q["metrics"].split(",") if q.get("metrics") else None)),
     ("GET", "/api/watchlist", lambda q, claims: {

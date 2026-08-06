@@ -10,6 +10,12 @@ const METRIC_LABELS: Record<string, string> = {
   loan_to_deposit_pct: 'Loan / deposit ratio',
   concentration_ratio_cre: 'CRE concentration',
   cet1_ratio: 'CET1 ratio',
+  leverage_ratio: 'Leverage ratio',
+  roa_pct: 'Return on assets',
+  net_interest_margin_pct: 'Net interest margin',
+  npl_ratio_pct: 'NPL ratio',
+  texas_ratio_pct: 'Texas Ratio',
+  brokered_deposit_pct: 'Brokered deposits',
 };
 
 const MAX_BANKS = 6;

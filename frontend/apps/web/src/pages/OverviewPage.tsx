@@ -24,17 +24,22 @@ export function OverviewPage() {
   const [leaderboard, setLeaderboard] = useState<RiskLeaderboardResult | null>(null);
   const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [lbState, setLbState] = useState('');
+  const [lbCluster, setLbCluster] = useState('');
   const colors = chartColors();
 
   useEffect(() => {
     api.population().then((r) => setBanks(r.banks)).catch((e) => setError(String(e.message || e)));
+  }, []);
+
+  useEffect(() => {
     // Own try/catch, not folded into the population error: the deposit-flight
     // model can legitimately be untrained (see get_risk_leaderboard's error
     // message) without the rest of the Overview page being broken.
-    api.riskLeaderboard(10)
-      .then(setLeaderboard)
+    api.riskLeaderboard(10, { state: lbState || undefined, cluster_label: lbCluster || undefined })
+      .then((r) => { setLeaderboard(r); setLeaderboardError(null); })
       .catch((e) => setLeaderboardError(String(e.message || e)));
-  }, []);
+  }, [lbState, lbCluster]);
 
   const stats = useMemo(() => {
     if (!banks || banks.length === 0) return null;
@@ -51,7 +56,9 @@ export function OverviewPage() {
     }
     const clusters = [...byCluster.entries()].sort((a, b) => b[1] - a[1]);
 
-    return { totalAssets, avgCet1, highUninsured, highCre, clusters };
+    const states = [...new Set(banks.map((b) => b.state).filter((s): s is string => !!s))].sort();
+
+    return { totalAssets, avgCet1, highUninsured, highCre, clusters, states };
   }, [banks]);
 
   if (error) {
@@ -133,12 +140,25 @@ export function OverviewPage() {
               Ranked by structural resemblance to real bank failures (2023: SVB/Signature/First
               Republic) — a high score is a prompt to look closer, not a prediction.
             </p>
+            <div className="overview-leaderboard-filters">
+              <select className="overview-leaderboard-select" value={lbState} onChange={(e) => setLbState(e.target.value)}>
+                <option value="">All states</option>
+                {stats.states.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
+              <select className="overview-leaderboard-select" value={lbCluster} onChange={(e) => setLbCluster(e.target.value)}>
+                <option value="">All clusters</option>
+                {stats.clusters.map(([label]) => <option key={label} value={label}>{label}</option>)}
+              </select>
+            </div>
             {leaderboardError && (
               <p className="muted overview-leaderboard-empty">
                 {leaderboardError.includes('not trained yet')
                   ? 'Deposit-flight model not trained yet.'
                   : leaderboardError}
               </p>
+            )}
+            {leaderboard && leaderboard.top.length === 0 && (
+              <p className="muted overview-leaderboard-empty">No banks match this state/cluster filter.</p>
             )}
             {leaderboard && (
               <div className="overview-cluster-list">

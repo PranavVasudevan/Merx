@@ -7,6 +7,7 @@ export function MaFitPanel({ result }: { result: MaFitResult }) {
   return (
     <div className="panel">
       <h2>Feature 15 · M&amp;A Fit — top partner candidates</h2>
+      <p className="muted mafit-subtitle">Geo column: real branch-network overlap from landed SOD footprints — market-count overlap, with deposit-weighted overlap in parentheses.</p>
       <div className="mafit-list">
         {result.candidates.map((c, i) => (
           <div className="mafit-row" key={c.cert_number} title={c.rationale}>
@@ -20,6 +21,12 @@ export function MaFitPanel({ result }: { result: MaFitResult }) {
                 transition={{ duration: 0.6, delay: i * 0.03, ease: [0.85, 0, 0.15, 1] }}
               />
             </div>
+            {c.geo_overlap !== null && (
+              <span className="mafit-geo tabular" title="Branch-network overlap (real SOD footprints, deposit-weighted in parentheses)">
+                {(c.geo_overlap * 100).toFixed(0)}%
+                {c.geo_overlap_deposit_weighted !== null && ` (${(c.geo_overlap_deposit_weighted * 100).toFixed(0)}%)`}
+              </span>
+            )}
             <span className="mafit-score tabular">{c.fit_score.toFixed(2)}</span>
           </div>
         ))}

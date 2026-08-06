@@ -4,7 +4,11 @@ import { motion } from 'motion/react';
 import { api, type BankSearchResult } from '../api';
 import './ScreenerPage.css';
 
-type SortKey = 'name' | 'state' | 'assets_b' | 'cluster';
+type SortKey = 'name' | 'state' | 'assets_b' | 'cluster' | 'roa_pct' | 'npl_ratio_pct' | 'cet1_ratio';
+
+function fmtPct(v: number | null): string {
+  return v === null || v === undefined ? '—' : `${v.toFixed(2)}%`;
+}
 
 export function ScreenerPage() {
   const navigate = useNavigate();
@@ -104,6 +108,15 @@ export function ScreenerPage() {
                 <th onClick={() => toggleSort('cluster')} className="screener-th">
                   Behavioral cluster{sortKey === 'cluster' && (sortDir === 'asc' ? ' ▲' : ' ▼')}
                 </th>
+                <th onClick={() => toggleSort('roa_pct')} className="screener-th screener-th-right">
+                  ROA{sortKey === 'roa_pct' && (sortDir === 'asc' ? ' ▲' : ' ▼')}
+                </th>
+                <th onClick={() => toggleSort('npl_ratio_pct')} className="screener-th screener-th-right">
+                  NPL ratio{sortKey === 'npl_ratio_pct' && (sortDir === 'asc' ? ' ▲' : ' ▼')}
+                </th>
+                <th onClick={() => toggleSort('cet1_ratio')} className="screener-th screener-th-right">
+                  CET1{sortKey === 'cet1_ratio' && (sortDir === 'asc' ? ' ▲' : ' ▼')}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -119,6 +132,9 @@ export function ScreenerPage() {
                   <td>{b.state ?? '—'}</td>
                   <td className="tabular screener-td-right">${b.assets_b.toFixed(1)}B</td>
                   <td className="muted">{b.cluster ?? '—'}</td>
+                  <td className="tabular screener-td-right">{fmtPct(b.roa_pct)}</td>
+                  <td className="tabular screener-td-right">{fmtPct(b.npl_ratio_pct)}</td>
+                  <td className="tabular screener-td-right">{fmtPct(b.cet1_ratio)}</td>
                 </motion.tr>
               ))}
             </tbody>

@@ -56,7 +56,13 @@ async function del<T>(path: string, params: Record<string, string | number | und
   return unwrap<T>(res);
 }
 
-export interface BankSearchResult { count: number; banks: { cert: number; name: string; state: string | null; assets_b: number; cluster: string | null }[] }
+export interface BankSearchResult {
+  count: number;
+  banks: {
+    cert: number; name: string; state: string | null; assets_b: number; cluster: string | null;
+    roa_pct: number | null; npl_ratio_pct: number | null; cet1_ratio: number | null;
+  }[];
+}
 
 export interface ScreenerFilters {
   query?: string;
@@ -89,7 +95,8 @@ export const api = {
   riskScore: (cert: number) => get<RiskScoreResult>('/banks/risk-score', { cert }),
   candles: (cert: number, limit_days = 180) => get<CandlesResult>('/banks/candles', { cert, limit_days }),
   marketSnapshot: (cert: number) => get<MarketSnapshot>('/banks/market-snapshot', { cert }),
-  riskLeaderboard: (top_n = 25) => get<RiskLeaderboardResult>('/risk-leaderboard', { top_n }),
+  riskLeaderboard: (top_n = 25, opts: { state?: string; cluster_label?: string } = {}) =>
+    get<RiskLeaderboardResult>('/risk-leaderboard', { top_n, state: opts.state, cluster_label: opts.cluster_label }),
   // certs travels as one comma-separated string — do_GET's query parser
   // collapses repeated keys, so a real list param isn't representable.
   compareBanks: (certs: number[], metrics?: string[]) =>
