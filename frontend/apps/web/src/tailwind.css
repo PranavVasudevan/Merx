@@ -1,0 +1,53 @@
+/* Tailwind is wired to the SAME tokens theme.css already defines (and, for the
+   terminal skin, that skin-terminal.css overrides) — not a second color system.
+   Utility classes like `bg-surface`, `text-primary`, `border-border` resolve to
+   whatever theme.css/skin-terminal.css currently say `--surface`/`--text-primary`/
+   `--border` are, so anything built with Tailwind re-skins for free alongside the
+   hand-rolled CSS components. Used only for new chrome (command palette, skin
+   toggle) — existing pages keep their own CSS files untouched. */
+@import "tailwindcss";
+
+@theme inline {
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-primary: var(--text-primary);
+  --color-secondary: var(--text-secondary);
+  --color-muted: var(--text-muted);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-gridline: var(--gridline);
+
+  --color-accent: var(--accent);
+  --color-cat-blue: var(--cat-blue);
+  --color-cat-green: var(--cat-green);
+  --color-cat-magenta: var(--cat-magenta);
+  --color-cat-yellow: var(--cat-yellow);
+  --color-cat-aqua: var(--cat-aqua);
+  --color-cat-orange: var(--cat-orange);
+  --color-cat-violet: var(--cat-violet);
+  --color-cat-red: var(--cat-red);
+
+  --color-status-good: var(--status-good);
+  --color-status-warning: var(--status-warning);
+  --color-status-serious: var(--status-serious);
+  --color-status-critical: var(--status-critical);
+
+  --radius-panel-sm: var(--radius-sm);
+  --radius-panel: var(--radius);
+  --radius-panel-lg: var(--radius-lg);
+  --radius-panel-pill: var(--radius-pill);
+
+  --ease-panel: var(--ease-organic);
+}
+
+/* `backdrop-blur`/glow utilities need concrete values — Tailwind's `backdrop-blur-*`
+   scale is fine as-is, but the glass panel look on the terminal skin needs a
+   one-off utility since "glow strength" is themed, not a fixed Tailwind size. */
+.glass-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: var(--panel-blur, none);
+  box-shadow: var(--panel-glow, var(--shadow));
+}

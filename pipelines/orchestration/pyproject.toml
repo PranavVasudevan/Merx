@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "banklens-orchestration"
+version = "0.1.0"
+description = "BankLens quarterly refresh DAG runner (stdlib-only reference implementation)"
+requires-python = ">=3.11"
+dependencies = []            # stdlib-only by design, see dag.py's docstring
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6", "black>=24"]
+
+[project.scripts]
+banklens-quarterly-refresh = "banklens_orchestration.quarterly_refresh:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/banklens_orchestration"]
+
+[tool.ruff]
+extend = "../../ruff.toml"
+line-length = 100
+target-version = "py311"
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "../ingestion/src", "../transforms/src"]
+testpaths = ["tests"]

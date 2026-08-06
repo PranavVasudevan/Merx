@@ -143,7 +143,7 @@ banklens/
 │   ├── ingestion/     Python reference connectors → Bronze  ← Phase 1 lives here
 │   ├── transforms/    Bronze→Silver→Gold reference math     ← Phase 1/2
 │   ├── dbt/           Silver/Gold transforms at scale        (Phase 2)
-│   ├── dagster/       Orchestration / software-defined assets (Phase 1–2)
+│   ├── orchestration/ Quarterly refresh DAG (real, stdlib)   ← Phase 1
 │   └── spark/         Distributed backfills                  (Phase 2)
 ├── services/        Deployable services (polyglot)
 │   ├── ingestion/       Rust connector SDK (production target for pipelines/ingestion)

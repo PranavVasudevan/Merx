@@ -101,7 +101,7 @@ def run_agent(persona: Persona, question: str, *, model: str | None = None,
     provider_name, client = providers.get_client(provider)
     model_id = providers.resolve_model(provider_name, model)
 
-    with MCPStdioClient() as mcp:
+    with MCPStdioClient(requester=f"agent:{persona.key}") as mcp:
         mcp_tools = mcp.list_tools()
         tools = _to_tool_schemas(mcp_tools, persona.tool_names)
 

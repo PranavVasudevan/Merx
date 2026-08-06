@@ -40,6 +40,22 @@ def test_initialized_notification_has_no_response():
     assert server.handle({"jsonrpc": "2.0", "method": "notifications/initialized"}) is None
 
 
+def test_initialize_captures_client_info_as_requester():
+    """clientInfo.name is the only caller identity a stdio server gets — it must
+    flow into the module-level `_requester` that `_audit` stamps on every row."""
+    server.handle({"jsonrpc": "2.0", "id": 1, "method": "initialize",
+                   "params": {"protocolVersion": "2025-06-18",
+                              "clientInfo": {"name": "agent:screener", "version": "0.1.0"}}})
+    assert server._requester == "agent:screener"
+
+
+def test_initialize_without_client_info_keeps_prior_requester():
+    prior = server._requester
+    server.handle({"jsonrpc": "2.0", "id": 1, "method": "initialize",
+                   "params": {"protocolVersion": "2025-06-18"}})
+    assert server._requester == prior
+
+
 def test_tools_list_exposes_all_features():
     r = server.handle({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
     names = {t["name"] for t in r["result"]["tools"]}

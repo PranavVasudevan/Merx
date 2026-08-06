@@ -311,6 +311,7 @@ export interface AuditLogEntry {
   arguments: Record<string, unknown>;
   ok: boolean;
   latency_ms: number;
+  requester: string;
 }
 
 export interface AgentRunEntry {

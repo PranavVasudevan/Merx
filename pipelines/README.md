@@ -7,7 +7,7 @@ The medallion pipeline. This is where Phase 1 is functional today.
 | `ingestion/` | Reference connectors → **Bronze** (raw + provenance) | 1 | Python (stdlib) |
 | `transforms/` | **Bronze→Silver→Gold** reference math | 1–2 | Python |
 | `dbt/` | Silver/Gold transforms at scale, tested | 2 | SQL (dbt) |
-| `dagster/` | Orchestration — software-defined assets, lineage | 1–2 | Python |
+| `orchestration/` | Quarterly refresh DAG — real, stdlib-only runner | 1 | Python (stdlib) |
 | `spark/` | Distributed historical backfills | 2 | PySpark |
 
 **Why Python first?** The reference implementations here let us *see and validate

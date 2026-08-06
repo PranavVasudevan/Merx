@@ -39,10 +39,16 @@ CREATE TABLE IF NOT EXISTS mcp_audit_log (
     tool TEXT NOT NULL,
     arguments JSONB NOT NULL,
     ok BOOLEAN NOT NULL,
-    latency_ms DOUBLE PRECISION NOT NULL
+    latency_ms DOUBLE PRECISION NOT NULL,
+    requester TEXT NOT NULL DEFAULT 'unknown'
 );
 CREATE INDEX IF NOT EXISTS mcp_audit_log_ts_idx ON mcp_audit_log (ts DESC);
 CREATE INDEX IF NOT EXISTS mcp_audit_log_tool_idx ON mcp_audit_log (tool);
+-- Column added after the table already existed in some dev/CI databases —
+-- CREATE TABLE IF NOT EXISTS above is a no-op there, so add it explicitly too.
+-- Must run BEFORE the index below, which references the column.
+ALTER TABLE mcp_audit_log ADD COLUMN IF NOT EXISTS requester TEXT NOT NULL DEFAULT 'unknown';
+CREATE INDEX IF NOT EXISTS mcp_audit_log_requester_idx ON mcp_audit_log (requester);
 
 CREATE TABLE IF NOT EXISTS agent_runs (
     id BIGSERIAL PRIMARY KEY,
@@ -156,19 +162,20 @@ def connect() -> psycopg.Connection:
 
 
 def record_audit(tool: str, arguments: dict, ok: bool, latency_ms: float,
-                  ts: datetime.datetime | None = None) -> None:
+                  ts: datetime.datetime | None = None,
+                  requester: str = "unknown") -> None:
     conn = get_conn()
     conn.execute(
-        "INSERT INTO mcp_audit_log (ts, tool, arguments, ok, latency_ms) "
-        "VALUES (%s, %s, %s, %s, %s)",
+        "INSERT INTO mcp_audit_log (ts, tool, arguments, ok, latency_ms, requester) "
+        "VALUES (%s, %s, %s, %s, %s, %s)",
         (ts or datetime.datetime.now(datetime.timezone.utc), tool,
-         json.dumps(arguments, default=str), ok, latency_ms),
+         json.dumps(arguments, default=str), ok, latency_ms, requester),
     )
 
 
 def fetch_recent_audit(limit: int = 50) -> list[dict]:
     conn = get_conn()
-    cols = ("id", "ts", "tool", "arguments", "ok", "latency_ms")
+    cols = ("id", "ts", "tool", "arguments", "ok", "latency_ms", "requester")
     rows = conn.execute(
         f"SELECT {', '.join(cols)} FROM mcp_audit_log ORDER BY ts DESC LIMIT %s",
         (limit,),

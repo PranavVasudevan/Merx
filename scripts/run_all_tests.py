@@ -31,6 +31,7 @@ SRC_PATHS = [
     REPO / "services" / "mcp-server" / "src",
     REPO / "pipelines" / "transforms" / "src",
     REPO / "pipelines" / "ingestion" / "src",
+    REPO / "pipelines" / "orchestration" / "src",
 ]
 
 SEARCH_DIRS = [REPO / "pipelines", REPO / "services", REPO / "libs"]

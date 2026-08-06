@@ -79,6 +79,7 @@ export function ActivityPage() {
               <thead>
                 <tr>
                   <th>When</th>
+                  <th>Requester</th>
                   <th>Tool</th>
                   <th>Arguments</th>
                   <th>Latency</th>
@@ -89,6 +90,7 @@ export function ActivityPage() {
                 {audit.map((a) => (
                   <tr key={a.id}>
                     <td className="tabular activity-td-ts">{fmtTs(a.ts)}</td>
+                    <td className="muted">{a.requester}</td>
                     <td>{a.tool}</td>
                     <td className="activity-td-text muted tabular">{truncate(JSON.stringify(a.arguments), 70)}</td>
                     <td className="tabular">{a.latency_ms.toFixed(0)}ms</td>

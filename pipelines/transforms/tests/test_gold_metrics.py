@@ -18,7 +18,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from banklens_transforms.gold import (  # noqa: E402
     concentration_ratios, cre_to_equity_pct, derive_gold, equity_to_assets_pct,
-    gold_features, loan_to_deposit_pct, max_concentration, uninsured_deposit_pct,
+    gold_features, growth_rate_nyr, loan_to_deposit_pct, max_concentration,
+    uninsured_deposit_pct,
 )
 from banklens_transforms.silver import to_bank_financials  # noqa: E402
 
@@ -133,6 +134,38 @@ def test_minus_one_sentinel_treated_as_missing_not_minus_1000():
     raw2["EQ"] = -500
     row2 = to_bank_financials(raw2)
     assert row2["total_equity"] == -500_000
+
+
+def test_growth_rate_3yr_needs_exact_anchor_quarter():
+    """No row landed exactly 12 quarters back -> None, not an interpolated guess."""
+    rows = [to_bank_financials(WF_2026Q1), to_bank_financials(WF_2025Q4)]
+    assert growth_rate_nyr(rows, 3, "total_assets") is None
+
+
+def test_growth_rate_3yr_computes_cagr_when_anchor_present():
+    anchor = dict(WF_2026Q1)
+    anchor["REPDTE"] = 20230331          # exactly 12 quarters before 2026Q1
+    anchor["ASSET"] = 1_000_000_000       # thousands -> $1.0T, current is $1.852239T
+    rows = [to_bank_financials(WF_2026Q1), to_bank_financials(anchor)]
+    rate = growth_rate_nyr(rows, 3, "total_assets")
+    # (1.852239/1.0)^(1/3) - 1 = 22.85%
+    assert approx(rate, 22.85, 0.05)
+
+
+def test_growth_rate_3yr_none_on_nonpositive_anchor():
+    anchor = dict(WF_2026Q1)
+    anchor["REPDTE"] = 20230331
+    anchor["ASSET"] = 0
+    rows = [to_bank_financials(WF_2026Q1), to_bank_financials(anchor)]
+    assert growth_rate_nyr(rows, 3, "total_assets") is None
+
+
+def test_derive_gold_wires_growth_rate_from_history():
+    rows = [to_bank_financials(WF_2026Q1), to_bank_financials(WF_2025Q4)]
+    gold = derive_gold(rows)
+    # only 2 quarters of history landed -> not enough for a 3yr anchor
+    assert gold[0]["growth_rate_3yr_pct"] is None
+    assert gold[0]["deposit_growth_rate_3yr_pct"] is None
 
 
 if __name__ == "__main__":

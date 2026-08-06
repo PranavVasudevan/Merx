@@ -54,8 +54,9 @@ const TOKENS: Record<keyof ChartColors, string> = {
 let cached: ChartColors | null = null;
 
 export function isDarkMode(): boolean {
-  return typeof window !== 'undefined'
-    && window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+  if (typeof window === 'undefined') return false;
+  if (document.documentElement.dataset.skin === 'terminal') return true; // terminal skin is dark-only
+  return !!window.matchMedia?.('(prefers-color-scheme: dark)').matches;
 }
 
 /** Concrete color values for chart libraries, read from theme.css's own tokens. */
@@ -75,19 +76,26 @@ export function chartColors(): ChartColors {
 }
 
 /**
- * Subscribe to theme flips. Returns an unsubscribe function.
+ * Subscribe to theme flips — either the OS light/dark preference (classic skin) or
+ * a manual skin switch (classic <-> terminal, see skin.ts). Returns an unsubscribe
+ * function.
  *
  * Previously nothing listened: an OS theme change left recharts rendering stale
  * colors until something else happened to re-render. With ECharts drawing to canvas
  * that degrades from cosmetic to a dark chart sitting on a light page, so charts
- * subscribe and re-render.
+ * subscribe and re-render. The skin-change listener is the same fix for the same
+ * reason, for a second way the underlying CSS custom properties can change.
  */
 export function onThemeChange(cb: () => void): () => void {
-  if (typeof window === 'undefined' || !window.matchMedia) return () => {};
-  const mq = window.matchMedia('(prefers-color-scheme: dark)');
+  if (typeof window === 'undefined') return () => {};
   const handler = () => { cached = null; cb(); };
-  mq.addEventListener('change', handler);
-  return () => mq.removeEventListener('change', handler);
+  const mq = window.matchMedia?.('(prefers-color-scheme: dark)');
+  mq?.addEventListener('change', handler);
+  window.addEventListener('banklens:skinchange', handler);
+  return () => {
+    mq?.removeEventListener('change', handler);
+    window.removeEventListener('banklens:skinchange', handler);
+  };
 }
 
 export function severityColor(sev: 'low' | 'elevated' | 'high'): string {

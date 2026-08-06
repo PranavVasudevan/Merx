@@ -1,70 +1,21 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import type { User } from 'oidc-client-ts';
+import { motion } from 'motion/react';
 import { api } from '../api';
 import { roles } from '../auth';
 import { BankSearch } from './BankSearch';
+import { CommandPalette } from './CommandPalette';
+import { SkinToggle } from './SkinToggle';
+import { NAV_GROUPS } from '../navGroups';
 import './NavShell.css';
 
-// Every route beyond "/" and "/bank/:cert" needs the analyst role — same
-// precedent StressPanel already established (compute-heavier/broader-reach
-// actions are analyst-gated, plain reads are viewer-level). Kept here as a
-// single source of truth so the nav can grey out links a viewer can't use
-// instead of only failing after the click.
 const ANALYST_ONLY_PATHS = new Set(['/assistant', '/activity', '/stress-lab']);
-
-// Grouped, not a flat bar: the expansion takes this well past the half-dozen links a
-// single row can hold. Groups are the user's mental model (find banks / analyse them /
-// my stuff / tooling), and each new page joins a group rather than lengthening a list.
-interface NavLink { to: string; label: string }
-interface NavGroup { label: string; links: NavLink[] }
-
-const NAV_GROUPS: NavGroup[] = [
-  { label: 'Explore', links: [
-    { to: '/', label: 'Overview' },
-    { to: '/screener', label: 'Screener' },
-    { to: '/compare', label: 'Compare' },
-  ] },
-  { label: 'Analyze', links: [
-    { to: '/earnings', label: 'Earnings' },
-    { to: '/credit', label: 'Credit' },
-    { to: '/funding', label: 'Funding' },
-    { to: '/trends', label: 'Trends' },
-    { to: '/filing-diff', label: 'Filing Diff' },
-    { to: '/briefing', label: 'Briefing' },
-  ] },
-  { label: 'Visualize', links: [
-    { to: '/heatmap', label: 'Heatmap' },
-    { to: '/treemap', label: 'Treemap' },
-    { to: '/distributions', label: 'Distributions' },
-  ] },
-  { label: 'Governance', links: [
-    { to: '/clusters', label: 'Clusters' },
-    { to: '/model', label: 'Model' },
-  ] },
-  { label: 'Geography', links: [
-    { to: '/geography', label: 'Branch Map' },
-    { to: '/market-share', label: 'Market Share' },
-  ] },
-  { label: 'Simulate', links: [
-    { to: '/network', label: 'Network' },
-    { to: '/stress-lab', label: 'Stress Lab' },
-  ] },
-  { label: 'Research', links: [
-    { to: '/filings', label: 'Filings' },
-  ] },
-  { label: 'My work', links: [
-    { to: '/watchlist', label: 'Watchlist' },
-  ] },
-  { label: 'Tools', links: [
-    { to: '/assistant', label: 'Assistant' },
-    { to: '/activity', label: 'Activity' },
-  ] },
-];
 
 export function NavShell({ user, onLogout }: { user: User; onLogout: () => void }) {
   const navigate = useNavigate();
   const [backendUp, setBackendUp] = useState<boolean | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const userRoles = roles(user);
   const isAnalyst = userRoles.includes('analyst');
 
@@ -83,52 +34,93 @@ export function NavShell({ user, onLogout }: { user: User; onLogout: () => void 
   }
 
   return (
-    <div className="app-shell">
-      <header className="app-header">
-        <div className="app-brand">
-          <span className="app-logo">BankLens</span>
-          <span className="muted app-tagline">Quant Terminal</span>
+    <div className="app-shell-redesigned">
+      {/* Sidebar */}
+      <motion.aside
+        initial={{ x: -288 }}
+        animate={{ x: 0 }}
+        className="app-sidebar"
+      >
+        {/* Logo Section */}
+        <div className="app-sidebar-header">
+          <div className="app-brand-redesigned">
+            <h1 className="app-logo-redesigned">BankLens</h1>
+            <span className="muted app-tagline-redesigned">v2.6 Terminal</span>
+          </div>
         </div>
 
-        <nav className="app-nav">
-          {NAV_GROUPS.map((group, i) => (
-            <div className="app-nav-group" key={group.label}>
-              {i > 0 && <span className="app-nav-sep" aria-hidden="true" />}
-              <span className="app-nav-group-label">{group.label}</span>
-              {group.links.map((link) => {
-                const gated = ANALYST_ONLY_PATHS.has(link.to) && !isAnalyst;
-                return (
-                  <NavLink
-                    key={link.to}
-                    to={link.to}
-                    end={link.to === '/'}
-                    className={({ isActive }) => `app-nav-link${isActive ? ' app-nav-link-active' : ''}${gated ? ' app-nav-link-gated' : ''}`}
-                    title={gated ? 'Requires the analyst role' : undefined}
-                  >
-                    {link.label}
-                    {gated && <span className="app-nav-lock" aria-hidden="true">🔒</span>}
-                  </NavLink>
-                );
-              })}
+        {/* Navigation */}
+        <nav className="app-nav-redesigned">
+          {NAV_GROUPS.map((group) => (
+            <div className="app-nav-group-redesigned" key={group.label}>
+              <span className="app-nav-group-label-redesigned">{group.label}</span>
+              <div className="app-nav-items-redesigned">
+                {group.links.map((link) => {
+                  const gated = ANALYST_ONLY_PATHS.has(link.to) && !isAnalyst;
+                  return (
+                    <NavLink
+                      key={link.to}
+                      to={link.to}
+                      end={link.to === '/'}
+                      className={({ isActive }) => `app-nav-link-redesigned${isActive ? ' app-nav-link-active-redesigned' : ''}${gated ? ' app-nav-link-gated-redesigned' : ''}`}
+                      title={gated ? 'Requires the analyst role' : undefined}
+                    >
+                      <span className="app-nav-link-label">{link.label}</span>
+                      {gated && <span className="app-nav-lock">🔒</span>}
+                    </NavLink>
+                  );
+                })}
+              </div>
             </div>
           ))}
         </nav>
 
-        <BankSearch onSelect={(c) => navigate(`/bank/${c}`)} />
-
-        <div className="app-user">
-          <span className="muted app-user-name">
-            {user.profile.preferred_username} · {userRoles.join(', ') || 'no role'}
-          </span>
-          <button className="app-user-logout" onClick={onLogout}>Sign out</button>
+        {/* User Footer */}
+        <div className="app-sidebar-footer">
+          <div className="app-user-card">
+            <p className="text-xs text-muted">Logged in as</p>
+            <p className="text-sm font-semibold text-primary truncate">{user.profile.preferred_username}</p>
+            <p className="text-xs text-muted">{userRoles.join(', ') || 'viewer'}</p>
+          </div>
+          <div className="app-sidebar-controls">
+            <SkinToggle />
+            <button className="app-user-logout-redesigned" onClick={onLogout}>
+              Sign out
+            </button>
+          </div>
         </div>
-      </header>
+      </motion.aside>
 
-      <Outlet />
+      {/* Main Content Area */}
+      <div className="app-main-redesigned">
+        {/* Header */}
+        <header className="app-header-redesigned">
+          <div className="app-header-left">
+            <div className="app-status-indicator">
+              <div className="app-status-dot" />
+              <span className="text-xs font-mono text-muted uppercase tracking-wider">Live • FDIC Connected</span>
+            </div>
+          </div>
 
-      <footer className="app-footer muted">
-        BankLens · data from FDIC BankFind, SEC EDGAR, Tiingo
-      </footer>
+          <div className="app-header-center">
+            <BankSearch onSelect={(c) => navigate(`/bank/${c}`)} />
+          </div>
+
+          <div className="app-header-right">
+            <CommandPalette />
+          </div>
+        </header>
+
+        {/* Page Content */}
+        <main className="app-content-redesigned">
+          <Outlet />
+        </main>
+
+        {/* Footer */}
+        <footer className="app-footer-redesigned muted">
+          BankLens · data from FDIC BankFind, SEC EDGAR, Tiingo
+        </footer>
+      </div>
     </div>
   );
 }

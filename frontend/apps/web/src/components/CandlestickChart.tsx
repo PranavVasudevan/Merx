@@ -1,7 +1,7 @@
 import { CandlestickSeries, ColorType, createChart, type IChartApi } from 'lightweight-charts';
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../api';
-import { chartColors } from '../colors';
+import { chartColors, onThemeChange } from '../colors';
 import type { CandlesResult, MarketSnapshot } from '../types';
 import './CandlestickChart.css';
 
@@ -15,7 +15,13 @@ export function CandlestickChart({ cert }: { cert: number }) {
   const [candles, setCandles] = useState<CandlesResult | null>(null);
   const [snapshot, setSnapshot] = useState<MarketSnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [themeTick, setThemeTick] = useState(0);
   const colors = chartColors();
+
+  // lightweight-charts is imperative canvas like ECharts (see EChart.tsx) — it
+  // won't pick up new colors from a React re-render on its own, so a skin/OS
+  // theme flip needs to force the init effect below to re-run and rebuild it.
+  useEffect(() => onThemeChange(() => setThemeTick((t) => t + 1)), []);
 
   useEffect(() => {
     setError(null);
@@ -52,7 +58,7 @@ export function CandlestickChart({ cert }: { cert: number }) {
     const onResize = () => chart.applyOptions({ width: containerRef.current?.clientWidth ?? 600 });
     window.addEventListener('resize', onResize);
     return () => { window.removeEventListener('resize', onResize); chart.remove(); chartRef.current = null; };
-  }, [candles, colors]);
+  }, [candles, colors, themeTick]);
 
   if (error) {
     return (

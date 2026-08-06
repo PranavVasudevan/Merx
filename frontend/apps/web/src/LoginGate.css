@@ -1,25 +1,30 @@
+/* BankLens Login Gate - Vibrant Glassmorphism */
+
 .login-gate-loading {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
   height: 100vh;
+  background:
+    radial-gradient(1400px 700px at 20% -20%, rgba(59, 130, 246, 0.08), transparent 60%),
+    radial-gradient(1000px 600px at 100% 10%, rgba(167, 139, 250, 0.06), transparent 55%),
+    var(--page);
   color: var(--text-muted);
   font-size: var(--text-sm);
+  font-weight: 500;
 }
+
 .login-gate-spinner {
-  width: 13px;
-  height: 13px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  border: 2px solid var(--gridline);
-  border-top-color: var(--accent);
+  border: 2.5px solid rgba(148, 163, 196, 0.2);
+  border-top-color: var(--cat-blue);
   display: inline-block;
 }
 
-/* A quiet radial vignette behind the centered card — the login screen is
-   the one place worth a touch more visual richness than the flat, tint-only
-   depth the rest of the (data-dense) app uses; the card itself stays exactly
-   as restrained as everywhere else. */
+/* Glassmorphic login background with ambient glow */
 .login-gate {
   display: flex;
   align-items: center;
@@ -27,56 +32,171 @@
   height: 100vh;
   padding: 0 var(--space-5);
   background:
-    radial-gradient(600px 400px at 50% 38%, color-mix(in srgb, var(--accent) 6%, transparent), transparent 70%),
+    radial-gradient(1400px 700px at 20% -20%, rgba(59, 130, 246, 0.08), transparent 60%),
+    radial-gradient(1000px 600px at 100% 10%, rgba(167, 139, 250, 0.06), transparent 55%),
     var(--page);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated gradient orbs in background */
+.login-gate::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(167, 139, 250, 0.08) 0%, transparent 50%);
+  animation: float 20s ease-in-out infinite;
+  z-index: 0;
+}
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(30px, -30px); }
 }
 
 .login-gate-card {
-  max-width: 380px;
+  max-width: 420px;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-4);
   text-align: center;
-  padding: var(--space-6) var(--space-5);
+  padding: var(--space-8);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--surface);
-  box-shadow: var(--shadow-float);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-glow);
+  position: relative;
+  z-index: 1;
+  transition: all var(--duration-base) var(--ease-organic);
+}
+
+.login-gate-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: 0 0 0 1px rgba(148, 163, 196, 0.15),
+              0 12px 40px rgba(0, 0, 0, 0.6),
+              0 0 50px -8px rgba(59, 130, 246, 0.4);
 }
 
 .login-gate-mark {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--accent);
-  border: 1px solid var(--border);
+  color: var(--cat-blue);
+  border: 1.5px solid rgba(59, 130, 246, 0.3);
   border-radius: var(--radius);
+  background: rgba(59, 130, 246, 0.1);
   margin-bottom: var(--space-1);
+  transition: all var(--duration-fast) var(--ease-organic);
 }
 
+.login-gate-card:hover .login-gate-mark {
+  border-color: rgba(59, 130, 246, 0.5);
+  background: rgba(59, 130, 246, 0.15);
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.2);
+}
+
+/* Logo styling */
+.login-gate-card .app-logo {
+  font-size: var(--text-2xl);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 50%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: var(--space-1) 0;
+}
+
+/* Description text */
+.login-gate-card > p:not(.login-gate-hint) {
+  color: var(--text-secondary);
+  font-size: var(--text-base);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Sign-in button */
 .login-gate-button {
+  width: 100%;
   border: none;
-  border-radius: var(--radius-sm);
-  background: var(--accent);
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
   color: #fff;
   font-size: var(--text-base);
-  font-weight: 600;
-  padding: 10px 22px;
+  font-weight: 700;
+  padding: 12px 24px;
   cursor: pointer;
-  margin-top: var(--space-1);
+  margin-top: var(--space-2);
+  transition: all var(--duration-fast) var(--ease-organic);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+  letter-spacing: -0.01em;
 }
-.login-gate-button:hover { filter: brightness(1.08); }
 
+.login-gate-button:hover {
+  box-shadow: 0 12px 32px rgba(59, 130, 246, 0.4);
+  transform: translateY(-2px);
+}
+
+.login-gate-button:active {
+  transform: translateY(0);
+}
+
+/* Error banner */
+.login-gate-card .app-banner-error {
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  margin: 0;
+  width: 100%;
+}
+
+/* Divider */
+.login-gate-card .hairline {
+  background: var(--gridline);
+  margin: var(--space-3) 0;
+  width: 100%;
+}
+
+/* Hint text for dev credentials */
 .login-gate-hint {
   font-size: var(--text-xs);
-  line-height: 1.5;
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin: 0;
+  padding-top: var(--space-2);
 }
+
 .login-gate-hint code {
-  background: var(--surface-2);
-  padding: 1px 5px;
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--cat-aqua);
+  padding: 2px 6px;
   border-radius: var(--radius-sm);
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: var(--text-xs);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .login-gate-card {
+    padding: var(--space-6);
+    gap: var(--space-3);
+  }
+
+  .login-gate-card .app-logo {
+    font-size: var(--text-xl);
+  }
 }

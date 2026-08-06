@@ -217,11 +217,46 @@ def qoq_delta(current, previous) -> dict | None:
     return {"abs": abs_change, "pct": pct_change}
 
 
-def gold_features(row: dict, prev: dict | None = None) -> dict:
+def _quarters_before(quarter: str, n: int) -> str:
+    """``quarter`` minus ``n`` quarters, e.g. ("2026Q1", 12) -> "2023Q1"."""
+    year, q = int(quarter[:4]), int(quarter[5])
+    total = year * 4 + (q - 1) - n
+    y, qi = divmod(total, 4)
+    return f"{y}Q{qi + 1}"
+
+
+def growth_rate_nyr(history_desc: list[dict], years: int, field: str) -> float | None:
+    """Annualized (CAGR) growth in ``field`` over ``years``, from a bank's own
+    Silver/Gold history (newest-first, current quarter first).
+
+    Requires a row landed exactly ``years * 4`` quarters before the current one —
+    no interpolation, so a gap in filing history correctly yields ``None`` rather
+    than a fabricated rate. Also ``None`` if the anchor value isn't a positive
+    number (CAGR is undefined for a zero/negative base).
+    """
+    if not history_desc:
+        return None
+    current = history_desc[0]
+    quarter = current.get("quarter")
+    if not quarter:
+        return None
+    target = _quarters_before(quarter, years * 4)
+    anchor = next((r for r in history_desc if r.get("quarter") == target), None)
+    if anchor is None:
+        return None
+    cur_val, past_val = current.get(field), anchor.get(field)
+    if cur_val is None or past_val is None or past_val <= 0:
+        return None
+    return round(((cur_val / past_val) ** (1 / years) - 1) * 100, 4)
+
+
+def gold_features(row: dict, prev: dict | None = None, history: list[dict] | None = None) -> dict:
     """Derive one Gold feature row from a Silver row (+ optional prior quarter).
 
     Pass ``prev=None`` for cross-sectional use (a population of many banks in one
-    quarter), where QoQ deltas don't apply.
+    quarter), where QoQ deltas don't apply. ``history`` — this bank's own Silver
+    rows newest-first, starting with ``row`` itself — enables the trailing
+    ``growth_rate_3yr_pct`` fields; omit it where only one quarter is available.
     """
     conc = concentration_ratios(row)
     max_label, max_val = max_concentration(conc)
@@ -278,12 +313,20 @@ def gold_features(row: dict, prev: dict | None = None) -> dict:
             row.get("total_deposits"), prev.get("total_deposits") if prev else None),
         "qoq_uninsured_deposit_pct": qoq_delta(
             uninsured_deposit_pct(row), uninsured_deposit_pct(prev) if prev else None),
+        # trailing growth (None until 3 years of quarterly history has landed)
+        "growth_rate_3yr_pct": growth_rate_nyr(history, 3, "total_assets") if history else None,
+        "deposit_growth_rate_3yr_pct": growth_rate_nyr(history, 3, "total_deposits") if history else None,
     }
 
 
 def derive_gold(silver_rows_desc: list[dict]) -> list[dict]:
-    """One bank's Silver rows (newest-first) -> Gold rows, with QoQ from the prior quarter."""
+    """One bank's Silver rows (newest-first) -> Gold rows, with QoQ from the prior quarter
+    and trailing 3yr growth from its own longer history."""
     return [
-        gold_features(row, silver_rows_desc[i + 1] if i + 1 < len(silver_rows_desc) else None)
+        gold_features(
+            row,
+            silver_rows_desc[i + 1] if i + 1 < len(silver_rows_desc) else None,
+            history=silver_rows_desc[i:],
+        )
         for i, row in enumerate(silver_rows_desc)
     ]

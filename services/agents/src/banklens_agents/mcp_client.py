@@ -21,9 +21,10 @@ REPO = Path(__file__).resolve().parents[4]
 class MCPStdioClient:
     """Context-managed client: `with MCPStdioClient() as c: c.list_tools()`."""
 
-    def __init__(self) -> None:
+    def __init__(self, requester: str = "banklens-agent") -> None:
         self._proc: subprocess.Popen | None = None
         self._next_id = 1
+        self._requester = requester
 
     def __enter__(self) -> "MCPStdioClient":
         env = os.environ.copy()
@@ -36,8 +37,13 @@ class MCPStdioClient:
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
             text=True, env=env, cwd=str(REPO),
         )
+        # `clientInfo.name` is the MCP spec's standard place for a client to
+        # identify itself at handshake time — the server threads it through to
+        # every audit-log row for this connection (see server.py's `_audit`),
+        # since a stdio server has no per-request auth header to read instead.
         self._send({"jsonrpc": "2.0", "id": self._id(), "method": "initialize",
-                    "params": {"protocolVersion": "2025-06-18", "capabilities": {}}})
+                    "params": {"protocolVersion": "2025-06-18", "capabilities": {},
+                               "clientInfo": {"name": self._requester, "version": "0.1.0"}}})
         self._recv()
         self._send({"jsonrpc": "2.0", "method": "notifications/initialized"})
         return self

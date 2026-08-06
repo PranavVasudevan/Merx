@@ -32,6 +32,12 @@ from .tools import TOOLS, TOOL_BY_NAME
 PROTOCOL_VERSION = "2025-06-18"
 _AUDIT = data.DATA / "mcp_audit.jsonl"
 _pg_warned = False
+# Set from `initialize`'s clientInfo.name (MCP spec) — the closest thing a
+# stdio server has to a caller identity, since there's no per-request auth
+# header the way an HTTP server would have. One process serves one client
+# connection, so this is safe to hold as module state rather than threading
+# it through every call.
+_requester = "unknown"
 
 
 def _result(mid, result):
@@ -87,7 +93,7 @@ def _audit(tool, args, ok, ms):
     global _pg_warned
     ts = datetime.datetime.now(datetime.timezone.utc)
     try:
-        common_db.record_audit(tool, args, ok, ms, ts=ts)
+        common_db.record_audit(tool, args, ok, ms, ts=ts, requester=_requester)
         return
     except Exception as exc:
         if not _pg_warned:
@@ -97,7 +103,7 @@ def _audit(tool, args, ok, ms):
     try:
         _AUDIT.parent.mkdir(parents=True, exist_ok=True)
         rec = {"ts": ts.isoformat(), "tool": tool, "arguments": args, "ok": ok,
-               "latency_ms": round(ms, 1)}
+               "latency_ms": round(ms, 1), "requester": _requester}
         with open(_AUDIT, "a", encoding="utf-8") as f:
             f.write(json.dumps(rec, default=str) + "\n")
     except Exception:
@@ -109,7 +115,12 @@ def handle(msg: dict):
     mid = msg.get("id")
 
     if method == "initialize":
-        proto = (msg.get("params") or {}).get("protocolVersion", PROTOCOL_VERSION)
+        global _requester
+        params = msg.get("params") or {}
+        proto = params.get("protocolVersion", PROTOCOL_VERSION)
+        client_name = (params.get("clientInfo") or {}).get("name")
+        if client_name:
+            _requester = str(client_name)
         return _result(mid, {
             "protocolVersion": proto,
             "capabilities": {"tools": {"listChanged": False}},

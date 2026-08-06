@@ -1,38 +1,138 @@
+/* BankLens Bank Detail Page - Production-Grade Glassmorphism */
+
+.bank-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
 .app-content {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-6);
 }
 
+/* Header Section */
 .bank-page-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: var(--space-3);
+  gap: var(--space-4);
+  padding: var(--space-6);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(6, 182, 212, 0.05) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: var(--radius-lg);
+  backdrop-filter: var(--glass-blur);
 }
-.bank-page-title {
-  font-size: var(--text-xl);
-  font-weight: 700;
-  letter-spacing: -0.015em;
-  margin: 0;
-}
-.bank-page-header-actions { display: flex; align-items: center; gap: var(--space-3); }
-.bank-page-header-link { font-size: var(--text-sm); color: var(--accent); text-decoration: none; }
-.bank-page-header-link:hover { text-decoration: underline; }
 
+.bank-page-title {
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  margin: 0;
+  background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 50%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  flex: 1;
+}
+
+.bank-page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.bank-page-header-link {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--cat-blue);
+  text-decoration: none;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: rgba(59, 130, 246, 0.1);
+  transition: all var(--duration-fast) var(--ease-organic);
+}
+
+.bank-page-header-link:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.2);
+}
+
+/* Content Grid */
 .app-grid {
   display: grid;
   grid-template-columns: 1.6fr 1fr;
-  gap: var(--space-4);
+  gap: var(--space-6);
   align-items: start;
 }
-.app-col { display: flex; flex-direction: column; gap: var(--space-4); }
 
-@media (max-width: 880px) {
-  .app-grid { grid-template-columns: 1fr; }
+.app-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
 }
 
+/* Responsive Grid */
+@media (max-width: 1200px) {
+  .app-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+  }
+
+  .bank-page-header {
+    flex-direction: column;
+  }
+
+  .bank-page-title {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-grid {
+    gap: var(--space-4);
+  }
+
+  .bank-page-header {
+    padding: var(--space-4);
+    gap: var(--space-3);
+  }
+
+  .bank-page-title {
+    font-size: 24px;
+  }
+
+  .bank-page-header-actions {
+    width: 100%;
+  }
+
+  .bank-page-header-link {
+    flex: 1;
+    text-align: center;
+  }
+}
+
+/* Footnote */
 .bank-page-footnote {
   text-align: center;
   font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin: var(--space-4) 0 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+
+/* Error Banner */
+.bank-page .app-banner-error {
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-4);
 }
