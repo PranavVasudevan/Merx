@@ -75,7 +75,28 @@ _EUR_MILLIONS_FIELDS = {
     "interest_expense": "interest_expense",
     "net_fee_income": "noninterest_income",
     "net_income": "net_income",
+    "cash_and_balances": "cash_and_balances",
+    # IFRS -> US-GAAP analogues, an approximation stated plainly rather than implied:
+    # "fair value through OCI" is the closest IFRS category to US AFS, and
+    # "amortised cost" to US HTM. Not identical accounting definitions, but the same
+    # economic distinction (marked-to-market vs. carried at cost), which is exactly
+    # what the rate-shock leg of the stress test keys off.
+    "securities_afs": "securities_afs",
+    "securities_htm": "securities_htm",
 }
+
+# Summed from their IFRS-9 stage components in the connector, then combined here.
+_LOAN_PARTS = ("loans_amortised_cost", "loans_fvoci")
+_NPL_PARTS = ("npl_loans_amortised_cost", "npl_loans_fvoci")
+_ALLOWANCE_PARTS = ("allowance_loans_amortised_cost", "allowance_loans_fvoci")
+
+
+def _sum_parts(raw: dict, parts) -> float | None:
+    """Sum present components; None only when every component is missing (so a bank
+    reporting only one of the two loan categories still gets a real total)."""
+    vals = [raw.get(p) for p in parts]
+    present = [v for v in vals if v is not None]
+    return sum(present) if present else None
 
 _RATIO_PASSTHROUGH = ("cet1_ratio", "tier1_rbc_ratio", "total_rbc_ratio", "leverage_ratio")
 
@@ -119,15 +140,49 @@ def to_bank_financials_eba(raw: dict, institution: dict, *, fx_rate: float,
     for field in _RATIO_PASSTHROUGH:
         row[field] = raw.get(field)
 
+    # ---- loans, non-performing, allowance (summed from IFRS-9 stage components) ----
+    def _usd(eur_millions):
+        return None if eur_millions is None else round(eur_millions * _MILLIONS * fx_rate, 2)
+
+    gross_loans = _sum_parts(raw, _LOAN_PARTS)
+    npl = _sum_parts(raw, _NPL_PARTS)
+    # EBA reports accumulated impairment as a NEGATIVE number (verified live:
+    # Deutsche Bank -5,736). FDIC's LNATRES is positive, and every downstream
+    # consumer (allowance_coverage_pct, texas_ratio_pct) assumes positive — so
+    # normalise the sign here rather than making each consumer special-case it.
+    allowance = _sum_parts(raw, _ALLOWANCE_PARTS)
+    allowance = abs(allowance) if allowance is not None else None
+
+    row["total_loans_gross"] = _usd(gross_loans)
+    row["noncurrent_loans"] = _usd(npl)
+    row["allowance_for_credit_losses"] = _usd(allowance)
+    row["total_loans_net"] = _usd(
+        gross_loans - allowance if gross_loans is not None and allowance is not None else None)
+
+    # ---- capital DOLLARS, derived from the reported ratios ----
+    # EBA publishes capital ratios but not the capital dollar amounts FDIC gives
+    # directly (RBCT1J/RBC). Since ratio = capital / RWA by definition, and RWA is
+    # reported, the dollars are recoverable exactly: capital = ratio x RWA. This is
+    # what makes the capital-shock leg of the stress test possible for EU banks at
+    # all — without it there is no starting capital to erode.
+    rwa = row.get("risk_weighted_assets")
+    for ratio_field, capital_field in (("tier1_rbc_ratio", "tier1_capital"),
+                                       ("total_rbc_ratio", "total_capital")):
+        ratio = row.get(ratio_field)
+        row[capital_field] = (round(ratio / 100.0 * rwa, 2)
+                              if ratio is not None and rwa else None)
+
     # Fields FDIC-derived Silver rows have that EBA genuinely has no equivalent
     # for — explicit None, not omitted, so Gold/xray treat "not disclosed" the
-    # same way they already treat any other missing FDIC field.
+    # same way they already treat any other missing FDIC field. Deposits are the
+    # consequential absence: EBA discloses no clean deposit total (only a combined
+    # amortised-cost liabilities figure that also contains issued debt), so the
+    # deposit-outflow leg of the stress test cannot run for these banks.
     for absent in ("total_deposits", "uninsured_deposits", "core_deposits",
-                   "total_loans_gross", "total_loans_net", "cre_loans",
-                   "construction_loans", "multifamily_loans", "nonfarm_nonres_loans",
-                   "residential_mortgage_loans", "farmland_loans", "agricultural_loans",
-                   "c_and_i_loans", "consumer_loans", "brokered_deposits",
-                   "noncurrent_loans", "allowance_for_credit_losses"):
+                   "cre_loans", "construction_loans", "multifamily_loans",
+                   "nonfarm_nonres_loans", "residential_mortgage_loans",
+                   "farmland_loans", "agricultural_loans", "c_and_i_loans",
+                   "consumer_loans", "brokered_deposits", "average_assets"):
         row.setdefault(absent, None)
 
     return row

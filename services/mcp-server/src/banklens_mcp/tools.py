@@ -752,7 +752,7 @@ def get_county_concentration(state: str = None, top_n: int = 100) -> dict:
     """
     names = _full_universe_names()
     rows = []
-    for fips, entry in data.county_table().items():
+    for _fips, entry in data.county_table().items():
         if state and (entry.get("state") or "").upper() != state.upper():
             continue
         c = county_concentration(entry)

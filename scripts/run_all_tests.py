@@ -55,6 +55,17 @@ def main() -> int:
     env["PYTHONPATH"] = os.pathsep.join(str(p) for p in SRC_PATHS)
 
     files = discover()
+    if not files:
+        # Discovering nothing is a FAILURE, not a pass. Without this, deleting or
+        # mis-locating every test file turns CI green — the suite reports
+        # "0 files | 0 passed | 0 failed" and exits 0, which reads identically to
+        # a healthy run. An empty suite verifies nothing and must say so loudly.
+        print(f"ERROR: no test files discovered under "
+              f"{', '.join(str(d.relative_to(REPO)) for d in SEARCH_DIRS)}.")
+        print("       Either tests are missing/misplaced, or this step should be "
+              "removed from CI: an empty suite must not report success.")
+        return 1
+
     totals = {"PASS": 0, "FAIL": 0, "SKIP": 0, "ERROR": 0}
     failed_files: list[str] = []
 

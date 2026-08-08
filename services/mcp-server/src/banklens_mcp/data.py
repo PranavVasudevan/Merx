@@ -185,7 +185,7 @@ def population(repdte: str | None = None) -> dict:
 
     members: dict[int, list] = defaultdict(list)
     cluster_labels: dict[int, str] = {}
-    for lab, ms in raw_members.items():
+    for _lab, ms in raw_members.items():
         means = {m: _avg(ms, m) for m in _CLUSTER_METRICS}
         text = clustering.label_cluster(means)
         sid = clustering.stable_cluster_id(text)

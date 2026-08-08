@@ -20,7 +20,14 @@ import argparse
 import sys
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[3]
+# parents[4], NOT [3]: this file sits at
+# <repo>/pipelines/orchestration/src/banklens_orchestration/quarterly_refresh.py,
+# so [3] is `pipelines/` and only [4] is the repo root. The sibling ingestion CLIs
+# at identical depth already use [4]. Found live by running this in a container,
+# where the wrong root made --data-dir default to `<repo>/pipelines/data` and the
+# job died on PermissionError; locally it stayed invisible because the PowerShell
+# wrapper sets PYTHONPATH itself, so the bogus sys.path entry below never mattered.
+REPO = Path(__file__).resolve().parents[4]
 for rel in ("pipelines/ingestion/src", "pipelines/transforms/src"):
     p = REPO / rel
     if str(p) not in sys.path:

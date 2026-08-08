@@ -73,6 +73,13 @@ export interface XrayResult {
   overall_risk: 'low' | 'elevated' | 'high';
   flag_count: number;
   flags: XrayFlag[];
+  // Coverage: `overall_risk` is only as complete as `rules_evaluated`. EU/EBA banks
+  // disclose far less than US Call Reports, so a low flag count there reflects fewer
+  // checks run, not necessarily a safer bank.
+  rules_evaluated: number;
+  rules_total: number;
+  rules_not_evaluated: string[];
+  fully_assessed: boolean;
   key_metrics: {
     uninsured_deposit_pct: number | null;
     loan_to_deposit_pct: number | null;
@@ -123,6 +130,12 @@ export interface StressResult {
   minimums: StressRatios;
   passes: Record<keyof StressRatios, boolean>;
   passes_all: boolean;
+  // Non-empty when a requested shock leg could not be applied because the driving
+  // input isn't disclosed for this bank (e.g. EU/EBA banks report no deposit total,
+  // so a deposit-run leg is skipped). When present, `passes_all` reflects FEWER
+  // shocks than were asked for and must not be read as a clean pass.
+  legs_not_applied: { leg: string; reason: string; requested_pct?: number; requested_bps?: number }[];
+  fully_covered: boolean;
   capital_waterfall: {
     loan_loss: number;
     afs_mark_loss: number;

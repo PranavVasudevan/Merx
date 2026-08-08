@@ -78,3 +78,23 @@
 .stress-bad-text { color: var(--status-critical); font-weight: 650; }
 
 .stress-liq-note { font-size: var(--text-sm); margin: var(--space-2) 0 0; }
+
+/* Shown when a requested shock leg couldn't be applied (e.g. EU banks disclose no
+   deposit total). Warning-toned, not critical: the result is narrower than asked
+   for, which is different from the bank failing. */
+.stress-coverage-warning {
+  background: color-mix(in srgb, var(--status-warning) 12%, transparent);
+  border-left: 3px solid var(--status-warning);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-4);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+.stress-coverage-warning ul { margin: var(--space-2) 0; padding-left: 1.1rem; }
+.stress-coverage-warning li { margin: 2px 0; }
+.stress-coverage-warning code {
+  background: var(--surface-2);
+  padding: 0 4px;
+  border-radius: 3px;
+}

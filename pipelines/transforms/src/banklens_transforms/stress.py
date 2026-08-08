@@ -92,6 +92,30 @@ def _apply_shocks(pos: dict, shock: Shock, afs_loss: float, htm_unrealized: floa
     afs = pos["securities_afs"] or 0.0
     htm = pos["securities_htm"] or 0.0
 
+    # A missing input is NOT the same as a zero input. The `or 0.0` coercions above
+    # are what let the arithmetic run at all, but if the caller asked for a shock leg
+    # whose driving input was never disclosed, the result silently comes back with
+    # that leg contributing nothing — i.e. a bank asked to survive a 25% deposit run
+    # reports completely unchanged ratios, which reads as "immune" rather than
+    # "unknown". That is a false reassurance, and worse than an honest gap. Found
+    # live on EU (EBA-sourced) banks, which disclose no deposit total at all.
+    # Every such leg is named here and surfaced in the result.
+    legs_not_applied = []
+    if shock.loan_loss_pct and pos.get("total_loans") is None:
+        legs_not_applied.append({
+            "leg": "loan_loss", "requested_pct": shock.loan_loss_pct,
+            "reason": "no total loan balance disclosed for this bank"})
+    if shock.deposit_outflow_pct and pos.get("total_deposits") is None:
+        legs_not_applied.append({
+            "leg": "deposit_outflow", "requested_pct": shock.deposit_outflow_pct,
+            "reason": "no deposit total disclosed for this bank (EBA reports a combined "
+                      "amortised-cost liabilities figure that also contains issued debt, "
+                      "so a deposit run cannot be modelled honestly)"})
+    if shock.rate_shock_bps and pos.get("securities_afs") is None and pos.get("securities_htm") is None:
+        legs_not_applied.append({
+            "leg": "rate_shock", "requested_bps": shock.rate_shock_bps,
+            "reason": "no securities portfolio disclosed for this bank"})
+
     # 1) credit losses on the loan book
     loan_loss = shock.loan_loss_pct / 100.0 * loans
 
@@ -123,6 +147,10 @@ def _apply_shocks(pos: dict, shock: Shock, afs_loss: float, htm_unrealized: floa
         "shock": asdict(shock),
         "before": before, "after": after, "minimums": MINIMUMS,
         "passes": verdict, "passes_all": all(verdict.values()),
+        # Empty for a fully-covered bank; non-empty means the headline verdict above
+        # reflects FEWER shocks than were requested — read it as partial, not passing.
+        "legs_not_applied": legs_not_applied,
+        "fully_covered": not legs_not_applied,
         "capital_waterfall": {
             "loan_loss": round(loan_loss, 0),
             "afs_mark_loss": round(afs_loss, 0),

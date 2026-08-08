@@ -11,3 +11,4 @@ resources:
   - bridge-service.yaml
   - web-deployment.yaml
   - web-service.yaml
+  - refresh-cronjob.yaml

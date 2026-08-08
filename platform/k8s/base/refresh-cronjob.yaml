@@ -1,0 +1,67 @@
+# Scheduled quarterly data refresh — the thing that turns the orchestration DAG
+# from "a script someone remembers to run" into an actual automated pipeline.
+#
+# Cadence is driven by when the source data genuinely changes, not by convenience:
+# US Call Reports post ~30-45 days after each quarter-end, so this fires at 06:00
+# UTC on the 5th of February, May, August and November. Running it more often just
+# re-fetches identical numbers; running it sooner fetches a quarter that hasn't
+# been published yet. (EU/EBA data refreshes only semiannually — the DAG re-lands
+# it every run regardless, which is harmless and keeps one schedule instead of two.)
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: banklens-refresh
+  labels:
+    app: banklens-refresh
+spec:
+  schedule: "0 6 5 2,5,8,11 *"
+  timeZone: "Etc/UTC"
+  # This job re-lands the whole population; two of them writing the same Bronze
+  # partitions at once would interleave partial writes. Forbid overlap rather than
+  # risk a torn landing.
+  concurrencyPolicy: Forbid
+  # A missed window (cluster down at 06:00) should still run when it comes back,
+  # but a *stale* catch-up days later is pointless for quarterly data.
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      # The DAG has its own per-stage retries; this is the outer backstop for the
+      # job dying entirely (evicted node, OOM), not for a flaky HTTP call.
+      backoffLimit: 2
+      # Upper bound so a hung source API can't leave a job running until the next
+      # quarter. The full refresh is minutes, not hours.
+      activeDeadlineSeconds: 7200
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: refresh
+              image: banklens-refresh:local
+              imagePullPolicy: IfNotPresent
+              args:
+                - python
+                - -m
+                - banklens_orchestration.quarterly_refresh
+                # --repdte deliberately omitted: the CLI defaults to the most
+                # recent quarter, which is what a scheduled run should always want.
+                # Pinning a date here would freeze this job on one quarter forever.
+                - --quarters
+                - "2"
+              resources:
+                # Heavier than the bridge: this one parses a ~15MB CSV and retrains
+                # the deposit-flight model, both in pure Python.
+                requests: { cpu: "200m", memory: "512Mi" }
+                limits: { cpu: "1000m", memory: "1Gi" }
+              volumeMounts:
+                - name: banklens-data
+                  mountPath: /app/data
+                  # Read-WRITE, unlike the bridge's mount. This job exists to write.
+                  readOnly: false
+          volumes:
+            - name: banklens-data
+              # Base defines the volume NAME only — overlays supply the real source,
+              # matching bridge-deployment.yaml. Both must resolve to the SAME
+              # underlying volume or the bridge will serve data this job never wrote.
+              emptyDir: {}

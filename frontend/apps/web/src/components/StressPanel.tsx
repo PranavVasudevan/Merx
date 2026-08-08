@@ -96,9 +96,33 @@ export function StressPanel({ cert }: { cert: number }) {
       {result && (
         <>
           <div className={`stress-verdict ${result.passes_all ? 'stress-pass' : 'stress-fail'}`}>
-            {result.passes_all ? 'PASS — clears all regulatory minimums' : 'FAIL — breaches a regulatory minimum'}
+            {result.passes_all
+              ? (result.fully_covered
+                  ? 'PASS — clears all regulatory minimums'
+                  : 'PARTIAL PASS — clears minimums, but not all shocks could be applied')
+              : 'FAIL — breaches a regulatory minimum'}
             {loading && <span className="muted"> · recalculating…</span>}
           </div>
+
+          {result.legs_not_applied?.length > 0 && (
+            <div className="stress-coverage-warning">
+              <strong>
+                {result.legs_not_applied.length === 1 ? 'One shock was' : 'Some shocks were'} not applied
+                {' '}— this result is narrower than what you asked for:
+              </strong>
+              <ul>
+                {result.legs_not_applied.map((l) => (
+                  <li key={l.leg}>
+                    <code>{l.leg.replace(/_/g, ' ')}</code>
+                    {l.requested_pct !== undefined && ` (${l.requested_pct}% requested)`}
+                    {l.requested_bps !== undefined && ` (${l.requested_bps} bps requested)`}
+                    {' — '}{l.reason}
+                  </li>
+                ))}
+              </ul>
+              Unchanged ratios here mean <em>not measured</em>, not <em>unaffected</em>.
+            </div>
+          )}
 
           <div className="stress-ratio-grid">
             {(['cet1', 'tier1', 'total', 'leverage'] as const).map((k) => (

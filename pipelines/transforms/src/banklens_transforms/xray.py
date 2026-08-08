@@ -125,13 +125,23 @@ def evaluate_xray(gold_row: dict, *, capital_basis: str = "risk_based") -> dict:
 
     flags: list[dict] = []
     skipped: list[str] = []
+    unevaluated: list[str] = []
+    evaluated = 0
     for rule in RULES:
         if rule.family in suppressed:
             skipped.append(rule.key)
             continue
         value = gold_row.get(rule.key)
         if value is None:
+            # Distinct from `skipped` above: that rule was deliberately suppressed for
+            # this bank's capital basis; THIS one simply has no data to test against.
+            # Both used to vanish silently, which made an under-covered bank look
+            # cleaner than a fully-assessed one — a bank scored on 2 of 9 rules
+            # showed "1 flag" exactly like a bank scored on all 9. Reported now so
+            # a low flag count can be read against how much was actually checked.
+            unevaluated.append(rule.key)
             continue
+        evaluated += 1
         sev = _severity(rule, value)
         if sev == "low":
             continue
@@ -166,6 +176,13 @@ def evaluate_xray(gold_row: dict, *, capital_basis: str = "risk_based") -> dict:
         # "capital not assessed", and see why.
         "capital_basis": capital_basis,
         "rules_not_applicable": skipped,
+        # Coverage: how much of the ruleset actually ran. `overall_risk` is only as
+        # complete as `rules_evaluated` — a "low" verdict from 2 of 9 rules is a
+        # statement about 2 rules, not a clean bill of health.
+        "rules_evaluated": evaluated,
+        "rules_total": len(RULES),
+        "rules_not_evaluated": unevaluated,
+        "fully_assessed": not unevaluated and not skipped,
         "key_metrics": {
             "uninsured_deposit_pct": gold_row.get("uninsured_deposit_pct"),
             "loan_to_deposit_pct": gold_row.get("loan_to_deposit_pct"),

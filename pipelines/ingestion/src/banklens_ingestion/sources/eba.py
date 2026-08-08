@@ -50,6 +50,7 @@ _NS = {"m": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
 # docstring). Ratios (CET1/Tier1/Total capital/leverage) are EBA's own reported
 # "transitional period" figures.
 FINANCIAL_ITEMS: dict[str, str] = {
+    "2521001": "cash_and_balances",
     "2521010": "total_assets",
     "2521214": "total_liabilities",
     "2521216": "total_equity",
@@ -73,6 +74,32 @@ FINANCIAL_ITEMS: dict[str, str] = {
 # EBA-sourced rows identically without a per-source special case.
 _RATIO_FIELDS_NEED_PERCENT_SCALING = (
     "cet1_ratio", "tier1_rbc_ratio", "total_rbc_ratio", "leverage_ratio")
+
+# Items dimensioned by IFRS 9 impairment stage (ASSETS_Stages = 1/2/3), which arrive
+# as THREE rows per bank-period and MUST be summed to get the real total.
+#
+# Verified live before mapping, not assumed: Deutsche Bank's stage-3 slice of item
+# 2521019 alone is EUR 14.1bn, which as a "total loan book" would be absurd for a
+# EUR 1.4tn bank. Summing the stages gives EUR 614bn, which is plausible. A naive
+# last-write-wins pivot silently keeps whichever stage the CSV happens to end on —
+# exactly the multi-dimensional-cube trap this connector's docstring warns about for
+# tr_cre.csv. Confirmed these 8 items vary on ASSETS_Stages ONLY (never on
+# ASSETS_FV/Exposure/Financial_instruments), so a plain sum over stages is correct.
+_STAGE_SUMMED_ITEMS: dict[str, str] = {
+    "2521016": "securities_afs",            # FVOCI debt securities  (IFRS analogue of AFS)
+    "2521018": "securities_htm",            # amortised-cost debt securities (analogue of HTM)
+    "2521017": "loans_fvoci",
+    "2521019": "loans_amortised_cost",
+    "2521027": "allowance_loans_fvoci",     # accumulated impairment, FVOCI loans
+    "2521029": "allowance_loans_amortised_cost",
+}
+
+# Stage 3 == "credit-impaired" under IFRS 9 — the closest real equivalent to FDIC's
+# noncurrent-loans figure, and the only way EU banks get a genuine NPL ratio.
+_STAGE3_ITEMS: dict[str, str] = {
+    "2521017": "npl_loans_fvoci",
+    "2521019": "npl_loans_amortised_cost",
+}
 
 
 class EbaSource(Source):
@@ -159,18 +186,39 @@ class EbaSource(Source):
         by_key: dict[tuple[str, str], dict] = defaultdict(dict)
         countries: dict[tuple[str, str], str] = {}
         for row in reader:
-            field = FINANCIAL_ITEMS.get(row.get("Item"))
-            if field is None:
-                continue
+            item = row.get("Item")
             key = (row["LEI_Code"], row["Period"])
             try:
                 value = float(row["Amount"])
             except (TypeError, ValueError):
                 continue
-            if field in _RATIO_FIELDS_NEED_PERCENT_SCALING:
-                value *= 100
-            by_key[key][field] = value
             countries[key] = row.get("NSA")
+
+            # 1) Scalar items: exactly one row per bank-period, assigned directly.
+            field = FINANCIAL_ITEMS.get(item)
+            if field is not None:
+                if field in _RATIO_FIELDS_NEED_PERCENT_SCALING:
+                    value *= 100
+                if field in by_key[key]:
+                    # A scalar item appearing twice means EBA added a dimension this
+                    # item didn't previously carry. Assigning would silently keep one
+                    # arbitrary slice and under-report the true figure, so fail loudly
+                    # instead — a wrong balance sheet is worse than a failed landing.
+                    raise ValueError(
+                        f"EBA item {item} ({field}) appeared more than once for "
+                        f"LEI={key[0]} period={key[1]} — it is now dimensioned and must "
+                        f"move into _STAGE_SUMMED_ITEMS (or be handled explicitly) "
+                        f"rather than assigned as a scalar.")
+                by_key[key][field] = value
+                continue
+
+            # 2) Stage-dimensioned items: accumulate across IFRS 9 stages 1/2/3.
+            summed = _STAGE_SUMMED_ITEMS.get(item)
+            if summed is not None:
+                by_key[key][summed] = by_key[key].get(summed, 0.0) + value
+            stage3 = _STAGE3_ITEMS.get(item)
+            if stage3 is not None and row.get("ASSETS_Stages") == "3":
+                by_key[key][stage3] = by_key[key].get(stage3, 0.0) + value
 
         return [{"lei": lei, "period": period, "country": countries[(lei, period)], **fields}
                for (lei, period), fields in by_key.items()]

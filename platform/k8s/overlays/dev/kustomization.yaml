@@ -15,6 +15,12 @@ patches:
     target:
       kind: Deployment
       name: banklens-bridge
+  # Same PVC for the scheduled refresh — it must WRITE to the volume the bridge
+  # READS, or a successful refresh would never become visible in the app.
+  - path: refresh-data-patch.yaml
+    target:
+      kind: CronJob
+      name: banklens-refresh
   # Local dev only: NodePort so the services are reachable at a fixed local port
   # without needing `kubectl port-forward` running in a separate terminal.
   - target:

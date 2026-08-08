@@ -1,0 +1,18 @@
+# Points the refresh CronJob's "banklens-data" volume at the SAME dev PVC the
+# bridge reads from. Without this the job writes to the base emptyDir, which is
+# discarded when the pod exits — the refresh would appear to succeed while the
+# bridge kept serving the old data.
+#
+# The volume path is deeper than the bridge's patch because a CronJob nests its
+# pod spec under jobTemplate.spec.template.
+#
+# ReadWriteOnce is fine here: this is a single-node local cluster, so the bridge
+# (readOnly) and this job (read-write) land on the same node and can both mount it.
+# On a real multi-node cluster this PVC would need ReadWriteMany, or the refresh
+# would have to be pinned to the bridge's node.
+- op: replace
+  path: /spec/jobTemplate/spec/template/spec/volumes/0
+  value:
+    name: banklens-data
+    persistentVolumeClaim:
+      claimName: banklens-data

@@ -78,7 +78,7 @@ consumer of the platform.
 | Authentication | Keycloak for identity, Open Policy Agent for authorization |
 | Frontend | React, TypeScript, Vite |
 | Charting | Recharts, Apache ECharts, Lightweight Charts, and a hand-implemented Canvas map projection for branch geography |
-| Deployment | Docker Compose for local development; Kubernetes manifests verified against a real cluster |
+| Deployment | Docker Compose for local development; Kustomize-based Kubernetes manifests with dev/staging/prod overlays |
 | Observability | Prometheus and Grafana |
 | CI | GitHub Actions — Python, Rust, and frontend build/lint checks on every change |
 
@@ -152,9 +152,9 @@ for EU data.
 ## Data and licensing
 
 Government sources (FDIC, SEC, EBA, ECB) are public and safe to redistribute.
-Tiingo market data is commercially licensed and display-only; the serving
-layer enforces that restriction at the API boundary. See
-`config/sources.yaml` for the complete license registry.
+Tiingo market data is commercially licensed and is registered as
+non-redistributable in the source registry. See `config/sources.yaml` for the
+complete license registry.
 
 ## License
 
