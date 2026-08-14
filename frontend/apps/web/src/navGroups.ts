@@ -22,6 +22,7 @@ export const NAV_GROUPS: NavGroup[] = [
     { to: '/heatmap', label: 'Heatmap' },
     { to: '/treemap', label: 'Treemap' },
     { to: '/distributions', label: 'Distributions' },
+    { to: '/market', label: 'Market' },
   ] },
   { label: 'Governance', links: [
     { to: '/clusters', label: 'Clusters' },

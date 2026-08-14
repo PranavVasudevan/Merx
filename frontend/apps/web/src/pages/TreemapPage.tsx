@@ -6,6 +6,7 @@ import { baseEChartTheme, tooltipStyle } from '../echartsTheme';
 import { api } from '../api';
 import { chartColors } from '../colors';
 import type { TreemapResult } from '../types';
+import { BankSearch } from '../components/BankSearch';
 import './TreemapPage.css';
 
 function riskColor(risk: string, colors: ReturnType<typeof chartColors>): string {
@@ -21,12 +22,21 @@ export function TreemapPage() {
   const [result, setResult] = useState<TreemapResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [groupBy, setGroupBy] = useState<'peer_cluster_label' | 'state' | 'country'>('peer_cluster_label');
+  const [selected, setSelected] = useState<{ cert: number; name: string } | null>(null);
 
   useEffect(() => {
     api.assetTreemap(groupBy)
       .then((r) => { setResult(r); setError(null); })
       .catch((e: Error) => setError(e.message));
   }, [groupBy]);
+
+  // Whether the selected bank actually landed anywhere in the currently-grouped
+  // treemap — "state"/"peer_cluster_label" groupings are US-only, so an EU
+  // selection under either would silently not appear.
+  const selectedFound = useMemo(() => {
+    if (!selected || !result) return false;
+    return result.groups.some((g) => g.children.some((c) => c.cert === selected.cert));
+  }, [result, selected]);
 
   const option = useMemo(() => {
     if (!result) return {} as EChartsOption;
@@ -62,15 +72,27 @@ export function TreemapPage() {
           name: g.name,
           value: g.children.reduce((s, c) => s + c.value, 0),
           itemStyle: { color: colors.baseline },
-          children: g.children.map((c) => ({
-            name: c.name, value: c.value, cert: c.cert,
-            itemStyle: { color: riskColor(c.overall_risk, colors) },
-          })),
+          children: g.children.map((c) => {
+            const isSelected = selected != null && c.cert === selected.cert;
+            return {
+              name: c.name, value: c.value, cert: c.cert,
+              // A distinct border + glow, not a fill-color change, so the cell
+              // still communicates its risk color while standing out from every
+              // other cell of the same color.
+              itemStyle: isSelected
+                ? {
+                    color: riskColor(c.overall_risk, colors),
+                    borderColor: colors.aqua, borderWidth: 3,
+                    shadowColor: colors.aqua, shadowBlur: 14,
+                  }
+                : { color: riskColor(c.overall_risk, colors) },
+            };
+          }),
         })),
       }],
     };
     return opt;
-  }, [result]);
+  }, [result, selected]);
 
   const onEvents = useMemo(() => ({
     click: (params: unknown) => {
@@ -86,28 +108,53 @@ export function TreemapPage() {
       <div className="panel">
         <h2>Population by assets</h2>
         <p className="muted treemap-subtitle">
-          Every bank in the population (US $1B–$250B slice + EU significant
+          Every bank in the population (the full US FDIC population + EU significant
           institutions), sized by assets, colored by X-Ray severity where available.
           Click a bank to open it. Group by country for the full US+EU view — behavioral
           cluster and state are US-only groupings (EU banks land in one "Unclassified"
           box under either, since EBA doesn't disclose the loan-mix data clusters need).
         </p>
         <div className="treemap-controls">
-          <select
-            className="treemap-select"
-            value={groupBy}
-            onChange={(e) => setGroupBy(e.target.value as 'peer_cluster_label' | 'state' | 'country')}
-          >
-            <option value="peer_cluster_label">Group by behavioral cluster (US only)</option>
-            <option value="state">Group by state (US only)</option>
-            <option value="country">Group by country (US + EU)</option>
-          </select>
+          <div className="treemap-controls-left">
+            <select
+              className="treemap-select"
+              value={groupBy}
+              onChange={(e) => setGroupBy(e.target.value as 'peer_cluster_label' | 'state' | 'country')}
+            >
+              <option value="peer_cluster_label">Group by behavioral cluster (US only)</option>
+              <option value="state">Group by state (US only)</option>
+              <option value="country">Group by country (US + EU)</option>
+            </select>
+            <BankSearch onSelect={(cert, name) => setSelected({ cert, name })} />
+            {selected && (
+              <span className="treemap-bank-chip">
+                <i style={{ background: colors.aqua }} />
+                {selected.name}
+                <button
+                  type="button"
+                  className="treemap-bank-chip-clear"
+                  onClick={() => setSelected(null)}
+                  aria-label="Clear selected bank"
+                >
+                  ×
+                </button>
+              </span>
+            )}
+          </div>
           <div className="treemap-legend">
             <span className="treemap-legend-item"><i style={{ background: colors.good }} />Low risk</span>
             <span className="treemap-legend-item"><i style={{ background: colors.warning }} />Elevated</span>
             <span className="treemap-legend-item"><i style={{ background: colors.critical }} />High</span>
+            <span className="treemap-legend-item"><i className="treemap-legend-swatch-outline" style={{ borderColor: colors.aqua }} />Selected</span>
           </div>
         </div>
+        {selected && !selectedFound && result && (
+          <p className="muted treemap-bank-not-found">
+            {selected.name} isn't in this view — it may have no reported assets, or "{
+              groupBy === 'country' ? 'country' : groupBy === 'state' ? 'state' : 'behavioral cluster'
+            }" grouping may not apply to it (EU banks only land under "country").
+          </p>
+        )}
         {error && <p className="app-banner-error">{error}</p>}
         {result && (
           <EChart

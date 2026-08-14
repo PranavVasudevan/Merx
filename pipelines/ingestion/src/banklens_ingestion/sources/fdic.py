@@ -81,7 +81,19 @@ FINANCIAL_FIELDS = [
     "EEFFR",       # efficiency ratio (RATIO, %)
     # ---- asset quality ----
     "NCLNLS",      # noncurrent loans & leases (90+ days past due or nonaccrual)
-    "NTLNLS",      # net charge-offs
+    "NTLNLS",      # net charge-offs (all loans, blended)
+    # C6 — net charge-offs by the SAME 8-leaf disjoint loan category gold.py's
+    # concentration ratios use (see gold.LOAN_CATEGORIES), each verified live
+    # against the FDIC API before being added here (this repo's field-code
+    # discipline — see this module's docstring).
+    "NTRECONS",    # net charge-offs: construction & land development
+    "NTREMULT",    # net charge-offs: multifamily residential RE
+    "NTRENRES",    # net charge-offs: nonfarm nonresidential (CRE core)
+    "NTRERES",     # net charge-offs: 1-4 family residential mortgages
+    "NTREAG",      # net charge-offs: farmland
+    "NTAG",        # net charge-offs: agricultural production
+    "NTCI",        # net charge-offs: commercial & industrial
+    "NTCON",       # net charge-offs: consumer (total)
     "LNATRES",     # allowance for credit losses on loans & leases
     "P3ASSET",     # assets past due 30-89 days (ASSET-level, not loan-level)
     "P9ASSET",     # assets past due 90+ days (ASSET-level, not loan-level)
@@ -97,6 +109,25 @@ FINANCIAL_FIELDS = [
 ]
 
 INSTITUTION_FIELDS = ["NAME", "CERT", "STALP", "CITY", "ACTIVE", "ASSET", "DEP", "ESTYMD"]
+
+# `failures` endpoint fields — verified live (2026-08-13) against real rows,
+# including the four positives docs/audit/04-remediation-prompts.md B6 asks to
+# stop hardcoding (SVB CERT 24735 -> FAILDATE 3/10/2023; Signature Bank CERT
+# 57053 -> 3/12/2023; IndyMac CERT 29730 -> 7/11/2008; confirmed live). This is
+# the FULL field set the endpoint returns, not a curated subset — every field
+# here appeared on a real landed row.
+FAILURE_FIELDS = [
+    "CERT", "NAME", "FAILDATE", "FAILYR", "CITY", "PSTALP",
+    "CHCLASS", "CHCLASS1",              # charter class at failure / at resolution
+    "QBFASSET", "QBFDEP",               # assets / deposits at failure ($ thousands)
+    "RESTYPE", "RESTYPE1",              # resolution type (e.g. "FAILURE"), resolution sub-type
+    "SAVR",                             # resolving fund (e.g. "DIF")
+    "BIDNAME", "BIDCITY", "BIDSTATE",   # acquiring institution + location, if any
+    "COST", "COSTMOSTRECENTASOF",       # resolution cost to the DIF ($ thousands), as-of date
+    "UNINSDEP",                         # uninsured deposits at failure, where disclosed
+    "RESDATE", "BRDATE",                # resolution date, bridge-bank date
+    "FIN", "ID",
+]
 
 
 class FdicSource(Source):
@@ -185,14 +216,22 @@ class FdicSource(Source):
             r["_source_url"] = url
         return rows
 
-    def fetch_population(self, repdte: str, min_assets_k: int = 1_000_000,
-                         max_assets_k: int = 250_000_000) -> tuple[list[dict], str]:
-        """Every bank in the MVP asset band for one quarter, as (rows, source_url).
+    def fetch_population(self, repdte: str, min_assets_k: int = 0,
+                         max_assets_k: int = 50_000_000_000) -> tuple[list[dict], str]:
+        """Every FDIC-insured bank for one quarter, as (rows, source_url).
 
-        The whole slice arrives in ONE request: the band holds ~1,050 banks and the
-        API's `limit` ceiling is 10,000, so no pagination is needed (unlike SOD's
-        ~76k branch rows). Asset bounds are in $ THOUSANDS, matching FDIC's own
-        convention — $1B-$250B is 1_000_000 to 250_000_000.
+        Widened (docs/audit/04-remediation-prompts.md B3) from the original MVP
+        slice, which silently excluded every bank under $1B and the four GSIBs
+        above $250B — the first thing a banker used to notice. Default bounds
+        are now effectively unbounded (0 to $50T in $ thousands — no real bank
+        approaches that ceiling); pass `min_assets_k`/`max_assets_k` explicitly
+        for a narrower slice (e.g. the old MVP band is still 1_000_000 to
+        250_000_000).
+
+        The whole slice arrives in ONE request: ~4,350 institutions nationwide
+        (live-verified against 2026Q1), well under the API's 10,000-row `limit`
+        ceiling, so no pagination is needed (unlike SOD's ~76k branch rows).
+        Asset bounds are in $ THOUSANDS, matching FDIC's own convention.
 
         Returns the URL alongside the rows so the caller can hand the REAL endpoint
         to Provenance.create(); the previously-landed provenance listed a URL whose
@@ -211,6 +250,30 @@ class FdicSource(Source):
             raise RuntimeError(
                 f"FDIC population for {repdte} returned {len(rows)} of {total} rows — "
                 f"the slice outgrew the 10,000-row single-request ceiling; add pagination.")
+        for r in rows:
+            r["_source_url"] = url
+        return rows, url
+
+    def fetch_failures(self) -> tuple[list[dict], str]:
+        """Every FDIC bank failure on record (4,115 as of 2026-08-13), as
+        (rows, source_url) — docs/audit/04-remediation-prompts.md B6: real data
+        to replace `deposit_flight.POSITIVE_CERTS`' hardcoded 4-bank dict.
+
+        One request: 4,115 rows is well under the 10,000 ceiling, same
+        single-request assumption `fetch_population` makes, verified the same
+        way (checked `meta.total` against the returned row count).
+        """
+        payload, url = self._get("failures", {
+            "fields": ",".join(FAILURE_FIELDS),
+            "sort_by": "FAILDATE", "sort_order": "DESC",
+            "limit": 10000,
+        })
+        rows = self._unwrap(payload)
+        total = payload.get("meta", {}).get("total")
+        if total is not None and len(rows) < total:
+            raise RuntimeError(
+                f"FDIC failures returned {len(rows)} of {total} rows — outgrew the "
+                f"10,000-row single-request ceiling; add pagination.")
         for r in rows:
             r["_source_url"] = url
         return rows, url

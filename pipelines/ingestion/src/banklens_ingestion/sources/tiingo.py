@@ -31,10 +31,16 @@ PRICE_FIELDS = ["date", "open", "high", "low", "close", "volume",
                 "adjOpen", "adjHigh", "adjLow", "adjClose", "adjVolume",
                 "divCash", "splitFactor"]
 
-# Free-tier discipline: 250 calls/day, 50 symbols/hour. A conservative per-call
-# delay keeps a batch run comfortably under the hourly cap without needing a
-# stateful rate-limit tracker.
+# Free-tier discipline: 250 calls/day, 50 symbols/hour. This per-call delay only
+# paces WITHIN one run (avoids hammering Tiingo back-to-back) — it does NOT by
+# itself keep a batch under the 50/hour ceiling (2s x 50 = 100s, nowhere near an
+# hour; a correction from an earlier version of this comment that overclaimed
+# it did). The actual hourly ceiling is enforced statefully, across runs, by
+# market_cli.py's persisted call log — see HOURLY_SYMBOL_CAP below and that
+# module's _load_state/_calls_in_last_hour.
 _MIN_DELAY_SECONDS = 2.0
+HOURLY_SYMBOL_CAP = 50
+DAILY_CALL_CAP = 250
 
 
 class MissingApiKey(RuntimeError):

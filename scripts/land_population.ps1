@@ -1,8 +1,9 @@
 <#
 .SYNOPSIS
-    Land the FDIC population slice (all US banks $1B-$250B) to Bronze, one request
-    per quarter. Keyless — no API key needed. This is the peer set every percentile,
-    cluster and leaderboard is computed against.
+    Land the full FDIC-insured population (~4,350 banks, widened from the original
+    $1B-$250B MVP slice — see docs/audit/04-remediation-prompts.md B3) to Bronze,
+    one request per quarter. Keyless — no API key needed. This is the peer set
+    every percentile, cluster and leaderboard is computed against.
 
     Landing several quarters is what makes QoQ/YoY real for the whole population
     (today's single cross-section leaves every qoq_* field null) and what lets

@@ -26,29 +26,6 @@ services:
       timeout: 5s
       retries: 5
 
-  clickhouse:
-    image: clickhouse/clickhouse-server:24.8
-    environment:
-      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-banklens}
-      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-change_me_locally}
-    ports: ["8123:8123", "9000:9000"]     # HTTP + native
-    volumes: ["chdata:/var/lib/clickhouse"]
-    ulimits:
-      nofile: { soft: 262144, hard: 262144 }
-
-  minio:                                   # S3-compatible object store for the lakehouse
-    image: minio/minio:latest
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-banklens}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change_me_locally}
-    ports: ["9002:9000", "9001:9001"]      # API + console
-    volumes: ["miniodata:/data"]
-
-  redis:
-    image: redis:7-alpine
-    ports: ["6379:6379"]
-
   # Real observability, not scaffolding — scrapes the REST bridge's actual
   # /metrics endpoint (services/api-gateway/src/bridge_server.py,
   # prometheus-client backed). host.docker.internal reaches the bridge
@@ -113,5 +90,3 @@ services:
 
 volumes:
   pgdata:
-  chdata:
-  miniodata:

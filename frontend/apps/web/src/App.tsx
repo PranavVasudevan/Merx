@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react';
 import type { User } from 'oidc-client-ts';
 import { Route, Routes } from 'react-router-dom';
 import { NavShell } from './components/NavShell';
+import { QuarterProvider } from './QuarterContext';
 
 // Every route is code-split. Eager imports put all pages plus three charting
 // libraries into one 1,015,105-byte chunk that every visitor downloaded regardless
@@ -28,6 +29,7 @@ const ClustersPage = lazy(() => import('./pages/ClustersPage').then(m => ({ defa
 const ModelPage = lazy(() => import('./pages/ModelPage').then(m => ({ default: m.ModelPage })));
 const GeographyPage = lazy(() => import('./pages/GeographyPage').then(m => ({ default: m.GeographyPage })));
 const MarketSharePage = lazy(() => import('./pages/MarketSharePage').then(m => ({ default: m.MarketSharePage })));
+const MarketPage = lazy(() => import('./pages/MarketPage').then(m => ({ default: m.MarketPage })));
 const NetworkPage = lazy(() => import('./pages/NetworkPage').then(m => ({ default: m.NetworkPage })));
 const StressLabPage = lazy(() => import('./pages/StressLabPage').then(m => ({ default: m.StressLabPage })));
 const FilingsPage = lazy(() => import('./pages/FilingsPage').then(m => ({ default: m.FilingsPage })));
@@ -38,6 +40,7 @@ function RouteFallback() {
 
 export default function App({ user, onLogout }: { user: User; onLogout: () => void }) {
   return (
+    <QuarterProvider>
     <Routes>
       <Route element={<NavShell user={user} onLogout={onLogout} />}>
         <Route index element={<Suspense fallback={<RouteFallback />}><OverviewPage /></Suspense>} />
@@ -56,6 +59,7 @@ export default function App({ user, onLogout }: { user: User; onLogout: () => vo
         <Route path="/model" element={<Suspense fallback={<RouteFallback />}><ModelPage /></Suspense>} />
         <Route path="/geography" element={<Suspense fallback={<RouteFallback />}><GeographyPage /></Suspense>} />
         <Route path="/market-share" element={<Suspense fallback={<RouteFallback />}><MarketSharePage /></Suspense>} />
+        <Route path="/market" element={<Suspense fallback={<RouteFallback />}><MarketPage /></Suspense>} />
         <Route path="/network" element={<Suspense fallback={<RouteFallback />}><NetworkPage /></Suspense>} />
         <Route path="/stress-lab" element={<Suspense fallback={<RouteFallback />}><StressLabPage /></Suspense>} />
         <Route path="/filings" element={<Suspense fallback={<RouteFallback />}><FilingsPage /></Suspense>} />
@@ -65,5 +69,6 @@ export default function App({ user, onLogout }: { user: User; onLogout: () => vo
         <Route path="/bank/:cert" element={<Suspense fallback={<RouteFallback />}><BankPage /></Suspense>} />
       </Route>
     </Routes>
+    </QuarterProvider>
   );
 }

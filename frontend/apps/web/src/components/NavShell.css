@@ -187,6 +187,9 @@
 }
 
 .app-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
   flex-shrink: 0;
 }
 
@@ -234,6 +237,20 @@
   flex-shrink: 0;
   background: var(--surface);
   backdrop-filter: var(--glass-blur);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.app-footer-with-freshness {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-5);
+}
+
+.app-footer-disclaimer {
+  opacity: 0.75;
 }
 
 /* Error State */

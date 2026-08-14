@@ -16,6 +16,31 @@
   color: var(--text-primary);
   font-size: var(--text-sm);
 }
+.treemap-controls-left { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
 .treemap-legend { display: flex; gap: var(--space-3); font-size: var(--text-xs); }
 .treemap-legend-item { display: inline-flex; align-items: center; gap: 5px; color: var(--text-muted); }
 .treemap-legend-item i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+.treemap-legend-swatch-outline { background: none; border: 2px solid; box-sizing: border-box; }
+
+.treemap-bank-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px var(--space-2) 5px var(--space-3);
+  border-radius: var(--radius-pill, 999px);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-size: var(--text-sm);
+}
+.treemap-bank-chip i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.treemap-bank-chip-clear {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: var(--text-base);
+  line-height: 1;
+  padding: 2px 4px;
+}
+.treemap-bank-chip-clear:hover { color: var(--text-primary); }
+.treemap-bank-not-found { font-size: var(--text-xs); margin: calc(-1 * var(--space-2)) 0 var(--space-2); }

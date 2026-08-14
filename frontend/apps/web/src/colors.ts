@@ -103,6 +103,21 @@ export function severityColor(sev: 'low' | 'elevated' | 'high'): string {
   return sev === 'high' ? c.critical : sev === 'elevated' ? c.warning : c.good;
 }
 
+/**
+ * C1: color/label zone for the deposit-flight model's resemblance PERCENTILE
+ * (0-100, rank within this quarter's scored population) — never its raw
+ * sigmoid output, which is not a calibrated probability of failure (see the
+ * model card's calibration curve on /model, and
+ * banklens_transforms.deposit_flight.population_percentile).
+ */
+export function resemblanceZone(percentile: number | null): { color: string; label: string } {
+  const c = chartColors();
+  if (percentile === null) return { color: c.muted, label: 'Not ranked' };
+  if (percentile >= 90) return { color: c.critical, label: 'High resemblance' };
+  if (percentile >= 70) return { color: c.warning, label: 'Moderate resemblance' };
+  return { color: c.good, label: 'Low resemblance' };
+}
+
 /** The categorical ramp, in the fixed order the dataviz tokens define. */
 export function categoricalPalette(): string[] {
   const c = chartColors();
@@ -113,4 +128,19 @@ export function categoricalPalette(): string[] {
 export function sequentialRamp(): string[] {
   const c = chartColors();
   return [c.seq100, c.seq300, c.seq450, c.seq600];
+}
+
+/**
+ * Three-stop diverging ramp (low -> neutral midpoint -> high), for values with a
+ * meaningful CENTER rather than a naturally-ordered low-to-high range — e.g. a
+ * correlation matrix centered at 0 (see MarketPage's correlation heatmap) or a
+ * percentile grid centered at the 50th percentile (see HeatmapPage). Reuses the
+ * same `--div-neg`/`--div-pos` tokens theme.css already defines, rather than
+ * adding a new pair — `divNeg`/`divPos` name the two ends by SIGN/DIRECTION
+ * (below vs above the center), not by value judgment, so this is safe to reuse
+ * for a metric like percentile standing where "low" isn't "bad."
+ */
+export function divergingRamp(): string[] {
+  const c = chartColors();
+  return [c.divNeg, c.surface2, c.divPos];
 }

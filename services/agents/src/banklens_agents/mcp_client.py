@@ -21,10 +21,14 @@ REPO = Path(__file__).resolve().parents[4]
 class MCPStdioClient:
     """Context-managed client: `with MCPStdioClient() as c: c.list_tools()`."""
 
-    def __init__(self, requester: str = "banklens-agent") -> None:
+    def __init__(self, requester: str = "banklens-agent", roles: list[str] | None = None) -> None:
         self._proc: subprocess.Popen | None = None
         self._next_id = 1
         self._requester = requester
+        # None means "no caller-role context at all" (e.g. a trusted local CLI
+        # run) — omit `roles` from `initialize` entirely rather than sending [],
+        # so the MCP server's own pre-existing behavior for that case is unchanged.
+        self._roles = roles
 
     def __enter__(self) -> "MCPStdioClient":
         env = os.environ.copy()
@@ -41,9 +45,18 @@ class MCPStdioClient:
         # identify itself at handshake time — the server threads it through to
         # every audit-log row for this connection (see server.py's `_audit`),
         # since a stdio server has no per-request auth header to read instead.
+        init_params: dict[str, Any] = {
+            "protocolVersion": "2025-06-18", "capabilities": {},
+            "clientInfo": {"name": self._requester, "version": "0.1.0"},
+        }
+        if self._roles is not None:
+            # See authz.py: the server treats an undeclared roles list and a
+            # declared-but-empty one identically (deny everything tiered), so
+            # this is just about not silently changing behavior for a caller
+            # that never opted into role-scoping in the first place.
+            init_params["roles"] = list(self._roles)
         self._send({"jsonrpc": "2.0", "id": self._id(), "method": "initialize",
-                    "params": {"protocolVersion": "2025-06-18", "capabilities": {},
-                               "clientInfo": {"name": self._requester, "version": "0.1.0"}}})
+                    "params": init_params})
         self._recv()
         self._send({"jsonrpc": "2.0", "method": "notifications/initialized"})
         return self

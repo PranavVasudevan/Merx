@@ -1,0 +1,28 @@
+{
+  "horizon_trading_days": 63,
+  "tickers_with_landed_price_data": 0,
+  "quarters_covered": [],
+  "by_severity": {
+    "low": {
+      "n": 0,
+      "mean": null,
+      "stdev": null
+    },
+    "elevated": {
+      "n": 0,
+      "mean": null,
+      "stdev": null
+    },
+    "high": {
+      "n": 0,
+      "mean": null,
+      "stdev": null
+    }
+  },
+  "high_vs_low_spread_pp": null,
+  "z_score": null,
+  "p_value": null,
+  "significant_at_05": false,
+  "n_total": 0,
+  "note": "Positive high_vs_low_spread_pp means high-severity banks OUTPERFORMED low-severity ones going forward \u2014 the OPPOSITE of what the rule engine would want to see if it carries real signal. A null or positive result is a legitimate finding, not a failure of this analysis."
+}

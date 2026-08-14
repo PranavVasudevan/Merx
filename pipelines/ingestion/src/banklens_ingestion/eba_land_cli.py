@@ -1,8 +1,9 @@
-"""Land the EBA EU-wide Transparency Exercise (institutions + financials) to Bronze.
+"""Land the EBA EU-wide Transparency Exercise (institutions + financials +
+credit risk) to Bronze.
 
 Real, live data — ~120 significant EU/EEA banks, no API key. See
-`sources/eba.py` for exactly what's captured and what's deliberately not (NPL/
-asset-quality is out of scope until the credit-risk cube's codes are verified).
+`sources/eba.py` for exactly what's captured from the credit-risk cube
+(`tr_cre.csv`) and what's deliberately still unparsed.
 
     python -m banklens_ingestion.eba_land_cli
     powershell -File scripts/land_eba.ps1
@@ -60,6 +61,15 @@ def run(data_dir: Path) -> None:
     periods = sorted({r["period"] for r in financials})
     print(f"  {len(financials)} bank-period rows across {len(periods)} period(s) "
           f"{periods}   checksum {prov2.checksum[:12]}...")
+
+    print("Landing EBA credit risk (tr_cre.csv — NPL + NACE sector, two Item "
+          "codes decoded of 89; see sources/eba.py)...")
+    credit_risk, cre_url = src.fetch_credit_risk()
+    prov3 = Provenance.create(source=src.name, endpoint=cre_url,
+                              license=src.license, payload=credit_risk)
+    write_partition(credit_risk, prov3, base_dir=data_dir / "bronze", source="eba",
+                    parts=("credit_risk",))
+    print(f"  {len(credit_risk)} bank-period rows   checksum {prov3.checksum[:12]}...")
 
 
 def main() -> None:

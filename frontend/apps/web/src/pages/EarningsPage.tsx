@@ -18,7 +18,7 @@ export function EarningsPage() {
     <MetricGroupPage
       group="earnings"
       title="Earnings"
-      subtitle="Profitability across the $1B–$250B population: return on assets/equity, net interest margin, operating efficiency, and how much of revenue is fee income versus the lending spread."
+      subtitle="Profitability across the population: return on assets/equity, net interest margin, operating efficiency, and how much of revenue is fee income versus the lending spread."
       columns={COLUMNS}
       defaultSort="roa_pct"
       highlightLabel="Highest return on assets"

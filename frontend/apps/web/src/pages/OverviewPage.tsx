@@ -2,18 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { api } from '../api';
-import { chartColors } from '../colors';
+import { resemblanceZone } from '../colors';
 import type { PopulationBank, RiskLeaderboardResult } from '../types';
 import './OverviewPage.css';
-
-// Same 0.5/0.15 thresholds RiskScorePanel.tsx uses for the per-bank gauge —
-// risk_score is the same score_vector output on the same 0-1 scale, so the
-// leaderboard should read as visually consistent with the bank dashboard.
-function riskZoneColor(score: number, colors: ReturnType<typeof chartColors>): string {
-  if (score >= 0.5) return colors.critical;
-  if (score >= 0.15) return colors.warning;
-  return colors.good;
-}
 
 function fmtB(v: number): string {
   return `$${v >= 1000 ? (v / 1000).toFixed(1) + 'T' : v.toFixed(0) + 'B'}`;
@@ -26,7 +17,6 @@ export function OverviewPage() {
   const [error, setError] = useState<string | null>(null);
   const [lbState, setLbState] = useState('');
   const [lbCluster, setLbCluster] = useState('');
-  const colors = chartColors();
 
   useEffect(() => {
     api.population().then((r) => setBanks(r.banks)).catch((e) => setError(String(e.message || e)));
@@ -68,7 +58,7 @@ export function OverviewPage() {
   return (
     <div className="overview-page">
       <div className="overview-hero panel">
-        <h1 className="overview-title">The $1B–$250B US bank population, at a glance</h1>
+        <h1 className="overview-title">The US bank population, at a glance</h1>
         <p className="secondary overview-subtitle">
           Real FDIC BankFind data, refreshed each quarter. Every number below is computed from the
           same Gold-layer data the per-bank dashboard uses — nothing here is a mock.
@@ -84,9 +74,9 @@ export function OverviewPage() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
           <div className="overview-kpi-row">
             <div className="panel overview-kpi">
-              <div className="overview-kpi-label muted">Banks in the slice</div>
+              <div className="overview-kpi-label muted">Banks in the population</div>
               <div className="overview-kpi-value tabular">{banks.length.toLocaleString()}</div>
-              <div className="overview-kpi-sub muted">$1B–$250B assets, 2026Q1</div>
+              <div className="overview-kpi-sub muted">every landed FDIC-insured bank, latest quarter</div>
             </div>
             <div className="panel overview-kpi">
               <div className="overview-kpi-label muted">Combined assets</div>
@@ -169,13 +159,15 @@ export function OverviewPage() {
                     <div className="overview-cluster-track">
                       <motion.div
                         className="overview-cluster-fill"
-                        style={{ background: riskZoneColor(b.risk_score, colors) }}
+                        style={{ background: resemblanceZone(b.resemblance_percentile).color }}
                         initial={{ width: 0 }}
-                        animate={{ width: `${Math.min(100, b.risk_score * 100)}%` }}
+                        animate={{ width: `${b.resemblance_percentile ?? 0}%` }}
                         transition={{ duration: 0.6, ease: [0.85, 0, 0.15, 1] }}
                       />
                     </div>
-                    <span className="tabular muted overview-cluster-count">{(b.risk_score * 100).toFixed(1)}%</span>
+                    <span className="tabular muted overview-cluster-count">
+                      {b.resemblance_percentile === null ? '—' : `${b.resemblance_percentile.toFixed(0)}th pctile`}
+                    </span>
                   </Link>
                 ))}
               </div>

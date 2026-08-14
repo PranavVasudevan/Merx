@@ -154,10 +154,22 @@ def evaluate_xray(gold_row: dict, *, capital_basis: str = "risk_based") -> dict:
             "severity": sev,
             "note": rule.why,
         }
-        # Peer context, if percentile ranks were attached (see peers.add_percentile_ranks).
-        pctile = gold_row.get(f"percentile_rank_{rule.key}")
+        # Peer context, if percentile ranks were attached (see
+        # peers.add_percentile_ranks). C11: defaults to the CLUSTER-
+        # conditional percentile (a behaviorally-similar peer group is a more
+        # meaningful comparison than the raw global population, which now
+        # spans a $1B community bank to a $900B GSIB — see B3), falling back
+        # to the population-wide figure only when this bank has no cluster
+        # assignment. `peer_percentile_basis` names which one was used so a
+        # caller never has to guess.
+        pctile = gold_row.get(f"percentile_rank_{rule.key}_within_cluster")
+        basis = "within_cluster"
+        if pctile is None:
+            pctile = gold_row.get(f"percentile_rank_{rule.key}")
+            basis = "global"
         if pctile is not None:
             flag["peer_percentile"] = pctile
+            flag["peer_percentile_basis"] = basis
         flags.append(flag)
 
     flags.sort(key=lambda f: _ORDER[f["severity"]], reverse=True)

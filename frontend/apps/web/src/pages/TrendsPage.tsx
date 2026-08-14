@@ -146,10 +146,14 @@ export function TrendsPage() {
             ))}
           </div>
           <p className="muted chart-caption trends-cluster-caveat">
-            Behavioral clusters are recomputed independently each quarter (k-means over
-            that quarter's whole population) — a bank sitting near a cluster boundary
-            can show real label changes here even with a stable balance sheet. This is
-            not a tracked "migration" against one fixed model.
+            {trends.cluster_mode === 'fixed'
+              ? 'Assigned against fixed reference-quarter centroids (not refit each quarter) — a ' +
+                'label change here reflects real behavioral movement, not k-means landing ' +
+                'differently this quarter.'
+              : 'Behavioral clusters are recomputed independently each quarter (k-means over ' +
+                'that quarter\'s whole population) — a bank sitting near a cluster boundary ' +
+                'can show label changes here even with a stable balance sheet. Run ' +
+                'cluster_centroids_cli to enable fixed-centroid assignment and remove this noise.'}
           </p>
 
           <div className="trends-grid">

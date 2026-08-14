@@ -1,5 +1,6 @@
 .distributions-page { display: flex; flex-direction: column; gap: var(--space-4); }
 .distributions-subtitle { margin: 0 0 var(--space-3); font-size: var(--text-sm); max-width: 680px; }
+.distributions-header-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
 .distributions-select {
   padding: 7px var(--space-3);
   border-radius: var(--radius-sm);
@@ -9,6 +10,35 @@
   font-size: var(--text-sm);
   min-width: 240px;
 }
+
+.distributions-controls { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.distributions-bank-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px var(--space-2) 5px var(--space-3);
+  border-radius: var(--radius-pill, 999px);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-size: var(--text-sm);
+}
+.distributions-bank-chip-clear {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: var(--text-base);
+  line-height: 1;
+  padding: 2px 4px;
+}
+.distributions-bank-chip-clear:hover { color: var(--text-primary); }
+.distributions-bank-readout {
+  font-size: var(--text-sm);
+  margin: 0 0 var(--space-2);
+  color: var(--text-secondary);
+}
+.distributions-bank-readout a { color: var(--text-primary); font-weight: 600; text-decoration: none; }
+.distributions-bank-readout a:hover { text-decoration: underline; }
 
 .distributions-stats {
   display: grid;

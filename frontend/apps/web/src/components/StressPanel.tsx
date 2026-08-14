@@ -28,6 +28,7 @@ export function StressPanel({ cert }: { cert: number }) {
   const [loanLoss, setLoanLoss] = useState(3);
   const [outflow, setOutflow] = useState(15);
   const [rateBps, setRateBps] = useState(200);
+  const [segmented, setSegmented] = useState(false);
   const [result, setResult] = useState<StressResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,13 +37,21 @@ export function StressPanel({ cert }: { cert: number }) {
   useEffect(() => {
     setLoading(true);
     const t = setTimeout(() => {
-      api.stressTest(cert, loanLoss, outflow, rateBps)
+      const req = segmented
+        ? api.segmentedStressTest(cert, 3.0, outflow, rateBps)
+        : api.stressTest(cert, loanLoss, outflow, rateBps);
+      req
         .then((r) => { setResult(r); setError(null); })
         .catch((e: Error) => { setResult(null); setError(e.message); })
         .finally(() => setLoading(false));
     }, 300);
     return () => clearTimeout(t);
-  }, [cert, loanLoss, outflow, rateBps]);
+  }, [cert, loanLoss, outflow, rateBps, segmented]);
+
+  const categoryLosses = useMemo(() => {
+    const cats = result?.capital_waterfall.loan_loss_by_category ?? {};
+    return Object.entries(cats).filter(([, v]) => v).sort((a, b) => b[1] - a[1]);
+  }, [result]);
 
   const waterfall = useMemo(() => {
     if (!result) return [];
@@ -69,9 +78,21 @@ export function StressPanel({ cert }: { cert: number }) {
       <h2>Feature 16 · Capital Buffer Simulator</h2>
       <div className="stress-controls">
         <label className="stress-slider">
-          <span>Loan losses <b className="tabular">{loanLoss.toFixed(0)}%</b></span>
-          <input type="range" min={0} max={15} step={1} value={loanLoss}
+          <span>
+            Loan losses{' '}
+            {segmented
+              ? <b className="tabular muted">by category (your own rate × 3)</b>
+              : <b className="tabular">{loanLoss.toFixed(0)}%</b>}
+          </span>
+          <input type="range" min={0} max={15} step={1} value={loanLoss} disabled={segmented}
             onChange={(e) => setLoanLoss(Number(e.target.value))} />
+        </label>
+        <label className="stress-slider stress-segmented-toggle">
+          <span>
+            <input type="checkbox" checked={segmented} onChange={(e) => setSegmented(e.target.checked)} />
+            {' '}Segment by loan category (C6) — this bank's own disclosed charge-off rate per
+            category, 3x
+          </span>
         </label>
         <label className="stress-slider">
           <span>Deposit outflow <b className="tabular">{outflow.toFixed(0)}%</b></span>
@@ -153,6 +174,18 @@ export function StressPanel({ cert }: { cert: number }) {
               </Bar>
             </BarChart>
           </ResponsiveContainer>
+
+          {categoryLosses.length > 0 && (
+            <div className="stress-category-breakdown">
+              <div className="muted stress-category-breakdown-title">Loss decomposition by loan category</div>
+              {categoryLosses.map(([label, v]) => (
+                <div className="stress-category-row" key={label}>
+                  <span className="stress-category-label">{label.replace(/_/g, ' ')}</span>
+                  <span className="tabular stress-bad-text">{fmtB(v)}</span>
+                </div>
+              ))}
+            </div>
+          )}
 
           {result.liquidity.shortfall_forcing_htm_sales > 0 ? (
             <p className="stress-liq-note stress-bad-text">

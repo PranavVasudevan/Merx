@@ -53,23 +53,74 @@ sources:
       HQ address for every branch, verified live) — only SIMS_LATITUDE/SIMS_LONGITUDE
       are trustworthy. See docs/data-contracts/branch_footprint.md.
 
+  fdic_failures:
+    name: "FDIC BankFind Suite — failures"
+    kind: rest_api
+    base_url: "https://banks.data.fdic.gov/api/failures"
+    auth: none
+    cadence: continuous
+    entities: ~4100           # failed banks on record (live-verified 2026-08-13)
+    docs: "https://banks.data.fdic.gov/docs/"
+    license: { tag: public-domain-us-gov, redistributable: true }
+    status: active            # implemented B6 (docs/audit/04-remediation-prompts.md)
+    data_quality_note: >
+      Replaces `deposit_flight.POSITIVE_CERTS`' old hardcoded 4-bank dict — see
+      `deposit_flight.derive_positive_certs`. Every field returned is landed
+      (see sources/fdic.py's FAILURE_FIELDS); acquirer name/location (BIDNAME/
+      BIDCITY/BIDSTATE) and resolution cost (COST) are useful M&A deal-comp
+      inputs beyond the deposit-flight model itself, not yet consumed
+      elsewhere. The broader FDIC "history" endpoint (non-failure mergers —
+      ~584,000 events, undocumented REPORT_TYPE/transaction codes) is
+      deliberately NOT parsed — same "a wrong number is worse than an honest
+      gap" reasoning as sources/eba.py's tr_cre.csv.
+
   fed_nic:
     name: "Federal Reserve NIC (FR Y-9C holding-company data)"
     kind: bulk_zip
-    base_url: "https://www.ffiec.gov/npw/FinancialReport/FinancialDataDownload"
+    base_url: "https://www.ffiec.gov/npw/FinancialReport"
+    endpoints:
+      attributes: "ReturnAttributesActiveZipFileCSV"
+      relationships: "ReturnRelationshipsZipFileCSV"
+      financials: "ReturnBHCFZipFiles?zipfilename=BHCF<YYYYMMDD>.ZIP"
     auth: none
     cadence: quarterly
     license: { tag: public-domain-us-gov, redistributable: true }
-    status: planned
+    status: active            # implemented B4 (docs/audit/04-remediation-prompts.md)
+    data_quality_note: >
+      FR Y-9C's consolidated balance sheet (the curated FINANCIAL_FIELDS in
+      sources/fed_nic.py) is only required of holding companies at/above the
+      Fed's Y-9C reporting threshold (~$3B consolidated assets) — smaller
+      holding companies file the simpler Y-9SP instead and appear in the same
+      bulk BHCF file with those fields blank (verified live: 379 of 3,694
+      landed 2025Q4 rows have a non-null total_assets). This is real filing-
+      requirement structure, not a landing gap: a bank's holding-company
+      rollup (get_holding_company) is reliable for large/regional/GSIB banks
+      and honestly empty for the smaller-BHC tail. Only ONE quarter is landed
+      by default (the latest); historical Y-9C backfill is not attempted.
+      `relationships` is filtered to OPEN, CONTROLLING ownership edges only —
+      the current parent/subsidiary tree, not the Fed's full historical/
+      minority-stake record.
 
   fred:
     name: "FRED (macro series)"
     kind: rest_api
     base_url: "https://api.stlouisfed.org/fred"
-    auth: api_key            # FRED_API_KEY
+    auth: api_key            # FRED_API_KEY — free, no card; see sources/fred.py
     cadence: varies
     license: { tag: public-domain-us-gov, redistributable: true }
-    status: planned
+    status: active            # implemented B4 (docs/audit/04-remediation-prompts.md)
+    data_quality_note: >
+      Landed series: Treasury yield curve (DGS3MO/DGS2/DGS5/DGS10/DGS30), Fed
+      funds effective rate (DFF), unemployment rate (UNRATE), a commercial
+      real-estate price index (COMREPUSQ159N) — see sources/fred.py's
+      DEFAULT_SERIES. This environment had no working FRED_API_KEY (present
+      in .env as an empty placeholder) when the connector was written, so
+      unlike every other source here, these series IDs were NOT live-verified
+      against a real API response before being trusted — they are the
+      standard, long-established FRED identifiers, but the first real landing
+      run should be read as this connector's actual verification step, not a
+      formality. `fetch_series` itself is generic (any FRED series id), so a
+      wrong id fails loudly rather than landing wrong data.
 
   market_ohlc:
     name: "Tiingo (EOD OHLCV)"
@@ -95,11 +146,21 @@ sources:
     license: { tag: eba-open, redistributable: true }
     status: active            # implemented in Phase 1 (pan-European expansion)
     data_quality_note: >
-      Coarser than FDIC's Call Reports: no loan-category concentration, no
-      uninsured-deposit split, no branch-level geography (EBA doesn't publish
-      either). CET1/Tier1/Total-capital/leverage ratios are reported as raw
-      fractions (0.1841 = 18.41%), NOT already-percentages like FDIC's
-      IDT1CER/RBCRWAJ/RBC1AAJ — scaled at fetch time, see sources/eba.py.
-      Credit-risk/NPL data (tr_cre.csv) deliberately not parsed yet — its
-      exposure-class x NACE-sector x performing-status cube needs the SDD.xlsx
-      data dictionary to decode correctly.
+      Coarser than FDIC's Call Reports: no US-style loan-CATEGORY concentration
+      (no CRE/C&I/consumer split), no uninsured-deposit split, no branch-level
+      geography (EBA doesn't publish any of these). CET1/Tier1/Total-capital/
+      leverage ratios are reported as raw fractions (0.1841 = 18.41%), NOT
+      already-percentages like FDIC's IDT1CER/RBCRWAJ/RBC1AAJ — scaled at fetch
+      time, see sources/eba.py.
+      Credit-risk (tr_cre.csv, B2): TWO of its 89 Item codes are decoded —
+      supervisory performing/non-performing gross carrying amount (a real NPL
+      ratio, `npl_ratio_pct_supervisory`) and a 19-NACE-sector concentration
+      proxy (`sector_concentration_hhi`/`_top_sector`/`_top_pct`). Both were
+      verified against the EBA's own "Mapped_templates" workbook and, for the
+      Perf_Status split, arithmetically (performing + non-performing == total on
+      live data) — see sources/eba.py's module docstring. The remaining 87 Item
+      codes (exposure-class x SA/IRB x counterparty-country breakdowns) are
+      still deliberately unparsed: decoding them needs an Exposure-class code
+      table and a Country code table neither SDD.xlsx nor Mapped_templates
+      publish in a form this connector could verify byte-for-byte, and a wrong
+      NPL/concentration number is worse than the honest gap.

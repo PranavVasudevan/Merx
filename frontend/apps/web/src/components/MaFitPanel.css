@@ -1,6 +1,20 @@
 .mafit-subtitle { margin: 0 0 var(--space-3); font-size: var(--text-xs); }
 .mafit-list { display: flex; flex-direction: column; gap: var(--space-2); }
 .mafit-row { display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-sm); }
+.mafit-row-clickable {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 4px 6px;
+  margin: 0 -6px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  transition: background-color var(--duration-fast) var(--ease-organic);
+}
+.mafit-row-clickable:hover { background: var(--surface-2); }
 .mafit-rank { width: 14px; font-size: var(--text-xs); }
 .mafit-name { flex: 0 0 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mafit-bar-track { flex: 1; height: 8px; background: var(--gridline); border-radius: 4px; overflow: hidden; }

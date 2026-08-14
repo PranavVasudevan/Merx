@@ -49,6 +49,22 @@ spec:
                 # Pinning a date here would freeze this job on one quarter forever.
                 - --quarters
                 - "2"
+              env:
+                # See quarterly_refresh.py's _assert_durable_volume(): the base
+                # manifest's own `emptyDir: {}` below (and the staging/prod
+                # overlay STUBS that don't yet patch it to a PVC) would
+                # otherwise let this job "succeed" while silently discarding
+                # everything it wrote. Only overlays/dev's real PVC patch
+                # (refresh-data-patch.yaml) passes this check.
+                - name: BANKLENS_REQUIRE_DURABLE_VOLUME
+                  value: "true"
+              # Postgres creds (filings stage writes filing_chunks embeddings) and
+              # the Tiingo key (market_data stage) — see
+              # platform/k8s/base/secrets.yaml and platform/k8s/README.md for how
+              # these are provisioned for real.
+              envFrom:
+                - secretRef: { name: banklens-db-credentials }
+                - secretRef: { name: banklens-market-data-keys }
               resources:
                 # Heavier than the bridge: this one parses a ~15MB CSV and retrains
                 # the deposit-flight model, both in pure Python.

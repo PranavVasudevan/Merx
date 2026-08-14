@@ -1,0 +1,5621 @@
+{
+  "default_weights": {
+    "funding": 0.45,
+    "business": 0.25,
+    "size": 0.15,
+    "geo": 0.15
+  },
+  "overall_mean_percentile": 73.1,
+  "n_deals_total": 347,
+  "per_quarter": {
+    "2022Q4": {
+      "n_matched_deals": 7,
+      "n": 7,
+      "mean_percentile": 74.7,
+      "median_percentile": 85.0,
+      "deals": [
+        {
+          "target_cert": 25796,
+          "acquirer_cert": 57931,
+          "target_name": "COMMUNITY BANK AND TRUST - WEST GEORGIA",
+          "acquirer_name": "ANCHOR BANK",
+          "fail_year": "2026",
+          "acquirer_percentile": 98.7
+        },
+        {
+          "target_cert": 57488,
+          "acquirer_cert": 20179,
+          "target_name": "METROPOLITAN CAPITAL B&T",
+          "acquirer_name": "FIRST INDEPENDENCE BANK",
+          "fail_year": "2026",
+          "acquirer_percentile": 96.6
+        },
+        {
+          "target_cert": 5520,
+          "acquirer_cert": 15480,
+          "target_name": "SANTA ANNA NATIONAL BANK",
+          "acquirer_name": "COLEMAN COUNTY STATE BANK",
+          "fail_year": "2025",
+          "acquirer_percentile": 65.4
+        },
+        {
+          "target_cert": 4134,
+          "acquirer_cert": 27394,
+          "target_name": "FIRST NB OF LINDSAY",
+          "acquirer_name": "FIRST BANK & TRUST CO.",
+          "fail_year": "2024",
+          "acquirer_percentile": 39.6
+        },
+        {
+          "target_cert": 27332,
+          "acquirer_cert": 7551,
+          "target_name": "REPUBLIC BANK",
+          "acquirer_name": "FULTON BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2024",
+          "acquirer_percentile": 99.7
+        },
+        {
+          "target_cert": 8758,
+          "acquirer_cert": 18400,
+          "target_name": "CITIZENS BANK",
+          "acquirer_name": "IOWA TRUST & SAVINGS BANK",
+          "fail_year": "2023",
+          "acquirer_percentile": 38.2
+        },
+        {
+          "target_cert": 24735,
+          "acquirer_cert": 11063,
+          "target_name": "SILICON VALLEY BANK",
+          "acquirer_name": "FIRST-CITIZENS BANK & TRUST COMPANY",
+          "fail_year": "2023",
+          "acquirer_percentile": 85.0
+        }
+      ]
+    },
+    "2008Q1": {
+      "n_matched_deals": 340,
+      "n": 340,
+      "mean_percentile": 73.1,
+      "median_percentile": 79.7,
+      "deals": [
+        {
+          "target_cert": 25796,
+          "acquirer_cert": 18903,
+          "target_name": "COMMUNITY BANK AND TRUST - WEST GEORGIA",
+          "acquirer_name": "ANCHOR BANK",
+          "fail_year": "2026",
+          "acquirer_percentile": 85.5
+        },
+        {
+          "target_cert": 57488,
+          "acquirer_cert": 20179,
+          "target_name": "METROPOLITAN CAPITAL B&T",
+          "acquirer_name": "FIRST INDEPENDENCE BANK",
+          "fail_year": "2026",
+          "acquirer_percentile": 71.2
+        },
+        {
+          "target_cert": 5520,
+          "acquirer_cert": 15480,
+          "target_name": "SANTA ANNA NATIONAL BANK",
+          "acquirer_name": "COLEMAN COUNTY STATE BANK",
+          "fail_year": "2025",
+          "acquirer_percentile": 78.3
+        },
+        {
+          "target_cert": 4134,
+          "acquirer_cert": 27394,
+          "target_name": "FIRST NB OF LINDSAY",
+          "acquirer_name": "FIRST BANK & TRUST CO.",
+          "fail_year": "2024",
+          "acquirer_percentile": 60.1
+        },
+        {
+          "target_cert": 27332,
+          "acquirer_cert": 7551,
+          "target_name": "REPUBLIC BANK",
+          "acquirer_name": "FULTON BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2024",
+          "acquirer_percentile": 93.9
+        },
+        {
+          "target_cert": 8758,
+          "acquirer_cert": 18400,
+          "target_name": "CITIZENS BANK",
+          "acquirer_name": "IOWA TRUST & SAVINGS BANK",
+          "fail_year": "2023",
+          "acquirer_percentile": 97.4
+        },
+        {
+          "target_cert": 24735,
+          "acquirer_cert": 11063,
+          "target_name": "SILICON VALLEY BANK",
+          "acquirer_name": "FIRST-CITIZENS BANK & TRUST COMPANY",
+          "fail_year": "2023",
+          "acquirer_percentile": 98.7
+        },
+        {
+          "target_cert": 15426,
+          "acquirer_cert": 16635,
+          "target_name": "ALMENA STATE BANK",
+          "acquirer_name": "EQUITY BANK",
+          "fail_year": "2020",
+          "acquirer_percentile": 84.3
+        },
+        {
+          "target_cert": 16748,
+          "acquirer_cert": 29566,
+          "target_name": "FIRST CITY BANK OF FLORIDA",
+          "acquirer_name": "UNITED FIDELITY BANK, FSB",
+          "fail_year": "2020",
+          "acquirer_percentile": 50.8
+        },
+        {
+          "target_cert": 14361,
+          "acquirer_cert": 34603,
+          "target_name": "THE FIRST STATE BANK",
+          "acquirer_name": "MVB BANK, INC",
+          "fail_year": "2020",
+          "acquirer_percentile": 53.0
+        },
+        {
+          "target_cert": 21111,
+          "acquirer_cert": 14679,
+          "target_name": "CITY NATIONAL BANK OF NEW JERSEY",
+          "acquirer_name": "INDUSTRIAL BANK",
+          "fail_year": "2019",
+          "acquirer_percentile": 61.7
+        },
+        {
+          "target_cert": 10716,
+          "acquirer_cert": 3108,
+          "target_name": "ENLOE STATE BANK",
+          "acquirer_name": "LEGEND BANK, NA",
+          "fail_year": "2019",
+          "acquirer_percentile": 39.3
+        },
+        {
+          "target_cert": 30570,
+          "acquirer_cert": 28068,
+          "target_name": "WASHINGTON FEDERAL BANK FOR SAVINGS",
+          "acquirer_name": "ROYAL SAVINGS BANK",
+          "fail_year": "2017",
+          "acquirer_percentile": 80.5
+        },
+        {
+          "target_cert": 17719,
+          "acquirer_cert": 4649,
+          "target_name": "THE FARMERS AND MERCHANTS STATE BANK OF ARGONIA",
+          "acquirer_name": "CONWAY BANK",
+          "fail_year": "2017",
+          "acquirer_percentile": 94.0
+        },
+        {
+          "target_cert": 1802,
+          "acquirer_cert": 29566,
+          "target_name": "FAYETTE COUNTY BANK",
+          "acquirer_name": "UNITED FIDELITY BANK, FSB",
+          "fail_year": "2017",
+          "acquirer_percentile": 62.1
+        },
+        {
+          "target_cert": 30003,
+          "acquirer_cert": 11063,
+          "target_name": "GUARANTY BANK",
+          "acquirer_name": "FIRST-CITIZENS BANK & TRUST COMPANY",
+          "fail_year": "2017",
+          "acquirer_percentile": 94.9
+        },
+        {
+          "target_cert": 35495,
+          "acquirer_cert": 22134,
+          "target_name": "PROFICIO BANK",
+          "acquirer_name": "CACHE VALLEY BANK",
+          "fail_year": "2017",
+          "acquirer_percentile": 89.8
+        },
+        {
+          "target_cert": 19328,
+          "acquirer_cert": 27074,
+          "target_name": "SEAWAY BANK AND TRUST COMPANY",
+          "acquirer_name": "STATE BANK OF TEXAS",
+          "fail_year": "2017",
+          "acquirer_percentile": 98.5
+        },
+        {
+          "target_cert": 34951,
+          "acquirer_cert": 11063,
+          "target_name": "HARVEST COMMUNITY BANK",
+          "acquirer_name": "FIRST-CITIZENS BANK & TRUST COMPANY",
+          "fail_year": "2017",
+          "acquirer_percentile": 55.0
+        },
+        {
+          "target_cert": 35312,
+          "acquirer_cert": 11063,
+          "target_name": "FIRST CORNERSTONE BANK",
+          "acquirer_name": "FIRST-CITIZENS BANK & TRUST COMPANY",
+          "fail_year": "2016",
+          "acquirer_percentile": 62.4
+        },
+        {
+          "target_cert": 9956,
+          "acquirer_cert": 10308,
+          "target_name": "TRUST COMPANY BANK",
+          "acquirer_name": "THE  BANK OF FAYETTE COUNTY",
+          "fail_year": "2016",
+          "acquirer_percentile": 47.2
+        },
+        {
+          "target_cert": 20364,
+          "acquirer_cert": 11063,
+          "target_name": "NORTH MILWAUKEE STATE BANK",
+          "acquirer_name": "FIRST-CITIZENS BANK & TRUST COMPANY",
+          "fail_year": "2016",
+          "acquirer_percentile": 43.4
+        },
+        {
+          "target_cert": 34112,
+          "acquirer_cert": 29566,
+          "target_name": "PREMIER BANK",
+          "acquirer_name": "UNITED FIDELITY BANK, FSB",
+          "fail_year": "2015",
+          "acquirer_percentile": 80.1
+        },
+        {
+          "target_cert": 57772,
+          "acquirer_cert": 19333,
+          "target_name": "EDGEBROOK BANK",
+          "acquirer_name": "REPUBLIC BANK OF CHICAGO",
+          "fail_year": "2015",
+          "acquirer_percentile": 41.3
+        },
+        {
+          "target_cert": 32102,
+          "acquirer_cert": 34968,
+          "target_name": "DORAL BANK",
+          "acquirer_name": "BANCO POPULAR DE PUERTO RICO",
+          "fail_year": "2015",
+          "acquirer_percentile": 97.4
+        },
+        {
+          "target_cert": 33938,
+          "acquirer_cert": 11063,
+          "target_name": "CAPITOL CITY BANK & TRUST COMPANY",
+          "acquirer_name": "FIRST-CITIZENS BANK & TRUST COMPANY",
+          "fail_year": "2015",
+          "acquirer_percentile": 59.4
+        },
+        {
+          "target_cert": 20290,
+          "acquirer_cert": 29566,
+          "target_name": "HIGHLAND COMMUNITY BANK",
+          "acquirer_name": "UNITED FIDELITY BANK, fsb",
+          "fail_year": "2015",
+          "acquirer_percentile": 91.6
+        },
+        {
+          "target_cert": 17557,
+          "acquirer_cert": 58302,
+          "target_name": "FIRST NATIONAL BANK OF CRESTVIEW",
+          "acquirer_name": "FIRST NBC BANK",
+          "fail_year": "2015",
+          "acquirer_percentile": 86.1
+        },
+        {
+          "target_cert": 34983,
+          "acquirer_cert": 35406,
+          "target_name": "NORTHERN STAR BANK",
+          "acquirer_name": "BANKVISTA",
+          "fail_year": "2014",
+          "acquirer_percentile": 56.9
+        },
+        {
+          "target_cert": 916,
+          "acquirer_cert": 27074,
+          "target_name": "THE NATIONAL REPUBLIC BANK OF CHICAGO",
+          "acquirer_name": "STATE BANK OF TEXAS",
+          "fail_year": "2014",
+          "acquirer_percentile": 66.2
+        },
+        {
+          "target_cert": 4862,
+          "acquirer_cert": 57776,
+          "target_name": "NBRS FINANCIAL BANK",
+          "acquirer_name": "HOWARD BANK",
+          "fail_year": "2014",
+          "acquirer_percentile": 57.4
+        },
+        {
+          "target_cert": 28462,
+          "acquirer_cert": 57754,
+          "target_name": "GREENCHOICE BANK, FSB",
+          "acquirer_name": "PROVIDENCE BANK, LLC",
+          "fail_year": "2014",
+          "acquirer_percentile": 69.4
+        },
+        {
+          "target_cert": 12483,
+          "acquirer_cert": 9465,
+          "target_name": "THE FREEDOM STATE BANK",
+          "acquirer_name": "ALVA STATE BANK & TRUST COMPANY",
+          "fail_year": "2014",
+          "acquirer_percentile": 87.5
+        },
+        {
+          "target_cert": 10450,
+          "acquirer_cert": 29546,
+          "target_name": "VALLEY BANK",
+          "acquirer_name": "GREAT SOUTHERN BANK",
+          "fail_year": "2014",
+          "acquirer_percentile": 98.9
+        },
+        {
+          "target_cert": 32284,
+          "acquirer_cert": 29566,
+          "target_name": "COLUMBIA SAVINGS BANK",
+          "acquirer_name": "UNITED FIDELITY BANK, FSB",
+          "fail_year": "2014",
+          "acquirer_percentile": 73.7
+        },
+        {
+          "target_cert": 57866,
+          "acquirer_cert": 19333,
+          "target_name": "AZTECAMERICA BANK",
+          "acquirer_name": "REPUBLIC BANK OF CHICAGO",
+          "fail_year": "2014",
+          "acquirer_percentile": 45.0
+        },
+        {
+          "target_cert": 15062,
+          "acquirer_cert": 17563,
+          "target_name": "ALLENDALE COUNTY BANK",
+          "acquirer_name": "PALMETTO STATE BANK",
+          "fail_year": "2014",
+          "acquirer_percentile": 32.1
+        },
+        {
+          "target_cert": 35096,
+          "acquirer_cert": 57696,
+          "target_name": "MILLENNIUM BANK, NATIONAL ASSOCIATION",
+          "acquirer_name": "WASHINGTONFIRST BANK",
+          "fail_year": "2014",
+          "acquirer_percentile": 76.1
+        },
+        {
+          "target_cert": 34296,
+          "acquirer_cert": 20164,
+          "target_name": "SYRINGA BANK",
+          "acquirer_name": "SUNWEST BANK",
+          "fail_year": "2014",
+          "acquirer_percentile": 97.6
+        },
+        {
+          "target_cert": 17967,
+          "acquirer_cert": 27476,
+          "target_name": "THE  BANK OF UNION",
+          "acquirer_name": "BANCFIRST",
+          "fail_year": "2014",
+          "acquirer_percentile": 75.0
+        },
+        {
+          "target_cert": 5732,
+          "acquirer_cert": 19333,
+          "target_name": "DUPAGE NATIONAL BANK",
+          "acquirer_name": "REPUBLIC BANK OF CHICAGO",
+          "fail_year": "2014",
+          "acquirer_percentile": 61.8
+        },
+        {
+          "target_cert": 14794,
+          "acquirer_cert": 31313,
+          "target_name": "BANK OF JACKSON COUNTY",
+          "acquirer_name": "FIRST FEDERAL BANK OF FLORIDA",
+          "fail_year": "2013",
+          "acquirer_percentile": 31.0
+        },
+        {
+          "target_cert": 14318,
+          "acquirer_cert": 17491,
+          "target_name": "FIRST NATIONAL BANK",
+          "acquirer_name": "PLAINSCAPITAL BANK",
+          "fail_year": "2013",
+          "acquirer_percentile": 87.2
+        },
+        {
+          "target_cert": 19849,
+          "acquirer_cert": 15310,
+          "target_name": "COMMUNITY SOUTH BANK",
+          "acquirer_name": "CB&S BANK, INC.",
+          "fail_year": "2013",
+          "acquirer_percentile": 99.9
+        },
+        {
+          "target_cert": 35016,
+          "acquirer_cert": 57038,
+          "target_name": "BANK OF WAUSAU",
+          "acquirer_name": "NICOLET NATIONAL BANK",
+          "fail_year": "2013",
+          "acquirer_percentile": 69.9
+        },
+        {
+          "target_cert": 34789,
+          "acquirer_cert": 4977,
+          "target_name": "MOUNTAIN NATIONAL BANK",
+          "acquirer_name": "FIRST TENNESSEE BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2013",
+          "acquirer_percentile": 26.7
+        },
+        {
+          "target_cert": 35386,
+          "acquirer_cert": 28679,
+          "target_name": "BANKS OF WISCONSIN",
+          "acquirer_name": "NORTH SHORE BANK, FSB",
+          "fail_year": "2013",
+          "acquirer_percentile": 78.8
+        },
+        {
+          "target_cert": 21649,
+          "acquirer_cert": 57810,
+          "target_name": "DOUGLAS COUNTY BANK",
+          "acquirer_name": "HAMILTON STATE BANK",
+          "fail_year": "2013",
+          "acquirer_percentile": 78.3
+        },
+        {
+          "target_cert": 58034,
+          "acquirer_cert": 31313,
+          "target_name": "CHIPOLA COMMUNITY BANK",
+          "acquirer_name": "FIRST FEDERAL BANK OF FLORIDA",
+          "fail_year": "2013",
+          "acquirer_percentile": 39.3
+        },
+        {
+          "target_cert": 29594,
+          "acquirer_cert": 28915,
+          "target_name": "FIRST FEDERAL BANK",
+          "acquirer_name": "YOUR COMMUNITY BANK",
+          "fail_year": "2013",
+          "acquirer_percentile": 38.9
+        },
+        {
+          "target_cert": 26680,
+          "acquirer_cert": 35200,
+          "target_name": "HERITAGE BANK OF NORTH FLORIDA",
+          "acquirer_name": "FIRSTATLANTIC BANK",
+          "fail_year": "2013",
+          "acquirer_percentile": 50.7
+        },
+        {
+          "target_cert": 16431,
+          "acquirer_cert": 50028,
+          "target_name": "FRONTIER BANK",
+          "acquirer_name": "HERITAGE BANK OF THE SOUTH",
+          "fail_year": "2013",
+          "acquirer_percentile": 89.9
+        },
+        {
+          "target_cert": 22476,
+          "acquirer_cert": 20856,
+          "target_name": "COVENANT BANK",
+          "acquirer_name": "LIBERTY BANK AND TRUST COMPANY",
+          "fail_year": "2013",
+          "acquirer_percentile": 13.2
+        },
+        {
+          "target_cert": 57157,
+          "acquirer_cert": 5151,
+          "target_name": "1ST REGENTS BANK",
+          "acquirer_name": "FIRST MINNESOTA BANK",
+          "fail_year": "2013",
+          "acquirer_percentile": 96.1
+        },
+        {
+          "target_cert": 33997,
+          "acquirer_cert": 20164,
+          "target_name": "WESTSIDE COMMUNITY BANK",
+          "acquirer_name": "SUNWEST BANK",
+          "fail_year": "2013",
+          "acquirer_percentile": 99.3
+        },
+        {
+          "target_cert": 27331,
+          "acquirer_cert": 8892,
+          "target_name": "COMMUNITY BANK OF THE OZARKS",
+          "acquirer_name": "BANK OF SULLIVAN",
+          "fail_year": "2012",
+          "acquirer_percentile": 99.3
+        },
+        {
+          "target_cert": 3731,
+          "acquirer_cert": 20369,
+          "target_name": "CITIZENS FIRST NATIONAL BANK",
+          "acquirer_name": "HEARTLAND BANK AND TRUST COMPANY",
+          "fail_year": "2012",
+          "acquirer_percentile": 95.8
+        },
+        {
+          "target_cert": 19189,
+          "acquirer_cert": 3890,
+          "target_name": "EXCEL BANK",
+          "acquirer_name": "SIMMONS FIRST NATIONAL BANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 65.0
+        },
+        {
+          "target_cert": 28144,
+          "acquirer_cert": 10988,
+          "target_name": "FIRST EAST SIDE SAVINGS BANK",
+          "acquirer_name": "STEARNS BANK NATIONAL ASSOCIATION",
+          "fail_year": "2012",
+          "acquirer_percentile": 73.4
+        },
+        {
+          "target_cert": 58073,
+          "acquirer_cert": 58463,
+          "target_name": "GULFSOUTH PRIVATE BANK",
+          "acquirer_name": "SMARTBANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 83.3
+        },
+        {
+          "target_cert": 20685,
+          "acquirer_cert": 58314,
+          "target_name": "FIRST UNITED BANK",
+          "acquirer_name": "OLD PLANK TRAIL COMMUNITY BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2012",
+          "acquirer_percentile": 42.4
+        },
+        {
+          "target_cert": 27316,
+          "acquirer_cert": 3890,
+          "target_name": "TRUMAN BANK",
+          "acquirer_name": "SIMMONS FIRST NATIONAL BANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 91.1
+        },
+        {
+          "target_cert": 35246,
+          "acquirer_cert": 23627,
+          "target_name": "FIRST COMMERCIAL BANK",
+          "acquirer_name": "REPUBLIC BANK & TRUST COMPANY",
+          "fail_year": "2012",
+          "acquirer_percentile": 21.2
+        },
+        {
+          "target_cert": 16240,
+          "acquirer_cert": 10988,
+          "target_name": "JASPER BANKING COMPANY",
+          "acquirer_name": "STEARNS BANK NATIONAL ASSOCIATION",
+          "fail_year": "2012",
+          "acquirer_percentile": 98.9
+        },
+        {
+          "target_cert": 1361,
+          "acquirer_cert": 18531,
+          "target_name": "HEARTLAND BANK",
+          "acquirer_name": "METCALF BANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 97.5
+        },
+        {
+          "target_cert": 27986,
+          "acquirer_cert": 33849,
+          "target_name": "SECOND FEDERAL SAVINGS AND LOAN ASSOCIATION OF CHICAGO",
+          "acquirer_name": "HINSDALE BANK & TRUST COMPANY",
+          "fail_year": "2012",
+          "acquirer_percentile": 68.1
+        },
+        {
+          "target_cert": 1056,
+          "acquirer_cert": 18385,
+          "target_name": "GLASGOW SAVINGS BANK",
+          "acquirer_name": "REGIONAL MISSOURI BANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 52.9
+        },
+        {
+          "target_cert": 19498,
+          "acquirer_cert": 20504,
+          "target_name": "MONTGOMERY BANK & TRUST",
+          "acquirer_name": "AMERIS BANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 85.8
+        },
+        {
+          "target_cert": 1690,
+          "acquirer_cert": 6104,
+          "target_name": "THE FARMERS BANK OF LYNCHBURG",
+          "acquirer_name": "CLAYTON BANK AND TRUST",
+          "fail_year": "2012",
+          "acquirer_percentile": 71.1
+        },
+        {
+          "target_cert": 35372,
+          "acquirer_cert": 33527,
+          "target_name": "CAROLINA FEDERAL SAVINGS BANK",
+          "acquirer_name": "BANK OF NORTH CAROLINA",
+          "fail_year": "2012",
+          "acquirer_percentile": 32.4
+        },
+        {
+          "target_cert": 416,
+          "acquirer_cert": 14922,
+          "target_name": "FIRST CAPITAL BANK",
+          "acquirer_name": "F & M BANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 12.2
+        },
+        {
+          "target_cert": 35224,
+          "acquirer_cert": 58558,
+          "target_name": "ALABAMA TRUST BANK, NATIONAL ASSOCIATION",
+          "acquirer_name": "SOUTHERN STATES BANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 26.6
+        },
+        {
+          "target_cert": 57766,
+          "acquirer_cert": 57968,
+          "target_name": "HARVEST BANK OF MARYLAND",
+          "acquirer_name": "SONABANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 93.7
+        },
+        {
+          "target_cert": 31495,
+          "acquirer_cert": 29546,
+          "target_name": "INTER SAVINGS BANK, FSB D/B/A/ INTERBANK, FSB",
+          "acquirer_name": "GREAT SOUTHERN BANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 75.5
+        },
+        {
+          "target_cert": 23632,
+          "acquirer_cert": 32172,
+          "target_name": "PALM DESERT NATIONAL BANK",
+          "acquirer_name": "PACIFIC PREMIER BANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 100.0
+        },
+        {
+          "target_cert": 35527,
+          "acquirer_cert": 58424,
+          "target_name": "FORT LEE FEDERAL SAVINGS BANK, FSB",
+          "acquirer_name": "ALMA BANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 31.5
+        },
+        {
+          "target_cert": 33883,
+          "acquirer_cert": 6560,
+          "target_name": "FIDELITY BANK",
+          "acquirer_name": "THE HUNTINGTON NATIONAL BANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 31.0
+        },
+        {
+          "target_cert": 58068,
+          "acquirer_cert": 10988,
+          "target_name": "CONVENANT BANK & TRUST",
+          "acquirer_name": "STEARNS BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2012",
+          "acquirer_percentile": 60.0
+        },
+        {
+          "target_cert": 35419,
+          "acquirer_cert": 33708,
+          "target_name": "PREMIER BANK",
+          "acquirer_name": "INTERNATIONAL BANK OF CHICAGO",
+          "fail_year": "2012",
+          "acquirer_percentile": 52.1
+        },
+        {
+          "target_cert": 34046,
+          "acquirer_cert": 58181,
+          "target_name": "GLOBAL COMMERCE BANK",
+          "acquirer_name": "METRO CITY BANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 92.1
+        },
+        {
+          "target_cert": 5687,
+          "acquirer_cert": 20504,
+          "target_name": "CENTRAL BANK OF GEORGIA",
+          "acquirer_name": "AMERIS BANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 95.6
+        },
+        {
+          "target_cert": 23187,
+          "acquirer_cert": 34395,
+          "target_name": "CHARTER NATIONAL BANK AND TRUST",
+          "acquirer_name": "BARRINGTON BANK & TRUST COMPANY, NATIONAL ASSOCIATION",
+          "fail_year": "2012",
+          "acquirer_percentile": 82.8
+        },
+        {
+          "target_cert": 29761,
+          "acquirer_cert": 4365,
+          "target_name": "SCB BANK",
+          "acquirer_name": "FIRST MERCHANTS BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2012",
+          "acquirer_percentile": 78.6
+        },
+        {
+          "target_cert": 19869,
+          "acquirer_cert": 6548,
+          "target_name": "BANKEAST",
+          "acquirer_name": "U.S. BANK NATIONAL ASSOCIATION",
+          "fail_year": "2012",
+          "acquirer_percentile": 45.6
+        },
+        {
+          "target_cert": 16579,
+          "acquirer_cert": 33555,
+          "target_name": "FIRST GUARANTY BANK AND TRUST COMPANY OF JACKSONVILLE",
+          "acquirer_name": "CENTERSTATE BANK OF FLORIDA, NATIONAL ASSOCIATION",
+          "fail_year": "2012",
+          "acquirer_percentile": 54.2
+        },
+        {
+          "target_cert": 35296,
+          "acquirer_cert": 23627,
+          "target_name": "TENNESSEE COMMERCE BANK",
+          "acquirer_name": "REPUBLIC BANK & TRUST COMPANY",
+          "fail_year": "2012",
+          "acquirer_percentile": 78.6
+        },
+        {
+          "target_cert": 57186,
+          "acquirer_cert": 33555,
+          "target_name": "CENTRAL FLORIDA STATE BANK",
+          "acquirer_name": "CENTERSTATE BANK OF FLORIDA, NATIONAL ASSOCIATION",
+          "fail_year": "2012",
+          "acquirer_percentile": 69.4
+        },
+        {
+          "target_cert": 19252,
+          "acquirer_cert": 57810,
+          "target_name": "THE FIRST STATE BANK",
+          "acquirer_name": "HAMILTON STATE BANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 86.6
+        },
+        {
+          "target_cert": 19657,
+          "acquirer_cert": 58302,
+          "target_name": "CENTRAL PROGRESSIVE BANK",
+          "acquirer_name": "FIRST NBC BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 59.2
+        },
+        {
+          "target_cert": 14194,
+          "acquirer_cert": 11347,
+          "target_name": "POLK COUNTY BANK",
+          "acquirer_name": "GRINNELL STATE BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 35.7
+        },
+        {
+          "target_cert": 57860,
+          "acquirer_cert": 35236,
+          "target_name": "COMMUNITY BANK OF ROCKMART",
+          "acquirer_name": "CENTURY BANK OF GEORGIA",
+          "fail_year": "2011",
+          "acquirer_percentile": 97.0
+        },
+        {
+          "target_cert": 19397,
+          "acquirer_cert": 12493,
+          "target_name": "MID CITY BANK, INC.",
+          "acquirer_name": "PURDUM STATE BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 5.6
+        },
+        {
+          "target_cert": 57087,
+          "acquirer_cert": 22134,
+          "target_name": "SUNFIRST BANK",
+          "acquirer_name": "CACHE VALLEY BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 67.9
+        },
+        {
+          "target_cert": 57759,
+          "acquirer_cert": 33708,
+          "target_name": "ALL AMERICAN BANK",
+          "acquirer_name": "INTERNATIONAL BANK OF CHICAGO",
+          "fail_year": "2011",
+          "acquirer_percentile": 89.3
+        },
+        {
+          "target_cert": 21132,
+          "acquirer_cert": 32964,
+          "target_name": "COMMUNITY BANKS OF COLORADO",
+          "acquirer_name": "BANK MIDWEST, NATIONAL ASSOCIATION",
+          "fail_year": "2011",
+          "acquirer_percentile": 99.3
+        },
+        {
+          "target_cert": 57036,
+          "acquirer_cert": 57870,
+          "target_name": "COMMUNITY CAPITAL BANK",
+          "acquirer_name": "STATE BANK AND TRUST COMPANY",
+          "fail_year": "2011",
+          "acquirer_percentile": 59.1
+        },
+        {
+          "target_cert": 32347,
+          "acquirer_cert": 33527,
+          "target_name": "BLUE RIDGE SAVINGS BANK, INC.",
+          "acquirer_name": "BANK OF NORTH CAROLINA",
+          "fail_year": "2011",
+          "acquirer_percentile": 96.1
+        },
+        {
+          "target_cert": 35395,
+          "acquirer_cert": 18402,
+          "target_name": "COUNTRY BANK",
+          "acquirer_name": "BLACKHAWK BANK & TRUST",
+          "fail_year": "2011",
+          "acquirer_percentile": 80.9
+        },
+        {
+          "target_cert": 58046,
+          "acquirer_cert": 28710,
+          "target_name": "FIRST STATE BANK",
+          "acquirer_name": "NORTHFIELD BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 79.5
+        },
+        {
+          "target_cert": 57256,
+          "acquirer_cert": 57870,
+          "target_name": "PIEDMONT COMMUNITY BANK",
+          "acquirer_name": "STATE BANK AND TRUST COMPANY",
+          "fail_year": "2011",
+          "acquirer_percentile": 61.6
+        },
+        {
+          "target_cert": 20115,
+          "acquirer_cert": 29546,
+          "target_name": "SUN SECURITY BANK",
+          "acquirer_name": "GREAT SOUTHERN BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 97.4
+        },
+        {
+          "target_cert": 33513,
+          "acquirer_cert": 34656,
+          "target_name": "FIRST INTERNATIONAL BANK",
+          "acquirer_name": "AMERICAN FIRST NATIONAL BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 88.8
+        },
+        {
+          "target_cert": 20408,
+          "acquirer_cert": 15359,
+          "target_name": "BANK OF THE COMMONWEALTH",
+          "acquirer_name": "SOUTHERN BANK AND TRUST COMPANY",
+          "fail_year": "2011",
+          "acquirer_percentile": 99.7
+        },
+        {
+          "target_cert": 33983,
+          "acquirer_cert": 21943,
+          "target_name": "CITIZENS BANK OF NORTHERN CALIFORNIA",
+          "acquirer_name": "TRI COUNTIES BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 88.2
+        },
+        {
+          "target_cert": 25155,
+          "acquirer_cert": 30720,
+          "target_name": "THE FIRST NATIONAL BANK OF FLORIDA",
+          "acquirer_name": "CHARTERBANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 96.4
+        },
+        {
+          "target_cert": 58226,
+          "acquirer_cert": 57521,
+          "target_name": "CREEKSIDE BANK",
+          "acquirer_name": "GEORGIA COMMERCE BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 84.6
+        },
+        {
+          "target_cert": 58273,
+          "acquirer_cert": 57521,
+          "target_name": "PATRIOT BANK OF GEORGIA",
+          "acquirer_name": "GEORGIA COMMERCE BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 83.4
+        },
+        {
+          "target_cert": 57239,
+          "acquirer_cert": 50028,
+          "target_name": "FIRST SOUTHERN NATIONAL BANK",
+          "acquirer_name": "HERITAGE BANK OF THE SOUTH",
+          "fail_year": "2011",
+          "acquirer_percentile": 92.4
+        },
+        {
+          "target_cert": 4744,
+          "acquirer_cert": 27237,
+          "target_name": "THE FIRST NATIONAL BANK OF OLATHE",
+          "acquirer_name": "ENTERPRISE BANK & TRUST",
+          "fail_year": "2011",
+          "acquirer_percentile": 98.1
+        },
+        {
+          "target_cert": 22637,
+          "acquirer_cert": 20369,
+          "target_name": "BANK OF SHOREWOOD",
+          "acquirer_name": "HEARTLAND BANK  AND TRUST COMPANY",
+          "fail_year": "2011",
+          "acquirer_percentile": 75.0
+        },
+        {
+          "target_cert": 22528,
+          "acquirer_cert": 33826,
+          "target_name": "BANK OF WHITMAN",
+          "acquirer_name": "COLUMBIA STATE BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 99.0
+        },
+        {
+          "target_cert": 4392,
+          "acquirer_cert": 3832,
+          "target_name": "INTEGRA BANK NATIONAL ASSOCIATION",
+          "acquirer_name": "OLD NATIONAL BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 99.6
+        },
+        {
+          "target_cert": 2994,
+          "acquirer_cert": 32964,
+          "target_name": "BANK OF CHOICE",
+          "acquirer_name": "BANK MIDWEST, NATIONAL ASSOCIATION",
+          "fail_year": "2011",
+          "acquirer_percentile": 95.7
+        },
+        {
+          "target_cert": 35244,
+          "acquirer_cert": 58309,
+          "target_name": "LANDMARK BANK OF FLORIDA",
+          "acquirer_name": "AMERICAN MOMENTUM BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 66.5
+        },
+        {
+          "target_cert": 58056,
+          "acquirer_cert": 58309,
+          "target_name": "SOUTHSHORE COMMUNITY BANK",
+          "acquirer_name": "AMERICAN MOMENTUM BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 94.9
+        },
+        {
+          "target_cert": 34870,
+          "acquirer_cert": 57147,
+          "target_name": "FIRST PEOPLES BANK",
+          "acquirer_name": "PREMIER AMERICAN BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2011",
+          "acquirer_percentile": 98.5
+        },
+        {
+          "target_cert": 19554,
+          "acquirer_cert": 20504,
+          "target_name": "HIGH TRUST BANK",
+          "acquirer_name": "AMERIS BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 35.9
+        },
+        {
+          "target_cert": 58238,
+          "acquirer_cert": 20504,
+          "target_name": "ONE GEORGIA BANK",
+          "acquirer_name": "AMERIS BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 74.3
+        },
+        {
+          "target_cert": 57442,
+          "acquirer_cert": 34573,
+          "target_name": "SUMMIT BANK",
+          "acquirer_name": "THE FOOTHILLS BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 92.1
+        },
+        {
+          "target_cert": 34522,
+          "acquirer_cert": 11063,
+          "target_name": "COLORADO CAPITAL BANK",
+          "acquirer_name": "FIRST-CITIZENS BANK & TRUST COMPANY",
+          "fail_year": "2011",
+          "acquirer_percentile": 87.0
+        },
+        {
+          "target_cert": 27935,
+          "acquirer_cert": 57082,
+          "target_name": "FIRST CHICAGO BANK & TRUST",
+          "acquirer_name": "NORTHBROOK BANK AND TRUST COMPANY",
+          "fail_year": "2011",
+          "acquirer_percentile": 78.6
+        },
+        {
+          "target_cert": 57593,
+          "acquirer_cert": 16858,
+          "target_name": "MOUNTAIN HERITAGE BANK",
+          "acquirer_name": "FIRST AMERICAN BANK AND TRUST COMPANY",
+          "fail_year": "2011",
+          "acquirer_percentile": 88.4
+        },
+        {
+          "target_cert": 27583,
+          "acquirer_cert": 57934,
+          "target_name": "FIRST COMMERCIAL BANK OF TAMPA BAY",
+          "acquirer_name": "STONEGATE BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 99.2
+        },
+        {
+          "target_cert": 19237,
+          "acquirer_cert": 57810,
+          "target_name": "MCINTOSH STATE BANK",
+          "acquirer_name": "HAMILTON STATE BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 77.2
+        },
+        {
+          "target_cert": 58420,
+          "acquirer_cert": 15504,
+          "target_name": "ATLANTIC BANK AND TRUST",
+          "acquirer_name": "FIRST CITIZENS BANK AND TRUST COMPANY, INC.",
+          "fail_year": "2011",
+          "acquirer_percentile": 44.1
+        },
+        {
+          "target_cert": 23626,
+          "acquirer_cert": 33826,
+          "target_name": "FIRST HERITAGE BANK",
+          "acquirer_name": "COLUMBIA STATE BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 66.1
+        },
+        {
+          "target_cert": 513,
+          "acquirer_cert": 33826,
+          "target_name": "SUMMIT BANK",
+          "acquirer_name": "COLUMBIA STATE BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 47.0
+        },
+        {
+          "target_cert": 34898,
+          "acquirer_cert": 57147,
+          "target_name": "COASTAL BANK",
+          "acquirer_name": "PREMIER AMERICAN BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2011",
+          "acquirer_percentile": 84.7
+        },
+        {
+          "target_cert": 57625,
+          "acquirer_cert": 57147,
+          "target_name": "CORTEZ COMMUNITY  BANK",
+          "acquirer_name": "PREMIER AMERICAN BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2011",
+          "acquirer_percentile": 78.1
+        },
+        {
+          "target_cert": 58539,
+          "acquirer_cert": 110,
+          "target_name": "FIRST CHOICE COMMUNITY BANK",
+          "acquirer_name": "BANK OF THE OZARKS",
+          "fail_year": "2011",
+          "acquirer_percentile": 54.3
+        },
+        {
+          "target_cert": 26297,
+          "acquirer_cert": 57147,
+          "target_name": "FIRST NATIONAL BANK OF CENTRAL FLORIDA",
+          "acquirer_name": "PREMIER AMERICAN BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2011",
+          "acquirer_percentile": 79.7
+        },
+        {
+          "target_cert": 19797,
+          "acquirer_cert": 110,
+          "target_name": "THE PARK AVENUE BANK",
+          "acquirer_name": "BANK OF THE OZARKS",
+          "fail_year": "2011",
+          "acquirer_percentile": 99.9
+        },
+        {
+          "target_cert": 21495,
+          "acquirer_cert": 57810,
+          "target_name": "BARTOW COUNTY BANK",
+          "acquirer_name": "HAMILTON STATE BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 62.0
+        },
+        {
+          "target_cert": 14273,
+          "acquirer_cert": 4988,
+          "target_name": "HERITAGE BANKING GROUP",
+          "acquirer_name": "TRUSTMARK NATIONAL BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 53.4
+        },
+        {
+          "target_cert": 57705,
+          "acquirer_cert": 28833,
+          "target_name": "NEW HORIZONS BANK",
+          "acquirer_name": "CITIZENS SOUTH BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 94.1
+        },
+        {
+          "target_cert": 10086,
+          "acquirer_cert": 20369,
+          "target_name": "WESTERN SPRINGS NATIONAL BANK AND TRUST",
+          "acquirer_name": "HEARTLAND BANK AND TRUST COMPANY",
+          "fail_year": "2011",
+          "acquirer_percentile": 96.2
+        },
+        {
+          "target_cert": 34292,
+          "acquirer_cert": 57103,
+          "target_name": "THE BANK OF COMMERCE",
+          "acquirer_name": "ADVANTAGE NATIONAL BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 84.5
+        },
+        {
+          "target_cert": 34818,
+          "acquirer_cert": 19328,
+          "target_name": "LEGACY BANK",
+          "acquirer_name": "SEAWAY BANK AND TRUST COMPANY",
+          "fail_year": "2011",
+          "acquirer_percentile": 96.4
+        },
+        {
+          "target_cert": 57855,
+          "acquirer_cert": 32779,
+          "target_name": "CHARTER OAK BANK",
+          "acquirer_name": "BANK OF MARIN",
+          "fail_year": "2011",
+          "acquirer_percentile": 69.3
+        },
+        {
+          "target_cert": 34601,
+          "acquirer_cert": 50028,
+          "target_name": "CITIZENS BANK OF EFFINGHAM",
+          "acquirer_name": "HERITAGE BANK OF THE SOUTH",
+          "fail_year": "2011",
+          "acquirer_percentile": 87.5
+        },
+        {
+          "target_cert": 34783,
+          "acquirer_cert": 22819,
+          "target_name": "SAN LUIS TRUST BANK, FSB",
+          "acquirer_name": "FIRST CALIFORNIA BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 82.5
+        },
+        {
+          "target_cert": 13272,
+          "acquirer_cert": 13454,
+          "target_name": "BADGER STATE BANK",
+          "acquirer_name": "ROYAL BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 79.1
+        },
+        {
+          "target_cert": 34692,
+          "acquirer_cert": 32172,
+          "target_name": "CANYON NATIONAL BANK",
+          "acquirer_name": "PACIFIC PREMIER BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 85.0
+        },
+        {
+          "target_cert": 14939,
+          "acquirer_cert": 58132,
+          "target_name": "PEOPLES STATE BANK",
+          "acquirer_name": "FIRST MICHIGAN BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 20.0
+        },
+        {
+          "target_cert": 35478,
+          "acquirer_cert": 57147,
+          "target_name": "SUNSHINE STATE COMMUNITY BANK",
+          "acquirer_name": "PREMIER AMERICAN BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2011",
+          "acquirer_percentile": 94.3
+        },
+        {
+          "target_cert": 57432,
+          "acquirer_cert": 12437,
+          "target_name": "AMERICAN TRUST BANK",
+          "acquirer_name": "RENASANT BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 79.4
+        },
+        {
+          "target_cert": 57948,
+          "acquirer_cert": 57082,
+          "target_name": "COMMUNITY FIRST BANK - CHICAGO",
+          "acquirer_name": "NORTHBROOK BANK AND TRUST COMPANY",
+          "fail_year": "2011",
+          "acquirer_percentile": 51.0
+        },
+        {
+          "target_cert": 5328,
+          "acquirer_cert": 2476,
+          "target_name": "EVERGREEN STATE BANK",
+          "acquirer_name": "MCFARLAND STATE BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 82.8
+        },
+        {
+          "target_cert": 12261,
+          "acquirer_cert": 6548,
+          "target_name": "FIRST COMMUNITY BANK",
+          "acquirer_name": "U.S. BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2011",
+          "acquirer_percentile": 33.8
+        },
+        {
+          "target_cert": 2303,
+          "acquirer_cert": 4147,
+          "target_name": "THE FIRST STATE BANK",
+          "acquirer_name": "BANK 7",
+          "fail_year": "2011",
+          "acquirer_percentile": 83.5
+        },
+        {
+          "target_cert": 57440,
+          "acquirer_cert": 110,
+          "target_name": "OGLETHORPE BANK",
+          "acquirer_name": "BANK OF THE OZARKS",
+          "fail_year": "2011",
+          "acquirer_percentile": 53.6
+        },
+        {
+          "target_cert": 57820,
+          "acquirer_cert": 27237,
+          "target_name": "LEGACY BANK",
+          "acquirer_name": "ENTERPRISE BANK & TRUST",
+          "fail_year": "2011",
+          "acquirer_percentile": 71.2
+        },
+        {
+          "target_cert": 58495,
+          "acquirer_cert": 34517,
+          "target_name": "APPALACIAN COMMUNITY BANK, F.S.B.",
+          "acquirer_name": "PEOPLES BANK OF EAST TENNESSEE",
+          "fail_year": "2010",
+          "acquirer_percentile": 77.3
+        },
+        {
+          "target_cert": 34578,
+          "acquirer_cert": 110,
+          "target_name": "CHESTATEE STATE BANK",
+          "acquirer_name": "BANK OF THE OZARKS",
+          "fail_year": "2010",
+          "acquirer_percentile": 86.3
+        },
+        {
+          "target_cert": 23306,
+          "acquirer_cert": 9298,
+          "target_name": "COMMUNITY NATIONAL BANK",
+          "acquirer_name": "FARMERS & MERCHANTS SAVINGS BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 63.7
+        },
+        {
+          "target_cert": 58052,
+          "acquirer_cert": 16288,
+          "target_name": "FIRST SOUTHERN BANK",
+          "acquirer_name": "SOUTHERN BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 63.0
+        },
+        {
+          "target_cert": 35065,
+          "acquirer_cert": 57870,
+          "target_name": "UNITED AMERICAS BANK",
+          "acquirer_name": "STATE BANK AND TRUST COMPANY",
+          "fail_year": "2010",
+          "acquirer_percentile": 30.0
+        },
+        {
+          "target_cert": 35561,
+          "acquirer_cert": 29282,
+          "target_name": "EARTHSTAR BANK",
+          "acquirer_name": "POLONIA BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 92.8
+        },
+        {
+          "target_cert": 34673,
+          "acquirer_cert": 58604,
+          "target_name": "PARAMOUNT BANK",
+          "acquirer_name": "LEVEL ONE BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 15.1
+        },
+        {
+          "target_cert": 35078,
+          "acquirer_cert": 7748,
+          "target_name": "ALLEGIANCE BANK OF NORTH AMERICA",
+          "acquirer_name": "VIST BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 69.4
+        },
+        {
+          "target_cert": 5287,
+          "acquirer_cert": 58132,
+          "target_name": "FIRST BANKING CENTER",
+          "acquirer_name": "FIRST MICHIGAN BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 1.7
+        },
+        {
+          "target_cert": 35463,
+          "acquirer_cert": 10988,
+          "target_name": "COPPER STAR BANK",
+          "acquirer_name": "STEARNS BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 89.4
+        },
+        {
+          "target_cert": 14580,
+          "acquirer_cert": 20504,
+          "target_name": "DARBY BANK & TRUST COMPANY",
+          "acquirer_name": "AMERIS BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 99.9
+        },
+        {
+          "target_cert": 57831,
+          "acquirer_cert": 20504,
+          "target_name": "TIFTON BANKING COMPANY",
+          "acquirer_name": "AMERIS BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 59.5
+        },
+        {
+          "target_cert": 31263,
+          "acquirer_cert": 588,
+          "target_name": "K BANK",
+          "acquirer_name": "MANUFACTURERS AND TRADERS TRUST COMPANY",
+          "fail_year": "2010",
+          "acquirer_percentile": 58.2
+        },
+        {
+          "target_cert": 58087,
+          "acquirer_cert": 22819,
+          "target_name": "WESTERN COMMERCIAL BANK",
+          "acquirer_name": "FIRST CALIFORNIA BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 70.1
+        },
+        {
+          "target_cert": 27573,
+          "acquirer_cert": 20504,
+          "target_name": "FIRST BANK OF JACKSONVILLE",
+          "acquirer_name": "AMERIS BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 52.5
+        },
+        {
+          "target_cert": 16089,
+          "acquirer_cert": 19328,
+          "target_name": "FIRST SUBURBAN NATIONAL BANK",
+          "acquirer_name": "SEAWAY BANK AND TRUST COMPANY",
+          "fail_year": "2010",
+          "acquirer_percentile": 93.8
+        },
+        {
+          "target_cert": 32251,
+          "acquirer_cert": 35066,
+          "target_name": "PROGRESS BANK OF FLORIDA",
+          "acquirer_name": "BAY CITIES BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 68.1
+        },
+        {
+          "target_cert": 33904,
+          "acquirer_cert": 17910,
+          "target_name": "THE GORDON BANK",
+          "acquirer_name": "MORRIS BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 90.0
+        },
+        {
+          "target_cert": 30898,
+          "acquirer_cert": 3890,
+          "target_name": "SECURITY SAVINGS BANK, F.S.B.",
+          "acquirer_name": "SIMMONS FIRST NATIONAL BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 95.6
+        },
+        {
+          "target_cert": 58205,
+          "acquirer_cert": 1040,
+          "target_name": "WESTBRIDGE BANK AND TRUST COMPANY",
+          "acquirer_name": "MIDLAND STATES BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 92.2
+        },
+        {
+          "target_cert": 35250,
+          "acquirer_cert": 22366,
+          "target_name": "SHORELINE BANK",
+          "acquirer_name": "GBC INTERNATIONAL BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 87.7
+        },
+        {
+          "target_cert": 35053,
+          "acquirer_cert": 18412,
+          "target_name": "NORTH COUNTY BANK",
+          "acquirer_name": "WHIDBEY ISLAND BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 94.9
+        },
+        {
+          "target_cert": 28612,
+          "acquirer_cert": 28679,
+          "target_name": "MARITIME SAVINGS BANK",
+          "acquirer_name": "NORTH SHORE BANK, FSB",
+          "fail_year": "2010",
+          "acquirer_percentile": 76.5
+        },
+        {
+          "target_cert": 35061,
+          "acquirer_cert": 110,
+          "target_name": "HORIZON BANK",
+          "acquirer_name": "BANK OF THE OZARKS",
+          "fail_year": "2010",
+          "acquirer_percentile": 69.3
+        },
+        {
+          "target_cert": 33219,
+          "acquirer_cert": 23364,
+          "target_name": "BUTTE COMMUNITY BANK",
+          "acquirer_name": "RABOBANK, NATIONAL ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 91.2
+        },
+        {
+          "target_cert": 25266,
+          "acquirer_cert": 33555,
+          "target_name": "COMMUNITY NATIONAL BANK AT BARTOW",
+          "acquirer_name": "CENTERSTATE BANK OF FLORIDA, NATIONAL ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 96.4
+        },
+        {
+          "target_cert": 31623,
+          "acquirer_cert": 35274,
+          "target_name": "IMPERIAL SAVINGS AND LOAN ASSOCIATION",
+          "acquirer_name": "RIVER COMMUNITY BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 74.8
+        },
+        {
+          "target_cert": 27344,
+          "acquirer_cert": 33555,
+          "target_name": "INDEPENDENT NATIONAL BANK",
+          "acquirer_name": "CENTERSTATE BANK OF FLORIDA, NATIONAL ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 84.4
+        },
+        {
+          "target_cert": 32165,
+          "acquirer_cert": 24045,
+          "target_name": "LOS PADRES BANK",
+          "acquirer_name": "PACIFIC WESTERN BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 98.7
+        },
+        {
+          "target_cert": 27090,
+          "acquirer_cert": 23364,
+          "target_name": "PACIFIC STATE BANK",
+          "acquirer_name": "RABOBANK, NATIONAL ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 86.8
+        },
+        {
+          "target_cert": 27259,
+          "acquirer_cert": 3430,
+          "target_name": "SONOMA VALLEY BANK",
+          "acquirer_name": "WESTAMERICA BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 80.4
+        },
+        {
+          "target_cert": 34231,
+          "acquirer_cert": 57082,
+          "target_name": "RAVENSWOOD BANK",
+          "acquirer_name": "NORTHBROOK BANK AND TRUST COMPANY",
+          "fail_year": "2010",
+          "acquirer_percentile": 91.3
+        },
+        {
+          "target_cert": 57658,
+          "acquirer_cert": 57870,
+          "target_name": "NORTHWEST BANK & TRUST",
+          "acquirer_name": "STATE BANK AND TRUST COMPANY",
+          "fail_year": "2010",
+          "acquirer_percentile": 54.1
+        },
+        {
+          "target_cert": 34486,
+          "acquirer_cert": 5271,
+          "target_name": "COMMUNITY SECURITY BANK",
+          "acquirer_name": "ROUNDBANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 86.8
+        },
+        {
+          "target_cert": 27559,
+          "acquirer_cert": 12437,
+          "target_name": "CRESCENT BANK AND TRUST COMPANY",
+          "acquirer_name": "RENASANT BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 98.9
+        },
+        {
+          "target_cert": 23181,
+          "acquirer_cert": 22401,
+          "target_name": "HOME VALLEY BANK",
+          "acquirer_name": "SOUTH VALLEY BANK & TRUST",
+          "fail_year": "2010",
+          "acquirer_percentile": 85.1
+        },
+        {
+          "target_cert": 32536,
+          "acquirer_cert": 28100,
+          "target_name": "STERLING BANK",
+          "acquirer_name": "IBERIABANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 85.7
+        },
+        {
+          "target_cert": 10506,
+          "acquirer_cert": 16402,
+          "target_name": "THUNDER BANK",
+          "acquirer_name": "THE BENNINGTON STATE BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 61.0
+        },
+        {
+          "target_cert": 17837,
+          "acquirer_cert": 15504,
+          "target_name": "WILLIAMSBURG FIRST NATIONAL BANK",
+          "acquirer_name": "FIRST CITIZENS BANK AND TRUST COMPANY, INC.",
+          "fail_year": "2010",
+          "acquirer_percentile": 50.7
+        },
+        {
+          "target_cert": 28864,
+          "acquirer_cert": 33555,
+          "target_name": "OLDE CYPRESS COMMUNITY BANK",
+          "acquirer_name": "CENTERSTATE BANK OF FLORIDA, NATIONAL ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 98.5
+        },
+        {
+          "target_cert": 32571,
+          "acquirer_cert": 110,
+          "target_name": "WOODLANDS BANK",
+          "acquirer_name": "BANK OF THE OZARKS",
+          "fail_year": "2010",
+          "acquirer_percentile": 71.2
+        },
+        {
+          "target_cert": 11636,
+          "acquirer_cert": 15399,
+          "target_name": "HOME NATIONAL BANK",
+          "acquirer_name": "RCB BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 99.9
+        },
+        {
+          "target_cert": 34152,
+          "acquirer_cert": 33120,
+          "target_name": "FIRST NATIONAL BANK",
+          "acquirer_name": "THE SAVANNAH BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 94.7
+        },
+        {
+          "target_cert": 26563,
+          "acquirer_cert": 57147,
+          "target_name": "PENINSULA BANK",
+          "acquirer_name": "PREMIER AMERICAN BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 89.4
+        },
+        {
+          "target_cert": 57110,
+          "acquirer_cert": 17266,
+          "target_name": "NEVADA SECURITY BANK",
+          "acquirer_name": "UMPQUA BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 92.8
+        },
+        {
+          "target_cert": 32955,
+          "acquirer_cert": 31628,
+          "target_name": "WASHINGTON FIRST INTERNATIONAL BANK",
+          "acquirer_name": "EAST WEST BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 77.0
+        },
+        {
+          "target_cert": 15814,
+          "acquirer_cert": 11445,
+          "target_name": "FIRST NATIONAL BANK",
+          "acquirer_name": "THE JEFFERSON BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 84.7
+        },
+        {
+          "target_cert": 29341,
+          "acquirer_cert": 15289,
+          "target_name": "TIERONE BANK",
+          "acquirer_name": "GREAT WESTERN BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 97.1
+        },
+        {
+          "target_cert": 57360,
+          "acquirer_cert": 34775,
+          "target_name": "BANK OF FLORIDA - SOUTHEAST",
+          "acquirer_name": "EVERBANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 7.6
+        },
+        {
+          "target_cert": 35106,
+          "acquirer_cert": 34775,
+          "target_name": "BANK OF FLORIDA - SOUTHWEST",
+          "acquirer_name": "EVERBANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 15.9
+        },
+        {
+          "target_cert": 57814,
+          "acquirer_cert": 34775,
+          "target_name": "BANK OF FLORIDA - TAMPA BAY",
+          "acquirer_name": "EVERBANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 8.6
+        },
+        {
+          "target_cert": 57315,
+          "acquirer_cert": 21943,
+          "target_name": "GRANITE COMMUNITY BANK, NATIONAL ASSOCIATION",
+          "acquirer_name": "TRI COUNTIES BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 63.2
+        },
+        {
+          "target_cert": 57735,
+          "acquirer_cert": 18361,
+          "target_name": "PINEHURST BANK",
+          "acquirer_name": "COULEE BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 79.7
+        },
+        {
+          "target_cert": 18117,
+          "acquirer_cert": 13675,
+          "target_name": "MIDWEST BANK AND TRUST COMPANY",
+          "acquirer_name": "FIRSTMERIT BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 99.3
+        },
+        {
+          "target_cert": 35586,
+          "acquirer_cert": 34120,
+          "target_name": "NEW LIBERTY BANK",
+          "acquirer_name": "BANK OF ANN ARBOR",
+          "fail_year": "2010",
+          "acquirer_percentile": 96.2
+        },
+        {
+          "target_cert": 35114,
+          "acquirer_cert": 20504,
+          "target_name": "SATILLA COMMUNITY BANK",
+          "acquirer_name": "AMERIS BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 71.3
+        },
+        {
+          "target_cert": 34255,
+          "acquirer_cert": 3890,
+          "target_name": "SOUTHWEST COMMUNITY BANK",
+          "acquirer_name": "SIMMONS FIRST NATIONAL BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 35.7
+        },
+        {
+          "target_cert": 16476,
+          "acquirer_cert": 10191,
+          "target_name": "ACCESS BANK",
+          "acquirer_name": "PRINSBANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 58.6
+        },
+        {
+          "target_cert": 14246,
+          "acquirer_cert": 31313,
+          "target_name": "THE BANK OF BONIFAY",
+          "acquirer_name": "FIRST FEDERAL BANK OF FLORIDA",
+          "fail_year": "2010",
+          "acquirer_percentile": 97.2
+        },
+        {
+          "target_cert": 57697,
+          "acquirer_cert": 57279,
+          "target_name": "TOWNE BANK OF ARIZONA",
+          "acquirer_name": "COMMERCE BANK OF ARIZONA",
+          "fail_year": "2010",
+          "acquirer_percentile": 75.6
+        },
+        {
+          "target_cert": 30005,
+          "acquirer_cert": 58132,
+          "target_name": "CF BANCORP",
+          "acquirer_name": "FIRST MICHIGAN BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 1.4
+        },
+        {
+          "target_cert": 58362,
+          "acquirer_cert": 30817,
+          "target_name": "CHAMPION BANK",
+          "acquirer_name": "BANKLIBERTY",
+          "fail_year": "2010",
+          "acquirer_percentile": 84.8
+        },
+        {
+          "target_cert": 27150,
+          "acquirer_cert": 31469,
+          "target_name": "EUROBANK",
+          "acquirer_name": "ORIENTAL BANK AND TRUST",
+          "fail_year": "2010",
+          "acquirer_percentile": 77.2
+        },
+        {
+          "target_cert": 32185,
+          "acquirer_cert": 22946,
+          "target_name": "R-G PREMIER BANK OF PUERTO RICO",
+          "acquirer_name": "SCOTIABANK DE PUERTO RICO",
+          "fail_year": "2010",
+          "acquirer_percentile": 3.5
+        },
+        {
+          "target_cert": 31027,
+          "acquirer_cert": 34968,
+          "target_name": "WESTERNBANK PUERTO RICO",
+          "acquirer_name": "BANCO POPULAR DE PUERTO RICO",
+          "fail_year": "2010",
+          "acquirer_percentile": 99.9
+        },
+        {
+          "target_cert": 3735,
+          "acquirer_cert": 16571,
+          "target_name": "AMCORE BANK, NATIONAL ASSOCIATION",
+          "acquirer_name": "HARRIS NATIONAL ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 98.8
+        },
+        {
+          "target_cert": 22853,
+          "acquirer_cert": 3628,
+          "target_name": "BROADWAY BANK",
+          "acquirer_name": "MB FINANCIAL BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 46.5
+        },
+        {
+          "target_cert": 34658,
+          "acquirer_cert": 19333,
+          "target_name": "CITIZENS BANK & TRUST COMPANY OF CHICAGO",
+          "acquirer_name": "REPUBLIC BANK OF CHICAGO",
+          "fail_year": "2010",
+          "acquirer_percentile": 66.8
+        },
+        {
+          "target_cert": 30600,
+          "acquirer_cert": 57082,
+          "target_name": "LINCOLN PARK SAVINGS BANK",
+          "acquirer_name": "NORTHBROOK BANK AND TRUST COMPANY",
+          "fail_year": "2010",
+          "acquirer_percentile": 91.7
+        },
+        {
+          "target_cert": 34821,
+          "acquirer_cert": 3628,
+          "target_name": "NEW CENTURY BANK",
+          "acquirer_name": "MB FINANCIAL BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 22.1
+        },
+        {
+          "target_cert": 58429,
+          "acquirer_cert": 33803,
+          "target_name": "WHEATLAND BANK",
+          "acquirer_name": "WHEATON BANK & TRUST",
+          "fail_year": "2010",
+          "acquirer_percentile": 66.6
+        },
+        {
+          "target_cert": 26619,
+          "acquirer_cert": 27334,
+          "target_name": "BUTLER BANK",
+          "acquirer_name": "PEOPLE'S UNITED BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 47.3
+        },
+        {
+          "target_cert": 21521,
+          "acquirer_cert": 18412,
+          "target_name": "CITY BANK",
+          "acquirer_name": "WHIDBEY ISLAND BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 50.8
+        },
+        {
+          "target_cert": 23876,
+          "acquirer_cert": 26610,
+          "target_name": "INNOVATIVE BANK",
+          "acquirer_name": "CENTER BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 92.5
+        },
+        {
+          "target_cert": 34242,
+          "acquirer_cert": 33527,
+          "target_name": "BEACH FIRST NATIONAL BANK",
+          "acquirer_name": "BANK OF NORTH CAROLINA",
+          "fail_year": "2010",
+          "acquirer_percentile": 97.2
+        },
+        {
+          "target_cert": 57060,
+          "acquirer_cert": 16022,
+          "target_name": "DESERT HILLS BANK",
+          "acquirer_name": "NEW YORK COMMUNITY BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 8.5
+        },
+        {
+          "target_cert": 57399,
+          "acquirer_cert": 30720,
+          "target_name": "MCINTOSH COMMERCIAL BANK",
+          "acquirer_name": "CHARTERBANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 94.3
+        },
+        {
+          "target_cert": 34678,
+          "acquirer_cert": 110,
+          "target_name": "UNITY NATIONAL BANK",
+          "acquirer_name": "BANK OF THE OZARKS",
+          "fail_year": "2010",
+          "acquirer_percentile": 85.9
+        },
+        {
+          "target_cert": 18806,
+          "acquirer_cert": 6731,
+          "target_name": "AMERICAN NATIONAL BANK",
+          "acquirer_name": "THE NATIONAL BANK AND TRUST COMPANY",
+          "fail_year": "2010",
+          "acquirer_percentile": 41.8
+        },
+        {
+          "target_cert": 10054,
+          "acquirer_cert": 28833,
+          "target_name": "BANK OF HIAWASSEE",
+          "acquirer_name": "CITIZENS SOUTH BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 98.0
+        },
+        {
+          "target_cert": 58104,
+          "acquirer_cert": 17041,
+          "target_name": "CENTURY SECURITY BANK",
+          "acquirer_name": "BANK OF UPSON",
+          "fail_year": "2010",
+          "acquirer_percentile": 94.3
+        },
+        {
+          "target_cert": 29561,
+          "acquirer_cert": 28094,
+          "target_name": "STATEWIDE BANK",
+          "acquirer_name": "HOME BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 86.4
+        },
+        {
+          "target_cert": 9268,
+          "acquirer_cert": 20369,
+          "target_name": "BANK OF ILLINOIS",
+          "acquirer_name": "HEARTLAND BANK AND TRUST COMPANY",
+          "fail_year": "2010",
+          "acquirer_percentile": 97.6
+        },
+        {
+          "target_cert": 58352,
+          "acquirer_cert": 34072,
+          "target_name": "CARSON RIVER COMMUNITY BANK",
+          "acquirer_name": "HERITAGE BANK OF NEVADA",
+          "fail_year": "2010",
+          "acquirer_percentile": 73.3
+        },
+        {
+          "target_cert": 38129,
+          "acquirer_cert": 17266,
+          "target_name": "RAINIER PACIFIC BANK",
+          "acquirer_name": "UMPQUA BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 86.3
+        },
+        {
+          "target_cert": 29952,
+          "acquirer_cert": 13675,
+          "target_name": "GEORGE WASHINGTON SAVINGS BANK",
+          "acquirer_name": "FIRSTMERIT BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 50.9
+        },
+        {
+          "target_cert": 57586,
+          "acquirer_cert": 32325,
+          "target_name": "MARCO COMMUNITY BANK",
+          "acquirer_name": "MUTUAL OF OMAHA BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 94.7
+        },
+        {
+          "target_cert": 15448,
+          "acquirer_cert": 10568,
+          "target_name": "1ST AMERICAN STATE BANK OF MINNESOTA",
+          "acquirer_name": "COMMUNITY DEVELOPMENT BANK, FSB",
+          "fail_year": "2010",
+          "acquirer_percentile": 56.4
+        },
+        {
+          "target_cert": 16730,
+          "acquirer_cert": 33826,
+          "target_name": "AMERICAN MARINE BANK",
+          "acquirer_name": "COLUMBIA STATE BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 89.4
+        },
+        {
+          "target_cert": 23011,
+          "acquirer_cert": 11063,
+          "target_name": "FIRST REGIONAL BANK",
+          "acquirer_name": "FIRST-CITIZENS BANK & TRUST COMPANY",
+          "fail_year": "2010",
+          "acquirer_percentile": 99.0
+        },
+        {
+          "target_cert": 5672,
+          "acquirer_cert": 57147,
+          "target_name": "FLORIDA COMMUNITY BANK",
+          "acquirer_name": "PREMIER AMERICAN BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 85.3
+        },
+        {
+          "target_cert": 16133,
+          "acquirer_cert": 15478,
+          "target_name": "MARSHALL BANK, NATIONAL ASSOCIATION",
+          "acquirer_name": "UNITED VALLEY BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 98.9
+        },
+        {
+          "target_cert": 8265,
+          "acquirer_cert": 4767,
+          "target_name": "BANK OF LEETON",
+          "acquirer_name": "SUNFLOWER BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 30.0
+        },
+        {
+          "target_cert": 22469,
+          "acquirer_cert": 33826,
+          "target_name": "COLUMBIA RIVER BANK",
+          "acquirer_name": "COLUMBIA STATE BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 99.5
+        },
+        {
+          "target_cert": 20501,
+          "acquirer_cert": 17266,
+          "target_name": "EVERGREEN BANK",
+          "acquirer_name": "UMPQUA BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 77.0
+        },
+        {
+          "target_cert": 17522,
+          "acquirer_cert": 8546,
+          "target_name": "ST. STEPHEN STATE BANK",
+          "acquirer_name": "FIRST STATE BANK OF ST. JOSEPH",
+          "fail_year": "2010",
+          "acquirer_percentile": 89.0
+        },
+        {
+          "target_cert": 22977,
+          "acquirer_cert": 28088,
+          "target_name": "HORIZON BANK",
+          "acquirer_name": "WASHINGTON FEDERAL SAVINGS AND LOAN ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 22.5
+        },
+        {
+          "target_cert": 32276,
+          "acquirer_cert": 32574,
+          "target_name": "NEW SOUTH FEDERAL SAVINGS BANK",
+          "acquirer_name": "BEAL BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 12.0
+        },
+        {
+          "target_cert": 32167,
+          "acquirer_cert": 12441,
+          "target_name": "PEOPLES FIRST COMMUNITY BANK",
+          "acquirer_name": "HANCOCK BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 99.9
+        },
+        {
+          "target_cert": 4731,
+          "acquirer_cert": 8728,
+          "target_name": "SOLUTIONSBANK",
+          "acquirer_name": "ARVEST BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 75.3
+        },
+        {
+          "target_cert": 58399,
+          "acquirer_cert": 27237,
+          "target_name": "VALLEY CAPITAL BANK, N.A.",
+          "acquirer_name": "ENTERPRISE BANK & TRUST",
+          "fail_year": "2009",
+          "acquirer_percentile": 24.0
+        },
+        {
+          "target_cert": 29776,
+          "acquirer_cert": 16022,
+          "target_name": "AMTRUST BANK",
+          "acquirer_name": "NEW YORK COMMUNITY BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 14.1
+        },
+        {
+          "target_cert": 26290,
+          "acquirer_cert": 57870,
+          "target_name": "FIRST SECURITY NATIONAL BANK",
+          "acquirer_name": "STATE BANK AND TRUST COMPANY",
+          "fail_year": "2009",
+          "acquirer_percentile": 55.3
+        },
+        {
+          "target_cert": 32583,
+          "acquirer_cert": 57968,
+          "target_name": "GREATER ATLANTIC BANK",
+          "acquirer_name": "SONABANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 89.4
+        },
+        {
+          "target_cert": 34663,
+          "acquirer_cert": 57870,
+          "target_name": "THE BUCKHEAD COMMUNITY BANK",
+          "acquirer_name": "STATE BANK AND TRUST COMPANY",
+          "fail_year": "2009",
+          "acquirer_percentile": 76.3
+        },
+        {
+          "target_cert": 32267,
+          "acquirer_cert": 28100,
+          "target_name": "CENTURY BANK, A FEDERAL SAVINGS BANK",
+          "acquirer_name": "IBERIABANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 97.5
+        },
+        {
+          "target_cert": 22427,
+          "acquirer_cert": 28100,
+          "target_name": "ORION BANK",
+          "acquirer_name": "IBERIABANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 98.7
+        },
+        {
+          "target_cert": 57914,
+          "acquirer_cert": 20164,
+          "target_name": "PACIFIC COAST NATIONAL BANK",
+          "acquirer_name": "SUNWEST BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 99.4
+        },
+        {
+          "target_cert": 19450,
+          "acquirer_cert": 17009,
+          "target_name": "GATEWAY BANK OF ST LOUIS",
+          "acquirer_name": "CENTRAL BANK OF KANSAS CITY",
+          "fail_year": "2009",
+          "acquirer_percentile": 70.9
+        },
+        {
+          "target_cert": 30329,
+          "acquirer_cert": 20856,
+          "target_name": "HOME FEDERAL SAVINGS BANK",
+          "acquirer_name": "LIBERTY BANK AND TRUST COMPANY",
+          "fail_year": "2009",
+          "acquirer_percentile": 20.2
+        },
+        {
+          "target_cert": 32469,
+          "acquirer_cert": 31628,
+          "target_name": "UNITED COMMERCIAL BANK",
+          "acquirer_name": "EAST WEST BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 89.9
+        },
+        {
+          "target_cert": 22286,
+          "acquirer_cert": 20504,
+          "target_name": "UNITED SECURITY BANK",
+          "acquirer_name": "AMERIS BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 64.3
+        },
+        {
+          "target_cert": 57794,
+          "acquirer_cert": 20504,
+          "target_name": "AMERICAN UNITED BANK",
+          "acquirer_name": "AMERIS BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 61.7
+        },
+        {
+          "target_cert": 18321,
+          "acquirer_cert": 18922,
+          "target_name": "BANK OF ELMWOOD",
+          "acquirer_name": "TRI CITY NATIONAL BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 95.6
+        },
+        {
+          "target_cert": 35044,
+          "acquirer_cert": 31313,
+          "target_name": "FLAGSHIP NATIONAL BANK",
+          "acquirer_name": "FIRST FEDERAL BANK OF FLORIDA",
+          "fail_year": "2009",
+          "acquirer_percentile": 92.5
+        },
+        {
+          "target_cert": 58336,
+          "acquirer_cert": 57934,
+          "target_name": "HILLCREST BANK FLORIDA",
+          "acquirer_name": "STONEGATE BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 90.2
+        },
+        {
+          "target_cert": 57959,
+          "acquirer_cert": 57934,
+          "target_name": "PARTNERS BANK",
+          "acquirer_name": "STONEGATE BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 92.3
+        },
+        {
+          "target_cert": 23266,
+          "acquirer_cert": 21716,
+          "target_name": "SAN JOAQUIN BANK",
+          "acquirer_name": "CITIZENS BUSINESS BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 97.8
+        },
+        {
+          "target_cert": 34824,
+          "acquirer_cert": 6560,
+          "target_name": "WARREN BANK",
+          "acquirer_name": "THE HUNTINGTON NATIONAL BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 54.7
+        },
+        {
+          "target_cert": 22868,
+          "acquirer_cert": 11063,
+          "target_name": "VENTURE BANK",
+          "acquirer_name": "FIRST-CITIZENS BANK & TRUST COMPANY",
+          "fail_year": "2009",
+          "acquirer_percentile": 96.0
+        },
+        {
+          "target_cert": 25231,
+          "acquirer_cert": 10908,
+          "target_name": "FIRST BANK OF KANSAS CITY",
+          "acquirer_name": "GREAT AMERICAN BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 77.5
+        },
+        {
+          "target_cert": 34875,
+          "acquirer_cert": 20164,
+          "target_name": "FIRST STATE BANK",
+          "acquirer_name": "SUNWEST BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 98.0
+        },
+        {
+          "target_cert": 27732,
+          "acquirer_cert": 29546,
+          "target_name": "VANTUS BANK",
+          "acquirer_name": "GREAT SOUTHERN BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 95.5
+        },
+        {
+          "target_cert": 27197,
+          "acquirer_cert": 24045,
+          "target_name": "AFFINITY BANK",
+          "acquirer_name": "PACIFIC WESTERN BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 91.7
+        },
+        {
+          "target_cert": 28312,
+          "acquirer_cert": 588,
+          "target_name": "BRADFORD BANK",
+          "acquirer_name": "MANUFACTURERS AND TRADERS TRUST COMPANY",
+          "fail_year": "2009",
+          "acquirer_percentile": 46.1
+        },
+        {
+          "target_cert": 22130,
+          "acquirer_cert": 28100,
+          "target_name": "CAPITALSOUTH BANK",
+          "acquirer_name": "IBERIABANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 97.0
+        },
+        {
+          "target_cert": 32618,
+          "acquirer_cert": 19048,
+          "target_name": "GUARANTY BANK",
+          "acquirer_name": "COMPASS BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 100.0
+        },
+        {
+          "target_cert": 57645,
+          "acquirer_cert": 4063,
+          "target_name": "COMMUNITY BANK OF ARIZONA",
+          "acquirer_name": "MIDFIRST BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 9.7
+        },
+        {
+          "target_cert": 31559,
+          "acquirer_cert": 6384,
+          "target_name": "DWELLING HOUSE SAVINGS AND LOAN",
+          "acquirer_name": "PNC BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2009",
+          "acquirer_percentile": 43.0
+        },
+        {
+          "target_cert": 34485,
+          "acquirer_cert": 4063,
+          "target_name": "UNION BANK, NATIONAL ASSOCIATION",
+          "acquirer_name": "MIDFIRST BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 25.0
+        },
+        {
+          "target_cert": 27183,
+          "acquirer_cert": 10988,
+          "target_name": "COMMUNITY NATIONAL BANK OF SARASOTA COUNTY",
+          "acquirer_name": "STEARNS BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2009",
+          "acquirer_percentile": 56.3
+        },
+        {
+          "target_cert": 27364,
+          "acquirer_cert": 10988,
+          "target_name": "FIRST STATE BANK",
+          "acquirer_name": "STEARNS BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2009",
+          "acquirer_percentile": 95.1
+        },
+        {
+          "target_cert": 9873,
+          "acquirer_cert": 5568,
+          "target_name": "FIRST STATE BANK OF ALTUS",
+          "acquirer_name": "HERRING BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 93.7
+        },
+        {
+          "target_cert": 57604,
+          "acquirer_cert": 57934,
+          "target_name": "INTEGRITY BANK",
+          "acquirer_name": "STONEGATE BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 92.8
+        },
+        {
+          "target_cert": 18659,
+          "acquirer_cert": 25330,
+          "target_name": "MUTUAL BANK",
+          "acquirer_name": "UNITED CENTRAL BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 95.8
+        },
+        {
+          "target_cert": 27367,
+          "acquirer_cert": 57870,
+          "target_name": "SECURITY BANK OF BIBB COUNTY",
+          "acquirer_name": "STATE BANK AND TRUST COMPANY",
+          "fail_year": "2009",
+          "acquirer_percentile": 80.9
+        },
+        {
+          "target_cert": 57346,
+          "acquirer_cert": 57870,
+          "target_name": "SECURITY BANK OF GWINNETT COUNTY",
+          "acquirer_name": "STATE BANK AND TRUST COMPANY",
+          "fail_year": "2009",
+          "acquirer_percentile": 70.9
+        },
+        {
+          "target_cert": 27048,
+          "acquirer_cert": 57870,
+          "target_name": "SECURITY BANK OF HOUSTON COUNTY",
+          "acquirer_name": "STATE BANK AND TRUST COMPANY",
+          "fail_year": "2009",
+          "acquirer_percentile": 62.5
+        },
+        {
+          "target_cert": 8486,
+          "acquirer_cert": 57870,
+          "target_name": "SECURITY BANK OF JONES COUNTY",
+          "acquirer_name": "STATE BANK AND TRUST COMPANY",
+          "fail_year": "2009",
+          "acquirer_percentile": 61.6
+        },
+        {
+          "target_cert": 57430,
+          "acquirer_cert": 57870,
+          "target_name": "SECURITY BANK OF NORTH FULTON",
+          "acquirer_name": "STATE BANK AND TRUST COMPANY",
+          "fail_year": "2009",
+          "acquirer_percentile": 55.6
+        },
+        {
+          "target_cert": 57105,
+          "acquirer_cert": 57870,
+          "target_name": "SECURITY BANK OF NORTH METRO",
+          "acquirer_name": "STATE BANK AND TRUST COMPANY",
+          "fail_year": "2009",
+          "acquirer_percentile": 62.9
+        },
+        {
+          "target_cert": 34103,
+          "acquirer_cert": 3931,
+          "target_name": "BANKFIRST",
+          "acquirer_name": "ALERUS FINANCIAL, NATIONAL ASSOCIATION",
+          "fail_year": "2009",
+          "acquirer_percentile": 93.9
+        },
+        {
+          "target_cert": 34594,
+          "acquirer_cert": 16858,
+          "target_name": "FIRST PIEDMONT BANK",
+          "acquirer_name": "FIRST AMERICAN BANK AND TRUST COMPANY",
+          "fail_year": "2009",
+          "acquirer_percentile": 96.1
+        },
+        {
+          "target_cert": 23556,
+          "acquirer_cert": 20852,
+          "target_name": "VINEYARD BANK, NATIONAL ASSOCIATION",
+          "acquirer_name": "CALIFORNIA BANK & TRUST",
+          "fail_year": "2009",
+          "acquirer_percentile": 99.5
+        },
+        {
+          "target_cert": 18390,
+          "acquirer_cert": 33306,
+          "target_name": "FOUNDERS BANK",
+          "acquirer_name": "THE PRIVATEBANK AND TRUST COMPANY",
+          "fail_year": "2009",
+          "acquirer_percentile": 98.2
+        },
+        {
+          "target_cert": 57667,
+          "acquirer_cert": 27074,
+          "target_name": "MILLENNIUM STATE BANK OF TEXAS",
+          "acquirer_name": "STATE BANK OF TEXAS",
+          "fail_year": "2009",
+          "acquirer_percentile": 85.2
+        },
+        {
+          "target_cert": 11710,
+          "acquirer_cert": 3607,
+          "target_name": "THE FIRST STATE BANK OF WINCHESTER",
+          "acquirer_name": "THE FIRST NATIONAL BANK OF BEARDSTOWN",
+          "fail_year": "2009",
+          "acquirer_percentile": 37.5
+        },
+        {
+          "target_cert": 12093,
+          "acquirer_cert": 12396,
+          "target_name": "THE JOHN WARNER BANK",
+          "acquirer_name": "STATE BANK OF LINCOLN",
+          "fail_year": "2009",
+          "acquirer_percentile": 51.4
+        },
+        {
+          "target_cert": 9744,
+          "acquirer_cert": 10988,
+          "target_name": "HORIZON BANK",
+          "acquirer_name": "STEARNS BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2009",
+          "acquirer_percentile": 17.5
+        },
+        {
+          "target_cert": 57893,
+          "acquirer_cert": 20164,
+          "target_name": "METROPACIFIC BANK",
+          "acquirer_name": "SUNWEST BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 99.3
+        },
+        {
+          "target_cert": 57332,
+          "acquirer_cert": 23301,
+          "target_name": "MIRAE BANK",
+          "acquirer_name": "WILSHIRE STATE BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 97.4
+        },
+        {
+          "target_cert": 35285,
+          "acquirer_cert": 30720,
+          "target_name": "NEIGHBORHOOD COMMUNITY BANK",
+          "acquirer_name": "CHARTERBANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 89.9
+        },
+        {
+          "target_cert": 4614,
+          "acquirer_cert": 17378,
+          "target_name": "FIRST NATIONAL BANK OF ANTHONY",
+          "acquirer_name": "BANK OF KANSAS",
+          "fail_year": "2009",
+          "acquirer_percentile": 59.0
+        },
+        {
+          "target_cert": 17309,
+          "acquirer_cert": 19333,
+          "target_name": "BANK OF LINCOLNWOOD",
+          "acquirer_name": "REPUBLIC BANK OF CHICAGO",
+          "fail_year": "2009",
+          "acquirer_percentile": 96.9
+        },
+        {
+          "target_cert": 5757,
+          "acquirer_cert": 18429,
+          "target_name": "CITIZENS NATIONAL BANK",
+          "acquirer_name": "MORTON COMMUNITY BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 95.6
+        },
+        {
+          "target_cert": 35175,
+          "acquirer_cert": 1040,
+          "target_name": "STRATEGIC CAPITAL BANK",
+          "acquirer_name": "MIDLAND STATES BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 76.5
+        },
+        {
+          "target_cert": 34843,
+          "acquirer_cert": 6161,
+          "target_name": "WESTSOUND BANK",
+          "acquirer_name": "KITSAP BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 99.1
+        },
+        {
+          "target_cert": 35461,
+          "acquirer_cert": 22134,
+          "target_name": "AMERICA WEST BANK",
+          "acquirer_name": "CACHE VALLEY BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 66.5
+        },
+        {
+          "target_cert": 57563,
+          "acquirer_cert": 57919,
+          "target_name": "CITIZENS COMMUNITY BANK",
+          "acquirer_name": "NORTH JERSEY COMMUNITY BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 79.7
+        },
+        {
+          "target_cert": 57943,
+          "acquirer_cert": 31203,
+          "target_name": "AMERICAN SOUTHERN BANK",
+          "acquirer_name": "BANK OF NORTH GEORGIA",
+          "fail_year": "2009",
+          "acquirer_percentile": 49.2
+        },
+        {
+          "target_cert": 34396,
+          "acquirer_cert": 6548,
+          "target_name": "FIRST BANK OF IDAHO, FSB",
+          "acquirer_name": "U.S. BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2009",
+          "acquirer_percentile": 14.0
+        },
+        {
+          "target_cert": 34369,
+          "acquirer_cert": 58604,
+          "target_name": "MICHIGAN HERITAGE BANK",
+          "acquirer_name": "LEVEL ONE BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 62.3
+        },
+        {
+          "target_cert": 8266,
+          "acquirer_cert": 18531,
+          "target_name": "AMERICAN STERLING BANK",
+          "acquirer_name": "METCALF BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 38.4
+        },
+        {
+          "target_cert": 33824,
+          "acquirer_cert": 18113,
+          "target_name": "GREAT BASIN BANK OF NEVADA",
+          "acquirer_name": "NEVADA STATE BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 78.0
+        },
+        {
+          "target_cert": 34639,
+          "acquirer_cert": 28994,
+          "target_name": "CAPE FEAR BANK",
+          "acquirer_name": "FIRST FEDERAL SAVINGS AND LOAN ASSOCIATION OF CHARLESTON",
+          "fail_year": "2009",
+          "acquirer_percentile": 88.0
+        },
+        {
+          "target_cert": 18896,
+          "acquirer_cert": 5568,
+          "target_name": "COLORADO NATIONAL BANK",
+          "acquirer_name": "HERRING BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 79.9
+        },
+        {
+          "target_cert": 4754,
+          "acquirer_cert": 29546,
+          "target_name": "TEAMBANK, N.A.",
+          "acquirer_name": "GREAT SOUTHERN BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 99.4
+        },
+        {
+          "target_cert": 57558,
+          "acquirer_cert": 15771,
+          "target_name": "FREEDOM BANK OF GEORGIA",
+          "acquirer_name": "NORTHEAST GEORGIA BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 99.6
+        },
+        {
+          "target_cert": 34820,
+          "acquirer_cert": 33897,
+          "target_name": "SECURITY SAVINGS BANK",
+          "acquirer_name": "BANK OF NEVADA",
+          "fail_year": "2009",
+          "acquirer_percentile": 74.1
+        },
+        {
+          "target_cert": 16500,
+          "acquirer_cert": 3775,
+          "target_name": "CORN BELT BANK AND TRUST COMPANY",
+          "acquirer_name": "THE CARLINVILLE NATIONAL BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 43.1
+        },
+        {
+          "target_cert": 57342,
+          "acquirer_cert": 1281,
+          "target_name": "PINNACLE BANK",
+          "acquirer_name": "WASHINGTON TRUST BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 51.3
+        },
+        {
+          "target_cert": 34563,
+          "acquirer_cert": 21435,
+          "target_name": "RIVERSIDE BANK OF THE GULF COAST",
+          "acquirer_name": "TIB BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 95.0
+        },
+        {
+          "target_cert": 22574,
+          "acquirer_cert": 3430,
+          "target_name": "COUNTY BANK",
+          "acquirer_name": "WESTAMERICA BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 99.2
+        },
+        {
+          "target_cert": 57017,
+          "acquirer_cert": 12368,
+          "target_name": "FIRSTBANK FINANCIAL SERVICES",
+          "acquirer_name": "REGIONS BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 73.2
+        },
+        {
+          "target_cert": 30763,
+          "acquirer_cert": 8675,
+          "target_name": "SUBURBAN FEDERAL SAVINGS BANK",
+          "acquirer_name": "BANK OF ESSEX",
+          "fail_year": "2009",
+          "acquirer_percentile": 66.3
+        },
+        {
+          "target_cert": 33025,
+          "acquirer_cert": 22819,
+          "target_name": "1ST CENTENNIAL BANK",
+          "acquirer_name": "FIRST CALIFORNIA BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 98.8
+        },
+        {
+          "target_cert": 34959,
+          "acquirer_cert": 17266,
+          "target_name": "BANK OF CLARK COUNTY",
+          "acquirer_name": "UMPQUA BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 80.4
+        },
+        {
+          "target_cert": 19733,
+          "acquirer_cert": 19333,
+          "target_name": "NATIONAL BANK OF COMMERCE",
+          "acquirer_name": "REPUBLIC BANK OF CHICAGO",
+          "fail_year": "2009",
+          "acquirer_percentile": 97.2
+        },
+        {
+          "target_cert": 35379,
+          "acquirer_cert": 9846,
+          "target_name": "HAVEN TRUST BANK",
+          "acquirer_name": "BRANCH BANKING AND TRUST COMPANY",
+          "fail_year": "2008",
+          "acquirer_percentile": 60.0
+        },
+        {
+          "target_cert": 16490,
+          "acquirer_cert": 8675,
+          "target_name": "THE COMMUNITY BANK",
+          "acquirer_name": "BANK OF ESSEX",
+          "fail_year": "2008",
+          "acquirer_percentile": 69.8
+        },
+        {
+          "target_cert": 23595,
+          "acquirer_cert": 24045,
+          "target_name": "SECURITY PACIFIC BANK",
+          "acquirer_name": "PACIFIC WESTERN BANK",
+          "fail_year": "2008",
+          "acquirer_percentile": 95.0
+        },
+        {
+          "target_cert": 57654,
+          "acquirer_cert": 12181,
+          "target_name": "MAIN STREET BANK",
+          "acquirer_name": "MONROE BANK & TRUST",
+          "fail_year": "2008",
+          "acquirer_percentile": 63.4
+        },
+        {
+          "target_cert": 6782,
+          "acquirer_cert": 9463,
+          "target_name": "AMERIBANK, INC.",
+          "acquirer_name": "THE CITIZENS SAVINGS BANK",
+          "fail_year": "2008",
+          "acquirer_percentile": 88.0
+        },
+        {
+          "target_cert": 34194,
+          "acquirer_cert": 18113,
+          "target_name": "SILVER STATE BANK",
+          "acquirer_name": "NEVADA STATE BANK",
+          "fail_year": "2008",
+          "acquirer_percentile": 99.7
+        },
+        {
+          "target_cert": 35469,
+          "acquirer_cert": 12368,
+          "target_name": "INTEGRITY BANK",
+          "acquirer_name": "REGIONS BANK",
+          "fail_year": "2008",
+          "acquirer_percentile": 71.5
+        },
+        {
+          "target_cert": 57523,
+          "acquirer_cert": 867,
+          "target_name": "FIRST PRIORITY BANK",
+          "acquirer_name": "SUNTRUST BANK",
+          "fail_year": "2008",
+          "acquirer_percentile": 33.4
+        },
+        {
+          "target_cert": 57961,
+          "acquirer_cert": 32325,
+          "target_name": "FIRST HERITAGE BANK N.A.",
+          "acquirer_name": "MUTUAL OF OMAHA BANK",
+          "fail_year": "2008",
+          "acquirer_percentile": 93.3
+        },
+        {
+          "target_cert": 27011,
+          "acquirer_cert": 32325,
+          "target_name": "FIRST NATIONAL BANK OF NEVADA",
+          "acquirer_name": "MUTUAL OF OMAHA BANK",
+          "fail_year": "2008",
+          "acquirer_percentile": 85.6
+        }
+      ]
+    }
+  },
+  "refit": {
+    "2022Q4": {
+      "weights": {
+        "funding": 0.2,
+        "business": 0.2,
+        "size": 0.6,
+        "geo": 0.0
+      },
+      "n": 7,
+      "mean_percentile": 79.9,
+      "median_percentile": 98.1,
+      "deals": [
+        {
+          "target_cert": 25796,
+          "acquirer_cert": 57931,
+          "target_name": "COMMUNITY BANK AND TRUST - WEST GEORGIA",
+          "acquirer_name": "ANCHOR BANK",
+          "fail_year": "2026",
+          "acquirer_percentile": 98.8
+        },
+        {
+          "target_cert": 57488,
+          "acquirer_cert": 20179,
+          "target_name": "METROPOLITAN CAPITAL B&T",
+          "acquirer_name": "FIRST INDEPENDENCE BANK",
+          "fail_year": "2026",
+          "acquirer_percentile": 98.1
+        },
+        {
+          "target_cert": 5520,
+          "acquirer_cert": 15480,
+          "target_name": "SANTA ANNA NATIONAL BANK",
+          "acquirer_name": "COLEMAN COUNTY STATE BANK",
+          "fail_year": "2025",
+          "acquirer_percentile": 75.2
+        },
+        {
+          "target_cert": 4134,
+          "acquirer_cert": 27394,
+          "target_name": "FIRST NB OF LINDSAY",
+          "acquirer_name": "FIRST BANK & TRUST CO.",
+          "fail_year": "2024",
+          "acquirer_percentile": 42.7
+        },
+        {
+          "target_cert": 27332,
+          "acquirer_cert": 7551,
+          "target_name": "REPUBLIC BANK",
+          "acquirer_name": "FULTON BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2024",
+          "acquirer_percentile": 99.8
+        },
+        {
+          "target_cert": 8758,
+          "acquirer_cert": 18400,
+          "target_name": "CITIZENS BANK",
+          "acquirer_name": "IOWA TRUST & SAVINGS BANK",
+          "fail_year": "2023",
+          "acquirer_percentile": 46.4
+        },
+        {
+          "target_cert": 24735,
+          "acquirer_cert": 11063,
+          "target_name": "SILICON VALLEY BANK",
+          "acquirer_name": "FIRST-CITIZENS BANK & TRUST COMPANY",
+          "fail_year": "2023",
+          "acquirer_percentile": 98.1
+        }
+      ]
+    },
+    "2008Q1": {
+      "weights": {
+        "funding": 0.0,
+        "business": 0.2,
+        "size": 0.6,
+        "geo": 0.2
+      },
+      "n": 340,
+      "mean_percentile": 71.9,
+      "median_percentile": 78.3,
+      "deals": [
+        {
+          "target_cert": 25796,
+          "acquirer_cert": 18903,
+          "target_name": "COMMUNITY BANK AND TRUST - WEST GEORGIA",
+          "acquirer_name": "ANCHOR BANK",
+          "fail_year": "2026",
+          "acquirer_percentile": 81.2
+        },
+        {
+          "target_cert": 57488,
+          "acquirer_cert": 20179,
+          "target_name": "METROPOLITAN CAPITAL B&T",
+          "acquirer_name": "FIRST INDEPENDENCE BANK",
+          "fail_year": "2026",
+          "acquirer_percentile": 99.2
+        },
+        {
+          "target_cert": 5520,
+          "acquirer_cert": 15480,
+          "target_name": "SANTA ANNA NATIONAL BANK",
+          "acquirer_name": "COLEMAN COUNTY STATE BANK",
+          "fail_year": "2025",
+          "acquirer_percentile": 99.3
+        },
+        {
+          "target_cert": 4134,
+          "acquirer_cert": 27394,
+          "target_name": "FIRST NB OF LINDSAY",
+          "acquirer_name": "FIRST BANK & TRUST CO.",
+          "fail_year": "2024",
+          "acquirer_percentile": 40.9
+        },
+        {
+          "target_cert": 27332,
+          "acquirer_cert": 7551,
+          "target_name": "REPUBLIC BANK",
+          "acquirer_name": "FULTON BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2024",
+          "acquirer_percentile": 89.9
+        },
+        {
+          "target_cert": 8758,
+          "acquirer_cert": 18400,
+          "target_name": "CITIZENS BANK",
+          "acquirer_name": "IOWA TRUST & SAVINGS BANK",
+          "fail_year": "2023",
+          "acquirer_percentile": 99.8
+        },
+        {
+          "target_cert": 24735,
+          "acquirer_cert": 11063,
+          "target_name": "SILICON VALLEY BANK",
+          "acquirer_name": "FIRST-CITIZENS BANK & TRUST COMPANY",
+          "fail_year": "2023",
+          "acquirer_percentile": 98.8
+        },
+        {
+          "target_cert": 15426,
+          "acquirer_cert": 16635,
+          "target_name": "ALMENA STATE BANK",
+          "acquirer_name": "EQUITY BANK",
+          "fail_year": "2020",
+          "acquirer_percentile": 89.0
+        },
+        {
+          "target_cert": 16748,
+          "acquirer_cert": 29566,
+          "target_name": "FIRST CITY BANK OF FLORIDA",
+          "acquirer_name": "UNITED FIDELITY BANK, FSB",
+          "fail_year": "2020",
+          "acquirer_percentile": 56.7
+        },
+        {
+          "target_cert": 14361,
+          "acquirer_cert": 34603,
+          "target_name": "THE FIRST STATE BANK",
+          "acquirer_name": "MVB BANK, INC",
+          "fail_year": "2020",
+          "acquirer_percentile": 69.6
+        },
+        {
+          "target_cert": 21111,
+          "acquirer_cert": 14679,
+          "target_name": "CITY NATIONAL BANK OF NEW JERSEY",
+          "acquirer_name": "INDUSTRIAL BANK",
+          "fail_year": "2019",
+          "acquirer_percentile": 66.4
+        },
+        {
+          "target_cert": 10716,
+          "acquirer_cert": 3108,
+          "target_name": "ENLOE STATE BANK",
+          "acquirer_name": "LEGEND BANK, NA",
+          "fail_year": "2019",
+          "acquirer_percentile": 34.1
+        },
+        {
+          "target_cert": 30570,
+          "acquirer_cert": 28068,
+          "target_name": "WASHINGTON FEDERAL BANK FOR SAVINGS",
+          "acquirer_name": "ROYAL SAVINGS BANK",
+          "fail_year": "2017",
+          "acquirer_percentile": 91.4
+        },
+        {
+          "target_cert": 17719,
+          "acquirer_cert": 4649,
+          "target_name": "THE FARMERS AND MERCHANTS STATE BANK OF ARGONIA",
+          "acquirer_name": "CONWAY BANK",
+          "fail_year": "2017",
+          "acquirer_percentile": 91.9
+        },
+        {
+          "target_cert": 1802,
+          "acquirer_cert": 29566,
+          "target_name": "FAYETTE COUNTY BANK",
+          "acquirer_name": "UNITED FIDELITY BANK, FSB",
+          "fail_year": "2017",
+          "acquirer_percentile": 47.0
+        },
+        {
+          "target_cert": 30003,
+          "acquirer_cert": 11063,
+          "target_name": "GUARANTY BANK",
+          "acquirer_name": "FIRST-CITIZENS BANK & TRUST COMPANY",
+          "fail_year": "2017",
+          "acquirer_percentile": 94.3
+        },
+        {
+          "target_cert": 35495,
+          "acquirer_cert": 22134,
+          "target_name": "PROFICIO BANK",
+          "acquirer_name": "CACHE VALLEY BANK",
+          "fail_year": "2017",
+          "acquirer_percentile": 99.1
+        },
+        {
+          "target_cert": 19328,
+          "acquirer_cert": 27074,
+          "target_name": "SEAWAY BANK AND TRUST COMPANY",
+          "acquirer_name": "STATE BANK OF TEXAS",
+          "fail_year": "2017",
+          "acquirer_percentile": 82.0
+        },
+        {
+          "target_cert": 34951,
+          "acquirer_cert": 11063,
+          "target_name": "HARVEST COMMUNITY BANK",
+          "acquirer_name": "FIRST-CITIZENS BANK & TRUST COMPANY",
+          "fail_year": "2017",
+          "acquirer_percentile": 49.5
+        },
+        {
+          "target_cert": 35312,
+          "acquirer_cert": 11063,
+          "target_name": "FIRST CORNERSTONE BANK",
+          "acquirer_name": "FIRST-CITIZENS BANK & TRUST COMPANY",
+          "fail_year": "2016",
+          "acquirer_percentile": 52.1
+        },
+        {
+          "target_cert": 9956,
+          "acquirer_cert": 10308,
+          "target_name": "TRUST COMPANY BANK",
+          "acquirer_name": "THE  BANK OF FAYETTE COUNTY",
+          "fail_year": "2016",
+          "acquirer_percentile": 39.4
+        },
+        {
+          "target_cert": 20364,
+          "acquirer_cert": 11063,
+          "target_name": "NORTH MILWAUKEE STATE BANK",
+          "acquirer_name": "FIRST-CITIZENS BANK & TRUST COMPANY",
+          "fail_year": "2016",
+          "acquirer_percentile": 26.7
+        },
+        {
+          "target_cert": 34112,
+          "acquirer_cert": 29566,
+          "target_name": "PREMIER BANK",
+          "acquirer_name": "UNITED FIDELITY BANK, FSB",
+          "fail_year": "2015",
+          "acquirer_percentile": 71.6
+        },
+        {
+          "target_cert": 57772,
+          "acquirer_cert": 19333,
+          "target_name": "EDGEBROOK BANK",
+          "acquirer_name": "REPUBLIC BANK OF CHICAGO",
+          "fail_year": "2015",
+          "acquirer_percentile": 37.5
+        },
+        {
+          "target_cert": 32102,
+          "acquirer_cert": 34968,
+          "target_name": "DORAL BANK",
+          "acquirer_name": "BANCO POPULAR DE PUERTO RICO",
+          "fail_year": "2015",
+          "acquirer_percentile": 98.9
+        },
+        {
+          "target_cert": 33938,
+          "acquirer_cert": 11063,
+          "target_name": "CAPITOL CITY BANK & TRUST COMPANY",
+          "acquirer_name": "FIRST-CITIZENS BANK & TRUST COMPANY",
+          "fail_year": "2015",
+          "acquirer_percentile": 61.8
+        },
+        {
+          "target_cert": 20290,
+          "acquirer_cert": 29566,
+          "target_name": "HIGHLAND COMMUNITY BANK",
+          "acquirer_name": "UNITED FIDELITY BANK, fsb",
+          "fail_year": "2015",
+          "acquirer_percentile": 84.4
+        },
+        {
+          "target_cert": 17557,
+          "acquirer_cert": 58302,
+          "target_name": "FIRST NATIONAL BANK OF CRESTVIEW",
+          "acquirer_name": "FIRST NBC BANK",
+          "fail_year": "2015",
+          "acquirer_percentile": 77.7
+        },
+        {
+          "target_cert": 34983,
+          "acquirer_cert": 35406,
+          "target_name": "NORTHERN STAR BANK",
+          "acquirer_name": "BANKVISTA",
+          "fail_year": "2014",
+          "acquirer_percentile": 73.2
+        },
+        {
+          "target_cert": 916,
+          "acquirer_cert": 27074,
+          "target_name": "THE NATIONAL REPUBLIC BANK OF CHICAGO",
+          "acquirer_name": "STATE BANK OF TEXAS",
+          "fail_year": "2014",
+          "acquirer_percentile": 80.2
+        },
+        {
+          "target_cert": 4862,
+          "acquirer_cert": 57776,
+          "target_name": "NBRS FINANCIAL BANK",
+          "acquirer_name": "HOWARD BANK",
+          "fail_year": "2014",
+          "acquirer_percentile": 51.9
+        },
+        {
+          "target_cert": 28462,
+          "acquirer_cert": 57754,
+          "target_name": "GREENCHOICE BANK, FSB",
+          "acquirer_name": "PROVIDENCE BANK, LLC",
+          "fail_year": "2014",
+          "acquirer_percentile": 75.7
+        },
+        {
+          "target_cert": 12483,
+          "acquirer_cert": 9465,
+          "target_name": "THE FREEDOM STATE BANK",
+          "acquirer_name": "ALVA STATE BANK & TRUST COMPANY",
+          "fail_year": "2014",
+          "acquirer_percentile": 59.9
+        },
+        {
+          "target_cert": 10450,
+          "acquirer_cert": 29546,
+          "target_name": "VALLEY BANK",
+          "acquirer_name": "GREAT SOUTHERN BANK",
+          "fail_year": "2014",
+          "acquirer_percentile": 97.5
+        },
+        {
+          "target_cert": 32284,
+          "acquirer_cert": 29566,
+          "target_name": "COLUMBIA SAVINGS BANK",
+          "acquirer_name": "UNITED FIDELITY BANK, FSB",
+          "fail_year": "2014",
+          "acquirer_percentile": 93.0
+        },
+        {
+          "target_cert": 57866,
+          "acquirer_cert": 19333,
+          "target_name": "AZTECAMERICA BANK",
+          "acquirer_name": "REPUBLIC BANK OF CHICAGO",
+          "fail_year": "2014",
+          "acquirer_percentile": 37.1
+        },
+        {
+          "target_cert": 15062,
+          "acquirer_cert": 17563,
+          "target_name": "ALLENDALE COUNTY BANK",
+          "acquirer_name": "PALMETTO STATE BANK",
+          "fail_year": "2014",
+          "acquirer_percentile": 49.6
+        },
+        {
+          "target_cert": 35096,
+          "acquirer_cert": 57696,
+          "target_name": "MILLENNIUM BANK, NATIONAL ASSOCIATION",
+          "acquirer_name": "WASHINGTONFIRST BANK",
+          "fail_year": "2014",
+          "acquirer_percentile": 62.5
+        },
+        {
+          "target_cert": 34296,
+          "acquirer_cert": 20164,
+          "target_name": "SYRINGA BANK",
+          "acquirer_name": "SUNWEST BANK",
+          "fail_year": "2014",
+          "acquirer_percentile": 73.1
+        },
+        {
+          "target_cert": 17967,
+          "acquirer_cert": 27476,
+          "target_name": "THE  BANK OF UNION",
+          "acquirer_name": "BANCFIRST",
+          "fail_year": "2014",
+          "acquirer_percentile": 56.9
+        },
+        {
+          "target_cert": 5732,
+          "acquirer_cert": 19333,
+          "target_name": "DUPAGE NATIONAL BANK",
+          "acquirer_name": "REPUBLIC BANK OF CHICAGO",
+          "fail_year": "2014",
+          "acquirer_percentile": 50.5
+        },
+        {
+          "target_cert": 14794,
+          "acquirer_cert": 31313,
+          "target_name": "BANK OF JACKSON COUNTY",
+          "acquirer_name": "FIRST FEDERAL BANK OF FLORIDA",
+          "fail_year": "2013",
+          "acquirer_percentile": 32.0
+        },
+        {
+          "target_cert": 14318,
+          "acquirer_cert": 17491,
+          "target_name": "FIRST NATIONAL BANK",
+          "acquirer_name": "PLAINSCAPITAL BANK",
+          "fail_year": "2013",
+          "acquirer_percentile": 93.6
+        },
+        {
+          "target_cert": 19849,
+          "acquirer_cert": 15310,
+          "target_name": "COMMUNITY SOUTH BANK",
+          "acquirer_name": "CB&S BANK, INC.",
+          "fail_year": "2013",
+          "acquirer_percentile": 93.9
+        },
+        {
+          "target_cert": 35016,
+          "acquirer_cert": 57038,
+          "target_name": "BANK OF WAUSAU",
+          "acquirer_name": "NICOLET NATIONAL BANK",
+          "fail_year": "2013",
+          "acquirer_percentile": 50.0
+        },
+        {
+          "target_cert": 34789,
+          "acquirer_cert": 4977,
+          "target_name": "MOUNTAIN NATIONAL BANK",
+          "acquirer_name": "FIRST TENNESSEE BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2013",
+          "acquirer_percentile": 71.5
+        },
+        {
+          "target_cert": 35386,
+          "acquirer_cert": 28679,
+          "target_name": "BANKS OF WISCONSIN",
+          "acquirer_name": "NORTH SHORE BANK, FSB",
+          "fail_year": "2013",
+          "acquirer_percentile": 74.2
+        },
+        {
+          "target_cert": 21649,
+          "acquirer_cert": 57810,
+          "target_name": "DOUGLAS COUNTY BANK",
+          "acquirer_name": "HAMILTON STATE BANK",
+          "fail_year": "2013",
+          "acquirer_percentile": 59.2
+        },
+        {
+          "target_cert": 58034,
+          "acquirer_cert": 31313,
+          "target_name": "CHIPOLA COMMUNITY BANK",
+          "acquirer_name": "FIRST FEDERAL BANK OF FLORIDA",
+          "fail_year": "2013",
+          "acquirer_percentile": 31.3
+        },
+        {
+          "target_cert": 29594,
+          "acquirer_cert": 28915,
+          "target_name": "FIRST FEDERAL BANK",
+          "acquirer_name": "YOUR COMMUNITY BANK",
+          "fail_year": "2013",
+          "acquirer_percentile": 93.4
+        },
+        {
+          "target_cert": 26680,
+          "acquirer_cert": 35200,
+          "target_name": "HERITAGE BANK OF NORTH FLORIDA",
+          "acquirer_name": "FIRSTATLANTIC BANK",
+          "fail_year": "2013",
+          "acquirer_percentile": 29.2
+        },
+        {
+          "target_cert": 16431,
+          "acquirer_cert": 50028,
+          "target_name": "FRONTIER BANK",
+          "acquirer_name": "HERITAGE BANK OF THE SOUTH",
+          "fail_year": "2013",
+          "acquirer_percentile": 85.7
+        },
+        {
+          "target_cert": 22476,
+          "acquirer_cert": 20856,
+          "target_name": "COVENANT BANK",
+          "acquirer_name": "LIBERTY BANK AND TRUST COMPANY",
+          "fail_year": "2013",
+          "acquirer_percentile": 39.5
+        },
+        {
+          "target_cert": 57157,
+          "acquirer_cert": 5151,
+          "target_name": "1ST REGENTS BANK",
+          "acquirer_name": "FIRST MINNESOTA BANK",
+          "fail_year": "2013",
+          "acquirer_percentile": 74.4
+        },
+        {
+          "target_cert": 33997,
+          "acquirer_cert": 20164,
+          "target_name": "WESTSIDE COMMUNITY BANK",
+          "acquirer_name": "SUNWEST BANK",
+          "fail_year": "2013",
+          "acquirer_percentile": 87.8
+        },
+        {
+          "target_cert": 27331,
+          "acquirer_cert": 8892,
+          "target_name": "COMMUNITY BANK OF THE OZARKS",
+          "acquirer_name": "BANK OF SULLIVAN",
+          "fail_year": "2012",
+          "acquirer_percentile": 98.0
+        },
+        {
+          "target_cert": 3731,
+          "acquirer_cert": 20369,
+          "target_name": "CITIZENS FIRST NATIONAL BANK",
+          "acquirer_name": "HEARTLAND BANK AND TRUST COMPANY",
+          "fail_year": "2012",
+          "acquirer_percentile": 89.9
+        },
+        {
+          "target_cert": 19189,
+          "acquirer_cert": 3890,
+          "target_name": "EXCEL BANK",
+          "acquirer_name": "SIMMONS FIRST NATIONAL BANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 58.8
+        },
+        {
+          "target_cert": 28144,
+          "acquirer_cert": 10988,
+          "target_name": "FIRST EAST SIDE SAVINGS BANK",
+          "acquirer_name": "STEARNS BANK NATIONAL ASSOCIATION",
+          "fail_year": "2012",
+          "acquirer_percentile": 39.3
+        },
+        {
+          "target_cert": 58073,
+          "acquirer_cert": 58463,
+          "target_name": "GULFSOUTH PRIVATE BANK",
+          "acquirer_name": "SMARTBANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 66.0
+        },
+        {
+          "target_cert": 20685,
+          "acquirer_cert": 58314,
+          "target_name": "FIRST UNITED BANK",
+          "acquirer_name": "OLD PLANK TRAIL COMMUNITY BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2012",
+          "acquirer_percentile": 37.2
+        },
+        {
+          "target_cert": 27316,
+          "acquirer_cert": 3890,
+          "target_name": "TRUMAN BANK",
+          "acquirer_name": "SIMMONS FIRST NATIONAL BANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 89.0
+        },
+        {
+          "target_cert": 35246,
+          "acquirer_cert": 23627,
+          "target_name": "FIRST COMMERCIAL BANK",
+          "acquirer_name": "REPUBLIC BANK & TRUST COMPANY",
+          "fail_year": "2012",
+          "acquirer_percentile": 71.7
+        },
+        {
+          "target_cert": 16240,
+          "acquirer_cert": 10988,
+          "target_name": "JASPER BANKING COMPANY",
+          "acquirer_name": "STEARNS BANK NATIONAL ASSOCIATION",
+          "fail_year": "2012",
+          "acquirer_percentile": 89.2
+        },
+        {
+          "target_cert": 1361,
+          "acquirer_cert": 18531,
+          "target_name": "HEARTLAND BANK",
+          "acquirer_name": "METCALF BANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 88.5
+        },
+        {
+          "target_cert": 27986,
+          "acquirer_cert": 33849,
+          "target_name": "SECOND FEDERAL SAVINGS AND LOAN ASSOCIATION OF CHICAGO",
+          "acquirer_name": "HINSDALE BANK & TRUST COMPANY",
+          "fail_year": "2012",
+          "acquirer_percentile": 87.0
+        },
+        {
+          "target_cert": 1056,
+          "acquirer_cert": 18385,
+          "target_name": "GLASGOW SAVINGS BANK",
+          "acquirer_name": "REGIONAL MISSOURI BANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 65.5
+        },
+        {
+          "target_cert": 19498,
+          "acquirer_cert": 20504,
+          "target_name": "MONTGOMERY BANK & TRUST",
+          "acquirer_name": "AMERIS BANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 73.1
+        },
+        {
+          "target_cert": 1690,
+          "acquirer_cert": 6104,
+          "target_name": "THE FARMERS BANK OF LYNCHBURG",
+          "acquirer_name": "CLAYTON BANK AND TRUST",
+          "fail_year": "2012",
+          "acquirer_percentile": 46.2
+        },
+        {
+          "target_cert": 35372,
+          "acquirer_cert": 33527,
+          "target_name": "CAROLINA FEDERAL SAVINGS BANK",
+          "acquirer_name": "BANK OF NORTH CAROLINA",
+          "fail_year": "2012",
+          "acquirer_percentile": 30.7
+        },
+        {
+          "target_cert": 416,
+          "acquirer_cert": 14922,
+          "target_name": "FIRST CAPITAL BANK",
+          "acquirer_name": "F & M BANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 20.1
+        },
+        {
+          "target_cert": 35224,
+          "acquirer_cert": 58558,
+          "target_name": "ALABAMA TRUST BANK, NATIONAL ASSOCIATION",
+          "acquirer_name": "SOUTHERN STATES BANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 23.3
+        },
+        {
+          "target_cert": 57766,
+          "acquirer_cert": 57968,
+          "target_name": "HARVEST BANK OF MARYLAND",
+          "acquirer_name": "SONABANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 97.8
+        },
+        {
+          "target_cert": 31495,
+          "acquirer_cert": 29546,
+          "target_name": "INTER SAVINGS BANK, FSB D/B/A/ INTERBANK, FSB",
+          "acquirer_name": "GREAT SOUTHERN BANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 94.5
+        },
+        {
+          "target_cert": 23632,
+          "acquirer_cert": 32172,
+          "target_name": "PALM DESERT NATIONAL BANK",
+          "acquirer_name": "PACIFIC PREMIER BANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 93.9
+        },
+        {
+          "target_cert": 35527,
+          "acquirer_cert": 58424,
+          "target_name": "FORT LEE FEDERAL SAVINGS BANK, FSB",
+          "acquirer_name": "ALMA BANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 63.1
+        },
+        {
+          "target_cert": 33883,
+          "acquirer_cert": 6560,
+          "target_name": "FIDELITY BANK",
+          "acquirer_name": "THE HUNTINGTON NATIONAL BANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 81.5
+        },
+        {
+          "target_cert": 58068,
+          "acquirer_cert": 10988,
+          "target_name": "CONVENANT BANK & TRUST",
+          "acquirer_name": "STEARNS BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2012",
+          "acquirer_percentile": 43.2
+        },
+        {
+          "target_cert": 35419,
+          "acquirer_cert": 33708,
+          "target_name": "PREMIER BANK",
+          "acquirer_name": "INTERNATIONAL BANK OF CHICAGO",
+          "fail_year": "2012",
+          "acquirer_percentile": 49.7
+        },
+        {
+          "target_cert": 34046,
+          "acquirer_cert": 58181,
+          "target_name": "GLOBAL COMMERCE BANK",
+          "acquirer_name": "METRO CITY BANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 88.4
+        },
+        {
+          "target_cert": 5687,
+          "acquirer_cert": 20504,
+          "target_name": "CENTRAL BANK OF GEORGIA",
+          "acquirer_name": "AMERIS BANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 83.5
+        },
+        {
+          "target_cert": 23187,
+          "acquirer_cert": 34395,
+          "target_name": "CHARTER NATIONAL BANK AND TRUST",
+          "acquirer_name": "BARRINGTON BANK & TRUST COMPANY, NATIONAL ASSOCIATION",
+          "fail_year": "2012",
+          "acquirer_percentile": 74.2
+        },
+        {
+          "target_cert": 29761,
+          "acquirer_cert": 4365,
+          "target_name": "SCB BANK",
+          "acquirer_name": "FIRST MERCHANTS BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2012",
+          "acquirer_percentile": 66.6
+        },
+        {
+          "target_cert": 19869,
+          "acquirer_cert": 6548,
+          "target_name": "BANKEAST",
+          "acquirer_name": "U.S. BANK NATIONAL ASSOCIATION",
+          "fail_year": "2012",
+          "acquirer_percentile": 54.3
+        },
+        {
+          "target_cert": 16579,
+          "acquirer_cert": 33555,
+          "target_name": "FIRST GUARANTY BANK AND TRUST COMPANY OF JACKSONVILLE",
+          "acquirer_name": "CENTERSTATE BANK OF FLORIDA, NATIONAL ASSOCIATION",
+          "fail_year": "2012",
+          "acquirer_percentile": 63.9
+        },
+        {
+          "target_cert": 35296,
+          "acquirer_cert": 23627,
+          "target_name": "TENNESSEE COMMERCE BANK",
+          "acquirer_name": "REPUBLIC BANK & TRUST COMPANY",
+          "fail_year": "2012",
+          "acquirer_percentile": 92.4
+        },
+        {
+          "target_cert": 57186,
+          "acquirer_cert": 33555,
+          "target_name": "CENTRAL FLORIDA STATE BANK",
+          "acquirer_name": "CENTERSTATE BANK OF FLORIDA, NATIONAL ASSOCIATION",
+          "fail_year": "2012",
+          "acquirer_percentile": 69.5
+        },
+        {
+          "target_cert": 19252,
+          "acquirer_cert": 57810,
+          "target_name": "THE FIRST STATE BANK",
+          "acquirer_name": "HAMILTON STATE BANK",
+          "fail_year": "2012",
+          "acquirer_percentile": 64.1
+        },
+        {
+          "target_cert": 19657,
+          "acquirer_cert": 58302,
+          "target_name": "CENTRAL PROGRESSIVE BANK",
+          "acquirer_name": "FIRST NBC BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 69.1
+        },
+        {
+          "target_cert": 14194,
+          "acquirer_cert": 11347,
+          "target_name": "POLK COUNTY BANK",
+          "acquirer_name": "GRINNELL STATE BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 39.5
+        },
+        {
+          "target_cert": 57860,
+          "acquirer_cert": 35236,
+          "target_name": "COMMUNITY BANK OF ROCKMART",
+          "acquirer_name": "CENTURY BANK OF GEORGIA",
+          "fail_year": "2011",
+          "acquirer_percentile": 92.4
+        },
+        {
+          "target_cert": 19397,
+          "acquirer_cert": 12493,
+          "target_name": "MID CITY BANK, INC.",
+          "acquirer_name": "PURDUM STATE BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 1.1
+        },
+        {
+          "target_cert": 57087,
+          "acquirer_cert": 22134,
+          "target_name": "SUNFIRST BANK",
+          "acquirer_name": "CACHE VALLEY BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 52.5
+        },
+        {
+          "target_cert": 57759,
+          "acquirer_cert": 33708,
+          "target_name": "ALL AMERICAN BANK",
+          "acquirer_name": "INTERNATIONAL BANK OF CHICAGO",
+          "fail_year": "2011",
+          "acquirer_percentile": 94.3
+        },
+        {
+          "target_cert": 21132,
+          "acquirer_cert": 32964,
+          "target_name": "COMMUNITY BANKS OF COLORADO",
+          "acquirer_name": "BANK MIDWEST, NATIONAL ASSOCIATION",
+          "fail_year": "2011",
+          "acquirer_percentile": 98.3
+        },
+        {
+          "target_cert": 57036,
+          "acquirer_cert": 57870,
+          "target_name": "COMMUNITY CAPITAL BANK",
+          "acquirer_name": "STATE BANK AND TRUST COMPANY",
+          "fail_year": "2011",
+          "acquirer_percentile": 29.3
+        },
+        {
+          "target_cert": 32347,
+          "acquirer_cert": 33527,
+          "target_name": "BLUE RIDGE SAVINGS BANK, INC.",
+          "acquirer_name": "BANK OF NORTH CAROLINA",
+          "fail_year": "2011",
+          "acquirer_percentile": 94.3
+        },
+        {
+          "target_cert": 35395,
+          "acquirer_cert": 18402,
+          "target_name": "COUNTRY BANK",
+          "acquirer_name": "BLACKHAWK BANK & TRUST",
+          "fail_year": "2011",
+          "acquirer_percentile": 79.7
+        },
+        {
+          "target_cert": 58046,
+          "acquirer_cert": 28710,
+          "target_name": "FIRST STATE BANK",
+          "acquirer_name": "NORTHFIELD BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 64.6
+        },
+        {
+          "target_cert": 57256,
+          "acquirer_cert": 57870,
+          "target_name": "PIEDMONT COMMUNITY BANK",
+          "acquirer_name": "STATE BANK AND TRUST COMPANY",
+          "fail_year": "2011",
+          "acquirer_percentile": 28.5
+        },
+        {
+          "target_cert": 20115,
+          "acquirer_cert": 29546,
+          "target_name": "SUN SECURITY BANK",
+          "acquirer_name": "GREAT SOUTHERN BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 96.8
+        },
+        {
+          "target_cert": 33513,
+          "acquirer_cert": 34656,
+          "target_name": "FIRST INTERNATIONAL BANK",
+          "acquirer_name": "AMERICAN FIRST NATIONAL BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 98.4
+        },
+        {
+          "target_cert": 20408,
+          "acquirer_cert": 15359,
+          "target_name": "BANK OF THE COMMONWEALTH",
+          "acquirer_name": "SOUTHERN BANK AND TRUST COMPANY",
+          "fail_year": "2011",
+          "acquirer_percentile": 91.4
+        },
+        {
+          "target_cert": 33983,
+          "acquirer_cert": 21943,
+          "target_name": "CITIZENS BANK OF NORTHERN CALIFORNIA",
+          "acquirer_name": "TRI COUNTIES BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 88.5
+        },
+        {
+          "target_cert": 25155,
+          "acquirer_cert": 30720,
+          "target_name": "THE FIRST NATIONAL BANK OF FLORIDA",
+          "acquirer_name": "CHARTERBANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 92.6
+        },
+        {
+          "target_cert": 58226,
+          "acquirer_cert": 57521,
+          "target_name": "CREEKSIDE BANK",
+          "acquirer_name": "GEORGIA COMMERCE BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 83.6
+        },
+        {
+          "target_cert": 58273,
+          "acquirer_cert": 57521,
+          "target_name": "PATRIOT BANK OF GEORGIA",
+          "acquirer_name": "GEORGIA COMMERCE BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 84.1
+        },
+        {
+          "target_cert": 57239,
+          "acquirer_cert": 50028,
+          "target_name": "FIRST SOUTHERN NATIONAL BANK",
+          "acquirer_name": "HERITAGE BANK OF THE SOUTH",
+          "fail_year": "2011",
+          "acquirer_percentile": 85.5
+        },
+        {
+          "target_cert": 4744,
+          "acquirer_cert": 27237,
+          "target_name": "THE FIRST NATIONAL BANK OF OLATHE",
+          "acquirer_name": "ENTERPRISE BANK & TRUST",
+          "fail_year": "2011",
+          "acquirer_percentile": 96.8
+        },
+        {
+          "target_cert": 22637,
+          "acquirer_cert": 20369,
+          "target_name": "BANK OF SHOREWOOD",
+          "acquirer_name": "HEARTLAND BANK  AND TRUST COMPANY",
+          "fail_year": "2011",
+          "acquirer_percentile": 57.5
+        },
+        {
+          "target_cert": 22528,
+          "acquirer_cert": 33826,
+          "target_name": "BANK OF WHITMAN",
+          "acquirer_name": "COLUMBIA STATE BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 98.8
+        },
+        {
+          "target_cert": 4392,
+          "acquirer_cert": 3832,
+          "target_name": "INTEGRA BANK NATIONAL ASSOCIATION",
+          "acquirer_name": "OLD NATIONAL BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 97.9
+        },
+        {
+          "target_cert": 2994,
+          "acquirer_cert": 32964,
+          "target_name": "BANK OF CHOICE",
+          "acquirer_name": "BANK MIDWEST, NATIONAL ASSOCIATION",
+          "fail_year": "2011",
+          "acquirer_percentile": 88.6
+        },
+        {
+          "target_cert": 35244,
+          "acquirer_cert": 58309,
+          "target_name": "LANDMARK BANK OF FLORIDA",
+          "acquirer_name": "AMERICAN MOMENTUM BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 52.2
+        },
+        {
+          "target_cert": 58056,
+          "acquirer_cert": 58309,
+          "target_name": "SOUTHSHORE COMMUNITY BANK",
+          "acquirer_name": "AMERICAN MOMENTUM BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 98.0
+        },
+        {
+          "target_cert": 34870,
+          "acquirer_cert": 57147,
+          "target_name": "FIRST PEOPLES BANK",
+          "acquirer_name": "PREMIER AMERICAN BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2011",
+          "acquirer_percentile": 98.0
+        },
+        {
+          "target_cert": 19554,
+          "acquirer_cert": 20504,
+          "target_name": "HIGH TRUST BANK",
+          "acquirer_name": "AMERIS BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 41.0
+        },
+        {
+          "target_cert": 58238,
+          "acquirer_cert": 20504,
+          "target_name": "ONE GEORGIA BANK",
+          "acquirer_name": "AMERIS BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 57.8
+        },
+        {
+          "target_cert": 57442,
+          "acquirer_cert": 34573,
+          "target_name": "SUMMIT BANK",
+          "acquirer_name": "THE FOOTHILLS BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 76.3
+        },
+        {
+          "target_cert": 34522,
+          "acquirer_cert": 11063,
+          "target_name": "COLORADO CAPITAL BANK",
+          "acquirer_name": "FIRST-CITIZENS BANK & TRUST COMPANY",
+          "fail_year": "2011",
+          "acquirer_percentile": 83.3
+        },
+        {
+          "target_cert": 27935,
+          "acquirer_cert": 57082,
+          "target_name": "FIRST CHICAGO BANK & TRUST",
+          "acquirer_name": "NORTHBROOK BANK AND TRUST COMPANY",
+          "fail_year": "2011",
+          "acquirer_percentile": 80.5
+        },
+        {
+          "target_cert": 57593,
+          "acquirer_cert": 16858,
+          "target_name": "MOUNTAIN HERITAGE BANK",
+          "acquirer_name": "FIRST AMERICAN BANK AND TRUST COMPANY",
+          "fail_year": "2011",
+          "acquirer_percentile": 98.2
+        },
+        {
+          "target_cert": 27583,
+          "acquirer_cert": 57934,
+          "target_name": "FIRST COMMERCIAL BANK OF TAMPA BAY",
+          "acquirer_name": "STONEGATE BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 92.5
+        },
+        {
+          "target_cert": 19237,
+          "acquirer_cert": 57810,
+          "target_name": "MCINTOSH STATE BANK",
+          "acquirer_name": "HAMILTON STATE BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 57.2
+        },
+        {
+          "target_cert": 58420,
+          "acquirer_cert": 15504,
+          "target_name": "ATLANTIC BANK AND TRUST",
+          "acquirer_name": "FIRST CITIZENS BANK AND TRUST COMPANY, INC.",
+          "fail_year": "2011",
+          "acquirer_percentile": 31.7
+        },
+        {
+          "target_cert": 23626,
+          "acquirer_cert": 33826,
+          "target_name": "FIRST HERITAGE BANK",
+          "acquirer_name": "COLUMBIA STATE BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 51.8
+        },
+        {
+          "target_cert": 513,
+          "acquirer_cert": 33826,
+          "target_name": "SUMMIT BANK",
+          "acquirer_name": "COLUMBIA STATE BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 39.5
+        },
+        {
+          "target_cert": 34898,
+          "acquirer_cert": 57147,
+          "target_name": "COASTAL BANK",
+          "acquirer_name": "PREMIER AMERICAN BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2011",
+          "acquirer_percentile": 80.0
+        },
+        {
+          "target_cert": 57625,
+          "acquirer_cert": 57147,
+          "target_name": "CORTEZ COMMUNITY  BANK",
+          "acquirer_name": "PREMIER AMERICAN BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2011",
+          "acquirer_percentile": 84.1
+        },
+        {
+          "target_cert": 58539,
+          "acquirer_cert": 110,
+          "target_name": "FIRST CHOICE COMMUNITY BANK",
+          "acquirer_name": "BANK OF THE OZARKS",
+          "fail_year": "2011",
+          "acquirer_percentile": 31.7
+        },
+        {
+          "target_cert": 26297,
+          "acquirer_cert": 57147,
+          "target_name": "FIRST NATIONAL BANK OF CENTRAL FLORIDA",
+          "acquirer_name": "PREMIER AMERICAN BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2011",
+          "acquirer_percentile": 73.9
+        },
+        {
+          "target_cert": 19797,
+          "acquirer_cert": 110,
+          "target_name": "THE PARK AVENUE BANK",
+          "acquirer_name": "BANK OF THE OZARKS",
+          "fail_year": "2011",
+          "acquirer_percentile": 99.9
+        },
+        {
+          "target_cert": 21495,
+          "acquirer_cert": 57810,
+          "target_name": "BARTOW COUNTY BANK",
+          "acquirer_name": "HAMILTON STATE BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 54.2
+        },
+        {
+          "target_cert": 14273,
+          "acquirer_cert": 4988,
+          "target_name": "HERITAGE BANKING GROUP",
+          "acquirer_name": "TRUSTMARK NATIONAL BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 60.3
+        },
+        {
+          "target_cert": 57705,
+          "acquirer_cert": 28833,
+          "target_name": "NEW HORIZONS BANK",
+          "acquirer_name": "CITIZENS SOUTH BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 91.8
+        },
+        {
+          "target_cert": 10086,
+          "acquirer_cert": 20369,
+          "target_name": "WESTERN SPRINGS NATIONAL BANK AND TRUST",
+          "acquirer_name": "HEARTLAND BANK AND TRUST COMPANY",
+          "fail_year": "2011",
+          "acquirer_percentile": 94.7
+        },
+        {
+          "target_cert": 34292,
+          "acquirer_cert": 57103,
+          "target_name": "THE BANK OF COMMERCE",
+          "acquirer_name": "ADVANTAGE NATIONAL BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 78.6
+        },
+        {
+          "target_cert": 34818,
+          "acquirer_cert": 19328,
+          "target_name": "LEGACY BANK",
+          "acquirer_name": "SEAWAY BANK AND TRUST COMPANY",
+          "fail_year": "2011",
+          "acquirer_percentile": 85.8
+        },
+        {
+          "target_cert": 57855,
+          "acquirer_cert": 32779,
+          "target_name": "CHARTER OAK BANK",
+          "acquirer_name": "BANK OF MARIN",
+          "fail_year": "2011",
+          "acquirer_percentile": 56.6
+        },
+        {
+          "target_cert": 34601,
+          "acquirer_cert": 50028,
+          "target_name": "CITIZENS BANK OF EFFINGHAM",
+          "acquirer_name": "HERITAGE BANK OF THE SOUTH",
+          "fail_year": "2011",
+          "acquirer_percentile": 83.0
+        },
+        {
+          "target_cert": 34783,
+          "acquirer_cert": 22819,
+          "target_name": "SAN LUIS TRUST BANK, FSB",
+          "acquirer_name": "FIRST CALIFORNIA BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 87.6
+        },
+        {
+          "target_cert": 13272,
+          "acquirer_cert": 13454,
+          "target_name": "BADGER STATE BANK",
+          "acquirer_name": "ROYAL BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 73.1
+        },
+        {
+          "target_cert": 34692,
+          "acquirer_cert": 32172,
+          "target_name": "CANYON NATIONAL BANK",
+          "acquirer_name": "PACIFIC PREMIER BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 88.7
+        },
+        {
+          "target_cert": 14939,
+          "acquirer_cert": 58132,
+          "target_name": "PEOPLES STATE BANK",
+          "acquirer_name": "FIRST MICHIGAN BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 9.8
+        },
+        {
+          "target_cert": 35478,
+          "acquirer_cert": 57147,
+          "target_name": "SUNSHINE STATE COMMUNITY BANK",
+          "acquirer_name": "PREMIER AMERICAN BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2011",
+          "acquirer_percentile": 84.8
+        },
+        {
+          "target_cert": 57432,
+          "acquirer_cert": 12437,
+          "target_name": "AMERICAN TRUST BANK",
+          "acquirer_name": "RENASANT BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 64.7
+        },
+        {
+          "target_cert": 57948,
+          "acquirer_cert": 57082,
+          "target_name": "COMMUNITY FIRST BANK - CHICAGO",
+          "acquirer_name": "NORTHBROOK BANK AND TRUST COMPANY",
+          "fail_year": "2011",
+          "acquirer_percentile": 37.0
+        },
+        {
+          "target_cert": 5328,
+          "acquirer_cert": 2476,
+          "target_name": "EVERGREEN STATE BANK",
+          "acquirer_name": "MCFARLAND STATE BANK",
+          "fail_year": "2011",
+          "acquirer_percentile": 73.1
+        },
+        {
+          "target_cert": 12261,
+          "acquirer_cert": 6548,
+          "target_name": "FIRST COMMUNITY BANK",
+          "acquirer_name": "U.S. BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2011",
+          "acquirer_percentile": 88.6
+        },
+        {
+          "target_cert": 2303,
+          "acquirer_cert": 4147,
+          "target_name": "THE FIRST STATE BANK",
+          "acquirer_name": "BANK 7",
+          "fail_year": "2011",
+          "acquirer_percentile": 91.3
+        },
+        {
+          "target_cert": 57440,
+          "acquirer_cert": 110,
+          "target_name": "OGLETHORPE BANK",
+          "acquirer_name": "BANK OF THE OZARKS",
+          "fail_year": "2011",
+          "acquirer_percentile": 59.8
+        },
+        {
+          "target_cert": 57820,
+          "acquirer_cert": 27237,
+          "target_name": "LEGACY BANK",
+          "acquirer_name": "ENTERPRISE BANK & TRUST",
+          "fail_year": "2011",
+          "acquirer_percentile": 72.3
+        },
+        {
+          "target_cert": 58495,
+          "acquirer_cert": 34517,
+          "target_name": "APPALACIAN COMMUNITY BANK, F.S.B.",
+          "acquirer_name": "PEOPLES BANK OF EAST TENNESSEE",
+          "fail_year": "2010",
+          "acquirer_percentile": 71.8
+        },
+        {
+          "target_cert": 34578,
+          "acquirer_cert": 110,
+          "target_name": "CHESTATEE STATE BANK",
+          "acquirer_name": "BANK OF THE OZARKS",
+          "fail_year": "2010",
+          "acquirer_percentile": 70.8
+        },
+        {
+          "target_cert": 23306,
+          "acquirer_cert": 9298,
+          "target_name": "COMMUNITY NATIONAL BANK",
+          "acquirer_name": "FARMERS & MERCHANTS SAVINGS BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 65.4
+        },
+        {
+          "target_cert": 58052,
+          "acquirer_cert": 16288,
+          "target_name": "FIRST SOUTHERN BANK",
+          "acquirer_name": "SOUTHERN BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 47.3
+        },
+        {
+          "target_cert": 35065,
+          "acquirer_cert": 57870,
+          "target_name": "UNITED AMERICAS BANK",
+          "acquirer_name": "STATE BANK AND TRUST COMPANY",
+          "fail_year": "2010",
+          "acquirer_percentile": 10.5
+        },
+        {
+          "target_cert": 35561,
+          "acquirer_cert": 29282,
+          "target_name": "EARTHSTAR BANK",
+          "acquirer_name": "POLONIA BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 68.6
+        },
+        {
+          "target_cert": 34673,
+          "acquirer_cert": 58604,
+          "target_name": "PARAMOUNT BANK",
+          "acquirer_name": "LEVEL ONE BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 12.1
+        },
+        {
+          "target_cert": 35078,
+          "acquirer_cert": 7748,
+          "target_name": "ALLEGIANCE BANK OF NORTH AMERICA",
+          "acquirer_name": "VIST BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 67.6
+        },
+        {
+          "target_cert": 5287,
+          "acquirer_cert": 58132,
+          "target_name": "FIRST BANKING CENTER",
+          "acquirer_name": "FIRST MICHIGAN BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 3.8
+        },
+        {
+          "target_cert": 35463,
+          "acquirer_cert": 10988,
+          "target_name": "COPPER STAR BANK",
+          "acquirer_name": "STEARNS BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 93.0
+        },
+        {
+          "target_cert": 14580,
+          "acquirer_cert": 20504,
+          "target_name": "DARBY BANK & TRUST COMPANY",
+          "acquirer_name": "AMERIS BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 99.2
+        },
+        {
+          "target_cert": 57831,
+          "acquirer_cert": 20504,
+          "target_name": "TIFTON BANKING COMPANY",
+          "acquirer_name": "AMERIS BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 46.0
+        },
+        {
+          "target_cert": 31263,
+          "acquirer_cert": 588,
+          "target_name": "K BANK",
+          "acquirer_name": "MANUFACTURERS AND TRADERS TRUST COMPANY",
+          "fail_year": "2010",
+          "acquirer_percentile": 78.3
+        },
+        {
+          "target_cert": 58087,
+          "acquirer_cert": 22819,
+          "target_name": "WESTERN COMMERCIAL BANK",
+          "acquirer_name": "FIRST CALIFORNIA BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 47.0
+        },
+        {
+          "target_cert": 27573,
+          "acquirer_cert": 20504,
+          "target_name": "FIRST BANK OF JACKSONVILLE",
+          "acquirer_name": "AMERIS BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 37.3
+        },
+        {
+          "target_cert": 16089,
+          "acquirer_cert": 19328,
+          "target_name": "FIRST SUBURBAN NATIONAL BANK",
+          "acquirer_name": "SEAWAY BANK AND TRUST COMPANY",
+          "fail_year": "2010",
+          "acquirer_percentile": 89.5
+        },
+        {
+          "target_cert": 32251,
+          "acquirer_cert": 35066,
+          "target_name": "PROGRESS BANK OF FLORIDA",
+          "acquirer_name": "BAY CITIES BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 71.7
+        },
+        {
+          "target_cert": 33904,
+          "acquirer_cert": 17910,
+          "target_name": "THE GORDON BANK",
+          "acquirer_name": "MORRIS BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 83.8
+        },
+        {
+          "target_cert": 30898,
+          "acquirer_cert": 3890,
+          "target_name": "SECURITY SAVINGS BANK, F.S.B.",
+          "acquirer_name": "SIMMONS FIRST NATIONAL BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 90.6
+        },
+        {
+          "target_cert": 58205,
+          "acquirer_cert": 1040,
+          "target_name": "WESTBRIDGE BANK AND TRUST COMPANY",
+          "acquirer_name": "MIDLAND STATES BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 97.2
+        },
+        {
+          "target_cert": 35250,
+          "acquirer_cert": 22366,
+          "target_name": "SHORELINE BANK",
+          "acquirer_name": "GBC INTERNATIONAL BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 98.3
+        },
+        {
+          "target_cert": 35053,
+          "acquirer_cert": 18412,
+          "target_name": "NORTH COUNTY BANK",
+          "acquirer_name": "WHIDBEY ISLAND BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 91.3
+        },
+        {
+          "target_cert": 28612,
+          "acquirer_cert": 28679,
+          "target_name": "MARITIME SAVINGS BANK",
+          "acquirer_name": "NORTH SHORE BANK, FSB",
+          "fail_year": "2010",
+          "acquirer_percentile": 95.9
+        },
+        {
+          "target_cert": 35061,
+          "acquirer_cert": 110,
+          "target_name": "HORIZON BANK",
+          "acquirer_name": "BANK OF THE OZARKS",
+          "fail_year": "2010",
+          "acquirer_percentile": 56.8
+        },
+        {
+          "target_cert": 33219,
+          "acquirer_cert": 23364,
+          "target_name": "BUTTE COMMUNITY BANK",
+          "acquirer_name": "RABOBANK, NATIONAL ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 81.3
+        },
+        {
+          "target_cert": 25266,
+          "acquirer_cert": 33555,
+          "target_name": "COMMUNITY NATIONAL BANK AT BARTOW",
+          "acquirer_name": "CENTERSTATE BANK OF FLORIDA, NATIONAL ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 97.8
+        },
+        {
+          "target_cert": 31623,
+          "acquirer_cert": 35274,
+          "target_name": "IMPERIAL SAVINGS AND LOAN ASSOCIATION",
+          "acquirer_name": "RIVER COMMUNITY BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 79.6
+        },
+        {
+          "target_cert": 27344,
+          "acquirer_cert": 33555,
+          "target_name": "INDEPENDENT NATIONAL BANK",
+          "acquirer_name": "CENTERSTATE BANK OF FLORIDA, NATIONAL ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 81.2
+        },
+        {
+          "target_cert": 32165,
+          "acquirer_cert": 24045,
+          "target_name": "LOS PADRES BANK",
+          "acquirer_name": "PACIFIC WESTERN BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 97.4
+        },
+        {
+          "target_cert": 27090,
+          "acquirer_cert": 23364,
+          "target_name": "PACIFIC STATE BANK",
+          "acquirer_name": "RABOBANK, NATIONAL ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 75.9
+        },
+        {
+          "target_cert": 27259,
+          "acquirer_cert": 3430,
+          "target_name": "SONOMA VALLEY BANK",
+          "acquirer_name": "WESTAMERICA BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 67.4
+        },
+        {
+          "target_cert": 34231,
+          "acquirer_cert": 57082,
+          "target_name": "RAVENSWOOD BANK",
+          "acquirer_name": "NORTHBROOK BANK AND TRUST COMPANY",
+          "fail_year": "2010",
+          "acquirer_percentile": 88.1
+        },
+        {
+          "target_cert": 57658,
+          "acquirer_cert": 57870,
+          "target_name": "NORTHWEST BANK & TRUST",
+          "acquirer_name": "STATE BANK AND TRUST COMPANY",
+          "fail_year": "2010",
+          "acquirer_percentile": 25.0
+        },
+        {
+          "target_cert": 34486,
+          "acquirer_cert": 5271,
+          "target_name": "COMMUNITY SECURITY BANK",
+          "acquirer_name": "ROUNDBANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 94.7
+        },
+        {
+          "target_cert": 27559,
+          "acquirer_cert": 12437,
+          "target_name": "CRESCENT BANK AND TRUST COMPANY",
+          "acquirer_name": "RENASANT BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 96.9
+        },
+        {
+          "target_cert": 23181,
+          "acquirer_cert": 22401,
+          "target_name": "HOME VALLEY BANK",
+          "acquirer_name": "SOUTH VALLEY BANK & TRUST",
+          "fail_year": "2010",
+          "acquirer_percentile": 89.4
+        },
+        {
+          "target_cert": 32536,
+          "acquirer_cert": 28100,
+          "target_name": "STERLING BANK",
+          "acquirer_name": "IBERIABANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 76.0
+        },
+        {
+          "target_cert": 10506,
+          "acquirer_cert": 16402,
+          "target_name": "THUNDER BANK",
+          "acquirer_name": "THE BENNINGTON STATE BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 51.4
+        },
+        {
+          "target_cert": 17837,
+          "acquirer_cert": 15504,
+          "target_name": "WILLIAMSBURG FIRST NATIONAL BANK",
+          "acquirer_name": "FIRST CITIZENS BANK AND TRUST COMPANY, INC.",
+          "fail_year": "2010",
+          "acquirer_percentile": 43.3
+        },
+        {
+          "target_cert": 28864,
+          "acquirer_cert": 33555,
+          "target_name": "OLDE CYPRESS COMMUNITY BANK",
+          "acquirer_name": "CENTERSTATE BANK OF FLORIDA, NATIONAL ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 98.4
+        },
+        {
+          "target_cert": 32571,
+          "acquirer_cert": 110,
+          "target_name": "WOODLANDS BANK",
+          "acquirer_name": "BANK OF THE OZARKS",
+          "fail_year": "2010",
+          "acquirer_percentile": 58.9
+        },
+        {
+          "target_cert": 11636,
+          "acquirer_cert": 15399,
+          "target_name": "HOME NATIONAL BANK",
+          "acquirer_name": "RCB BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 94.6
+        },
+        {
+          "target_cert": 34152,
+          "acquirer_cert": 33120,
+          "target_name": "FIRST NATIONAL BANK",
+          "acquirer_name": "THE SAVANNAH BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 90.0
+        },
+        {
+          "target_cert": 26563,
+          "acquirer_cert": 57147,
+          "target_name": "PENINSULA BANK",
+          "acquirer_name": "PREMIER AMERICAN BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 75.1
+        },
+        {
+          "target_cert": 57110,
+          "acquirer_cert": 17266,
+          "target_name": "NEVADA SECURITY BANK",
+          "acquirer_name": "UMPQUA BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 82.9
+        },
+        {
+          "target_cert": 32955,
+          "acquirer_cert": 31628,
+          "target_name": "WASHINGTON FIRST INTERNATIONAL BANK",
+          "acquirer_name": "EAST WEST BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 80.5
+        },
+        {
+          "target_cert": 15814,
+          "acquirer_cert": 11445,
+          "target_name": "FIRST NATIONAL BANK",
+          "acquirer_name": "THE JEFFERSON BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 32.1
+        },
+        {
+          "target_cert": 29341,
+          "acquirer_cert": 15289,
+          "target_name": "TIERONE BANK",
+          "acquirer_name": "GREAT WESTERN BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 95.2
+        },
+        {
+          "target_cert": 57360,
+          "acquirer_cert": 34775,
+          "target_name": "BANK OF FLORIDA - SOUTHEAST",
+          "acquirer_name": "EVERBANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 77.0
+        },
+        {
+          "target_cert": 35106,
+          "acquirer_cert": 34775,
+          "target_name": "BANK OF FLORIDA - SOUTHWEST",
+          "acquirer_name": "EVERBANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 84.5
+        },
+        {
+          "target_cert": 57814,
+          "acquirer_cert": 34775,
+          "target_name": "BANK OF FLORIDA - TAMPA BAY",
+          "acquirer_name": "EVERBANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 25.5
+        },
+        {
+          "target_cert": 57315,
+          "acquirer_cert": 21943,
+          "target_name": "GRANITE COMMUNITY BANK, NATIONAL ASSOCIATION",
+          "acquirer_name": "TRI COUNTIES BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 50.5
+        },
+        {
+          "target_cert": 57735,
+          "acquirer_cert": 18361,
+          "target_name": "PINEHURST BANK",
+          "acquirer_name": "COULEE BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 97.7
+        },
+        {
+          "target_cert": 18117,
+          "acquirer_cert": 13675,
+          "target_name": "MIDWEST BANK AND TRUST COMPANY",
+          "acquirer_name": "FIRSTMERIT BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 98.0
+        },
+        {
+          "target_cert": 35586,
+          "acquirer_cert": 34120,
+          "target_name": "NEW LIBERTY BANK",
+          "acquirer_name": "BANK OF ANN ARBOR",
+          "fail_year": "2010",
+          "acquirer_percentile": 98.5
+        },
+        {
+          "target_cert": 35114,
+          "acquirer_cert": 20504,
+          "target_name": "SATILLA COMMUNITY BANK",
+          "acquirer_name": "AMERIS BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 53.5
+        },
+        {
+          "target_cert": 34255,
+          "acquirer_cert": 3890,
+          "target_name": "SOUTHWEST COMMUNITY BANK",
+          "acquirer_name": "SIMMONS FIRST NATIONAL BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 34.5
+        },
+        {
+          "target_cert": 16476,
+          "acquirer_cert": 10191,
+          "target_name": "ACCESS BANK",
+          "acquirer_name": "PRINSBANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 50.0
+        },
+        {
+          "target_cert": 14246,
+          "acquirer_cert": 31313,
+          "target_name": "THE BANK OF BONIFAY",
+          "acquirer_name": "FIRST FEDERAL BANK OF FLORIDA",
+          "fail_year": "2010",
+          "acquirer_percentile": 97.3
+        },
+        {
+          "target_cert": 57697,
+          "acquirer_cert": 57279,
+          "target_name": "TOWNE BANK OF ARIZONA",
+          "acquirer_name": "COMMERCE BANK OF ARIZONA",
+          "fail_year": "2010",
+          "acquirer_percentile": 63.4
+        },
+        {
+          "target_cert": 30005,
+          "acquirer_cert": 58132,
+          "target_name": "CF BANCORP",
+          "acquirer_name": "FIRST MICHIGAN BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 5.2
+        },
+        {
+          "target_cert": 58362,
+          "acquirer_cert": 30817,
+          "target_name": "CHAMPION BANK",
+          "acquirer_name": "BANKLIBERTY",
+          "fail_year": "2010",
+          "acquirer_percentile": 95.3
+        },
+        {
+          "target_cert": 27150,
+          "acquirer_cert": 31469,
+          "target_name": "EUROBANK",
+          "acquirer_name": "ORIENTAL BANK AND TRUST",
+          "fail_year": "2010",
+          "acquirer_percentile": 95.7
+        },
+        {
+          "target_cert": 32185,
+          "acquirer_cert": 22946,
+          "target_name": "R-G PREMIER BANK OF PUERTO RICO",
+          "acquirer_name": "SCOTIABANK DE PUERTO RICO",
+          "fail_year": "2010",
+          "acquirer_percentile": 58.4
+        },
+        {
+          "target_cert": 31027,
+          "acquirer_cert": 34968,
+          "target_name": "WESTERNBANK PUERTO RICO",
+          "acquirer_name": "BANCO POPULAR DE PUERTO RICO",
+          "fail_year": "2010",
+          "acquirer_percentile": 99.6
+        },
+        {
+          "target_cert": 3735,
+          "acquirer_cert": 16571,
+          "target_name": "AMCORE BANK, NATIONAL ASSOCIATION",
+          "acquirer_name": "HARRIS NATIONAL ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 96.8
+        },
+        {
+          "target_cert": 22853,
+          "acquirer_cert": 3628,
+          "target_name": "BROADWAY BANK",
+          "acquirer_name": "MB FINANCIAL BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 89.0
+        },
+        {
+          "target_cert": 34658,
+          "acquirer_cert": 19333,
+          "target_name": "CITIZENS BANK & TRUST COMPANY OF CHICAGO",
+          "acquirer_name": "REPUBLIC BANK OF CHICAGO",
+          "fail_year": "2010",
+          "acquirer_percentile": 39.9
+        },
+        {
+          "target_cert": 30600,
+          "acquirer_cert": 57082,
+          "target_name": "LINCOLN PARK SAVINGS BANK",
+          "acquirer_name": "NORTHBROOK BANK AND TRUST COMPANY",
+          "fail_year": "2010",
+          "acquirer_percentile": 89.7
+        },
+        {
+          "target_cert": 34821,
+          "acquirer_cert": 3628,
+          "target_name": "NEW CENTURY BANK",
+          "acquirer_name": "MB FINANCIAL BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 68.3
+        },
+        {
+          "target_cert": 58429,
+          "acquirer_cert": 33803,
+          "target_name": "WHEATLAND BANK",
+          "acquirer_name": "WHEATON BANK & TRUST",
+          "fail_year": "2010",
+          "acquirer_percentile": 64.2
+        },
+        {
+          "target_cert": 26619,
+          "acquirer_cert": 27334,
+          "target_name": "BUTLER BANK",
+          "acquirer_name": "PEOPLE'S UNITED BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 56.4
+        },
+        {
+          "target_cert": 21521,
+          "acquirer_cert": 18412,
+          "target_name": "CITY BANK",
+          "acquirer_name": "WHIDBEY ISLAND BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 84.7
+        },
+        {
+          "target_cert": 23876,
+          "acquirer_cert": 26610,
+          "target_name": "INNOVATIVE BANK",
+          "acquirer_name": "CENTER BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 78.3
+        },
+        {
+          "target_cert": 34242,
+          "acquirer_cert": 33527,
+          "target_name": "BEACH FIRST NATIONAL BANK",
+          "acquirer_name": "BANK OF NORTH CAROLINA",
+          "fail_year": "2010",
+          "acquirer_percentile": 99.6
+        },
+        {
+          "target_cert": 57060,
+          "acquirer_cert": 16022,
+          "target_name": "DESERT HILLS BANK",
+          "acquirer_name": "NEW YORK COMMUNITY BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 74.0
+        },
+        {
+          "target_cert": 57399,
+          "acquirer_cert": 30720,
+          "target_name": "MCINTOSH COMMERCIAL BANK",
+          "acquirer_name": "CHARTERBANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 90.7
+        },
+        {
+          "target_cert": 34678,
+          "acquirer_cert": 110,
+          "target_name": "UNITY NATIONAL BANK",
+          "acquirer_name": "BANK OF THE OZARKS",
+          "fail_year": "2010",
+          "acquirer_percentile": 73.4
+        },
+        {
+          "target_cert": 18806,
+          "acquirer_cert": 6731,
+          "target_name": "AMERICAN NATIONAL BANK",
+          "acquirer_name": "THE NATIONAL BANK AND TRUST COMPANY",
+          "fail_year": "2010",
+          "acquirer_percentile": 40.3
+        },
+        {
+          "target_cert": 10054,
+          "acquirer_cert": 28833,
+          "target_name": "BANK OF HIAWASSEE",
+          "acquirer_name": "CITIZENS SOUTH BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 98.0
+        },
+        {
+          "target_cert": 58104,
+          "acquirer_cert": 17041,
+          "target_name": "CENTURY SECURITY BANK",
+          "acquirer_name": "BANK OF UPSON",
+          "fail_year": "2010",
+          "acquirer_percentile": 82.0
+        },
+        {
+          "target_cert": 29561,
+          "acquirer_cert": 28094,
+          "target_name": "STATEWIDE BANK",
+          "acquirer_name": "HOME BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 82.7
+        },
+        {
+          "target_cert": 9268,
+          "acquirer_cert": 20369,
+          "target_name": "BANK OF ILLINOIS",
+          "acquirer_name": "HEARTLAND BANK AND TRUST COMPANY",
+          "fail_year": "2010",
+          "acquirer_percentile": 97.8
+        },
+        {
+          "target_cert": 58352,
+          "acquirer_cert": 34072,
+          "target_name": "CARSON RIVER COMMUNITY BANK",
+          "acquirer_name": "HERITAGE BANK OF NEVADA",
+          "fail_year": "2010",
+          "acquirer_percentile": 50.4
+        },
+        {
+          "target_cert": 38129,
+          "acquirer_cert": 17266,
+          "target_name": "RAINIER PACIFIC BANK",
+          "acquirer_name": "UMPQUA BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 87.5
+        },
+        {
+          "target_cert": 29952,
+          "acquirer_cert": 13675,
+          "target_name": "GEORGE WASHINGTON SAVINGS BANK",
+          "acquirer_name": "FIRSTMERIT BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 67.4
+        },
+        {
+          "target_cert": 57586,
+          "acquirer_cert": 32325,
+          "target_name": "MARCO COMMUNITY BANK",
+          "acquirer_name": "MUTUAL OF OMAHA BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 92.3
+        },
+        {
+          "target_cert": 15448,
+          "acquirer_cert": 10568,
+          "target_name": "1ST AMERICAN STATE BANK OF MINNESOTA",
+          "acquirer_name": "COMMUNITY DEVELOPMENT BANK, FSB",
+          "fail_year": "2010",
+          "acquirer_percentile": 45.4
+        },
+        {
+          "target_cert": 16730,
+          "acquirer_cert": 33826,
+          "target_name": "AMERICAN MARINE BANK",
+          "acquirer_name": "COLUMBIA STATE BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 82.9
+        },
+        {
+          "target_cert": 23011,
+          "acquirer_cert": 11063,
+          "target_name": "FIRST REGIONAL BANK",
+          "acquirer_name": "FIRST-CITIZENS BANK & TRUST COMPANY",
+          "fail_year": "2010",
+          "acquirer_percentile": 97.4
+        },
+        {
+          "target_cert": 5672,
+          "acquirer_cert": 57147,
+          "target_name": "FLORIDA COMMUNITY BANK",
+          "acquirer_name": "PREMIER AMERICAN BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 75.2
+        },
+        {
+          "target_cert": 16133,
+          "acquirer_cert": 15478,
+          "target_name": "MARSHALL BANK, NATIONAL ASSOCIATION",
+          "acquirer_name": "UNITED VALLEY BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 99.9
+        },
+        {
+          "target_cert": 8265,
+          "acquirer_cert": 4767,
+          "target_name": "BANK OF LEETON",
+          "acquirer_name": "SUNFLOWER BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 19.7
+        },
+        {
+          "target_cert": 22469,
+          "acquirer_cert": 33826,
+          "target_name": "COLUMBIA RIVER BANK",
+          "acquirer_name": "COLUMBIA STATE BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 97.8
+        },
+        {
+          "target_cert": 20501,
+          "acquirer_cert": 17266,
+          "target_name": "EVERGREEN BANK",
+          "acquirer_name": "UMPQUA BANK",
+          "fail_year": "2010",
+          "acquirer_percentile": 75.3
+        },
+        {
+          "target_cert": 17522,
+          "acquirer_cert": 8546,
+          "target_name": "ST. STEPHEN STATE BANK",
+          "acquirer_name": "FIRST STATE BANK OF ST. JOSEPH",
+          "fail_year": "2010",
+          "acquirer_percentile": 91.8
+        },
+        {
+          "target_cert": 22977,
+          "acquirer_cert": 28088,
+          "target_name": "HORIZON BANK",
+          "acquirer_name": "WASHINGTON FEDERAL SAVINGS AND LOAN ASSOCIATION",
+          "fail_year": "2010",
+          "acquirer_percentile": 90.4
+        },
+        {
+          "target_cert": 32276,
+          "acquirer_cert": 32574,
+          "target_name": "NEW SOUTH FEDERAL SAVINGS BANK",
+          "acquirer_name": "BEAL BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 89.5
+        },
+        {
+          "target_cert": 32167,
+          "acquirer_cert": 12441,
+          "target_name": "PEOPLES FIRST COMMUNITY BANK",
+          "acquirer_name": "HANCOCK BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 98.1
+        },
+        {
+          "target_cert": 4731,
+          "acquirer_cert": 8728,
+          "target_name": "SOLUTIONSBANK",
+          "acquirer_name": "ARVEST BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 72.8
+        },
+        {
+          "target_cert": 58399,
+          "acquirer_cert": 27237,
+          "target_name": "VALLEY CAPITAL BANK, N.A.",
+          "acquirer_name": "ENTERPRISE BANK & TRUST",
+          "fail_year": "2009",
+          "acquirer_percentile": 21.3
+        },
+        {
+          "target_cert": 29776,
+          "acquirer_cert": 16022,
+          "target_name": "AMTRUST BANK",
+          "acquirer_name": "NEW YORK COMMUNITY BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 99.0
+        },
+        {
+          "target_cert": 26290,
+          "acquirer_cert": 57870,
+          "target_name": "FIRST SECURITY NATIONAL BANK",
+          "acquirer_name": "STATE BANK AND TRUST COMPANY",
+          "fail_year": "2009",
+          "acquirer_percentile": 25.5
+        },
+        {
+          "target_cert": 32583,
+          "acquirer_cert": 57968,
+          "target_name": "GREATER ATLANTIC BANK",
+          "acquirer_name": "SONABANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 92.0
+        },
+        {
+          "target_cert": 34663,
+          "acquirer_cert": 57870,
+          "target_name": "THE BUCKHEAD COMMUNITY BANK",
+          "acquirer_name": "STATE BANK AND TRUST COMPANY",
+          "fail_year": "2009",
+          "acquirer_percentile": 45.7
+        },
+        {
+          "target_cert": 32267,
+          "acquirer_cert": 28100,
+          "target_name": "CENTURY BANK, A FEDERAL SAVINGS BANK",
+          "acquirer_name": "IBERIABANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 98.3
+        },
+        {
+          "target_cert": 22427,
+          "acquirer_cert": 28100,
+          "target_name": "ORION BANK",
+          "acquirer_name": "IBERIABANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 95.7
+        },
+        {
+          "target_cert": 57914,
+          "acquirer_cert": 20164,
+          "target_name": "PACIFIC COAST NATIONAL BANK",
+          "acquirer_name": "SUNWEST BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 94.6
+        },
+        {
+          "target_cert": 19450,
+          "acquirer_cert": 17009,
+          "target_name": "GATEWAY BANK OF ST LOUIS",
+          "acquirer_name": "CENTRAL BANK OF KANSAS CITY",
+          "fail_year": "2009",
+          "acquirer_percentile": 78.3
+        },
+        {
+          "target_cert": 30329,
+          "acquirer_cert": 20856,
+          "target_name": "HOME FEDERAL SAVINGS BANK",
+          "acquirer_name": "LIBERTY BANK AND TRUST COMPANY",
+          "fail_year": "2009",
+          "acquirer_percentile": 44.7
+        },
+        {
+          "target_cert": 32469,
+          "acquirer_cert": 31628,
+          "target_name": "UNITED COMMERCIAL BANK",
+          "acquirer_name": "EAST WEST BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 97.7
+        },
+        {
+          "target_cert": 22286,
+          "acquirer_cert": 20504,
+          "target_name": "UNITED SECURITY BANK",
+          "acquirer_name": "AMERIS BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 49.6
+        },
+        {
+          "target_cert": 57794,
+          "acquirer_cert": 20504,
+          "target_name": "AMERICAN UNITED BANK",
+          "acquirer_name": "AMERIS BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 40.9
+        },
+        {
+          "target_cert": 18321,
+          "acquirer_cert": 18922,
+          "target_name": "BANK OF ELMWOOD",
+          "acquirer_name": "TRI CITY NATIONAL BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 96.6
+        },
+        {
+          "target_cert": 35044,
+          "acquirer_cert": 31313,
+          "target_name": "FLAGSHIP NATIONAL BANK",
+          "acquirer_name": "FIRST FEDERAL BANK OF FLORIDA",
+          "fail_year": "2009",
+          "acquirer_percentile": 95.7
+        },
+        {
+          "target_cert": 58336,
+          "acquirer_cert": 57934,
+          "target_name": "HILLCREST BANK FLORIDA",
+          "acquirer_name": "STONEGATE BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 90.0
+        },
+        {
+          "target_cert": 57959,
+          "acquirer_cert": 57934,
+          "target_name": "PARTNERS BANK",
+          "acquirer_name": "STONEGATE BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 78.4
+        },
+        {
+          "target_cert": 23266,
+          "acquirer_cert": 21716,
+          "target_name": "SAN JOAQUIN BANK",
+          "acquirer_name": "CITIZENS BUSINESS BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 92.4
+        },
+        {
+          "target_cert": 34824,
+          "acquirer_cert": 6560,
+          "target_name": "WARREN BANK",
+          "acquirer_name": "THE HUNTINGTON NATIONAL BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 73.1
+        },
+        {
+          "target_cert": 22868,
+          "acquirer_cert": 11063,
+          "target_name": "VENTURE BANK",
+          "acquirer_name": "FIRST-CITIZENS BANK & TRUST COMPANY",
+          "fail_year": "2009",
+          "acquirer_percentile": 89.7
+        },
+        {
+          "target_cert": 25231,
+          "acquirer_cert": 10908,
+          "target_name": "FIRST BANK OF KANSAS CITY",
+          "acquirer_name": "GREAT AMERICAN BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 54.3
+        },
+        {
+          "target_cert": 34875,
+          "acquirer_cert": 20164,
+          "target_name": "FIRST STATE BANK",
+          "acquirer_name": "SUNWEST BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 81.6
+        },
+        {
+          "target_cert": 27732,
+          "acquirer_cert": 29546,
+          "target_name": "VANTUS BANK",
+          "acquirer_name": "GREAT SOUTHERN BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 93.5
+        },
+        {
+          "target_cert": 27197,
+          "acquirer_cert": 24045,
+          "target_name": "AFFINITY BANK",
+          "acquirer_name": "PACIFIC WESTERN BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 98.8
+        },
+        {
+          "target_cert": 28312,
+          "acquirer_cert": 588,
+          "target_name": "BRADFORD BANK",
+          "acquirer_name": "MANUFACTURERS AND TRADERS TRUST COMPANY",
+          "fail_year": "2009",
+          "acquirer_percentile": 75.7
+        },
+        {
+          "target_cert": 22130,
+          "acquirer_cert": 28100,
+          "target_name": "CAPITALSOUTH BANK",
+          "acquirer_name": "IBERIABANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 93.8
+        },
+        {
+          "target_cert": 32618,
+          "acquirer_cert": 19048,
+          "target_name": "GUARANTY BANK",
+          "acquirer_name": "COMPASS BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 99.8
+        },
+        {
+          "target_cert": 57645,
+          "acquirer_cert": 4063,
+          "target_name": "COMMUNITY BANK OF ARIZONA",
+          "acquirer_name": "MIDFIRST BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 28.8
+        },
+        {
+          "target_cert": 31559,
+          "acquirer_cert": 6384,
+          "target_name": "DWELLING HOUSE SAVINGS AND LOAN",
+          "acquirer_name": "PNC BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2009",
+          "acquirer_percentile": 28.6
+        },
+        {
+          "target_cert": 34485,
+          "acquirer_cert": 4063,
+          "target_name": "UNION BANK, NATIONAL ASSOCIATION",
+          "acquirer_name": "MIDFIRST BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 36.3
+        },
+        {
+          "target_cert": 27183,
+          "acquirer_cert": 10988,
+          "target_name": "COMMUNITY NATIONAL BANK OF SARASOTA COUNTY",
+          "acquirer_name": "STEARNS BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2009",
+          "acquirer_percentile": 48.4
+        },
+        {
+          "target_cert": 27364,
+          "acquirer_cert": 10988,
+          "target_name": "FIRST STATE BANK",
+          "acquirer_name": "STEARNS BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2009",
+          "acquirer_percentile": 98.8
+        },
+        {
+          "target_cert": 9873,
+          "acquirer_cert": 5568,
+          "target_name": "FIRST STATE BANK OF ALTUS",
+          "acquirer_name": "HERRING BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 97.5
+        },
+        {
+          "target_cert": 57604,
+          "acquirer_cert": 57934,
+          "target_name": "INTEGRITY BANK",
+          "acquirer_name": "STONEGATE BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 87.0
+        },
+        {
+          "target_cert": 18659,
+          "acquirer_cert": 25330,
+          "target_name": "MUTUAL BANK",
+          "acquirer_name": "UNITED CENTRAL BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 86.3
+        },
+        {
+          "target_cert": 27367,
+          "acquirer_cert": 57870,
+          "target_name": "SECURITY BANK OF BIBB COUNTY",
+          "acquirer_name": "STATE BANK AND TRUST COMPANY",
+          "fail_year": "2009",
+          "acquirer_percentile": 47.3
+        },
+        {
+          "target_cert": 57346,
+          "acquirer_cert": 57870,
+          "target_name": "SECURITY BANK OF GWINNETT COUNTY",
+          "acquirer_name": "STATE BANK AND TRUST COMPANY",
+          "fail_year": "2009",
+          "acquirer_percentile": 37.6
+        },
+        {
+          "target_cert": 27048,
+          "acquirer_cert": 57870,
+          "target_name": "SECURITY BANK OF HOUSTON COUNTY",
+          "acquirer_name": "STATE BANK AND TRUST COMPANY",
+          "fail_year": "2009",
+          "acquirer_percentile": 31.1
+        },
+        {
+          "target_cert": 8486,
+          "acquirer_cert": 57870,
+          "target_name": "SECURITY BANK OF JONES COUNTY",
+          "acquirer_name": "STATE BANK AND TRUST COMPANY",
+          "fail_year": "2009",
+          "acquirer_percentile": 31.2
+        },
+        {
+          "target_cert": 57430,
+          "acquirer_cert": 57870,
+          "target_name": "SECURITY BANK OF NORTH FULTON",
+          "acquirer_name": "STATE BANK AND TRUST COMPANY",
+          "fail_year": "2009",
+          "acquirer_percentile": 25.7
+        },
+        {
+          "target_cert": 57105,
+          "acquirer_cert": 57870,
+          "target_name": "SECURITY BANK OF NORTH METRO",
+          "acquirer_name": "STATE BANK AND TRUST COMPANY",
+          "fail_year": "2009",
+          "acquirer_percentile": 30.3
+        },
+        {
+          "target_cert": 34103,
+          "acquirer_cert": 3931,
+          "target_name": "BANKFIRST",
+          "acquirer_name": "ALERUS FINANCIAL, NATIONAL ASSOCIATION",
+          "fail_year": "2009",
+          "acquirer_percentile": 90.1
+        },
+        {
+          "target_cert": 34594,
+          "acquirer_cert": 16858,
+          "target_name": "FIRST PIEDMONT BANK",
+          "acquirer_name": "FIRST AMERICAN BANK AND TRUST COMPANY",
+          "fail_year": "2009",
+          "acquirer_percentile": 89.4
+        },
+        {
+          "target_cert": 23556,
+          "acquirer_cert": 20852,
+          "target_name": "VINEYARD BANK, NATIONAL ASSOCIATION",
+          "acquirer_name": "CALIFORNIA BANK & TRUST",
+          "fail_year": "2009",
+          "acquirer_percentile": 98.4
+        },
+        {
+          "target_cert": 18390,
+          "acquirer_cert": 33306,
+          "target_name": "FOUNDERS BANK",
+          "acquirer_name": "THE PRIVATEBANK AND TRUST COMPANY",
+          "fail_year": "2009",
+          "acquirer_percentile": 96.0
+        },
+        {
+          "target_cert": 57667,
+          "acquirer_cert": 27074,
+          "target_name": "MILLENNIUM STATE BANK OF TEXAS",
+          "acquirer_name": "STATE BANK OF TEXAS",
+          "fail_year": "2009",
+          "acquirer_percentile": 92.0
+        },
+        {
+          "target_cert": 11710,
+          "acquirer_cert": 3607,
+          "target_name": "THE FIRST STATE BANK OF WINCHESTER",
+          "acquirer_name": "THE FIRST NATIONAL BANK OF BEARDSTOWN",
+          "fail_year": "2009",
+          "acquirer_percentile": 54.4
+        },
+        {
+          "target_cert": 12093,
+          "acquirer_cert": 12396,
+          "target_name": "THE JOHN WARNER BANK",
+          "acquirer_name": "STATE BANK OF LINCOLN",
+          "fail_year": "2009",
+          "acquirer_percentile": 71.9
+        },
+        {
+          "target_cert": 9744,
+          "acquirer_cert": 10988,
+          "target_name": "HORIZON BANK",
+          "acquirer_name": "STEARNS BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2009",
+          "acquirer_percentile": 38.8
+        },
+        {
+          "target_cert": 57893,
+          "acquirer_cert": 20164,
+          "target_name": "METROPACIFIC BANK",
+          "acquirer_name": "SUNWEST BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 99.7
+        },
+        {
+          "target_cert": 57332,
+          "acquirer_cert": 23301,
+          "target_name": "MIRAE BANK",
+          "acquirer_name": "WILSHIRE STATE BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 99.2
+        },
+        {
+          "target_cert": 35285,
+          "acquirer_cert": 30720,
+          "target_name": "NEIGHBORHOOD COMMUNITY BANK",
+          "acquirer_name": "CHARTERBANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 84.8
+        },
+        {
+          "target_cert": 4614,
+          "acquirer_cert": 17378,
+          "target_name": "FIRST NATIONAL BANK OF ANTHONY",
+          "acquirer_name": "BANK OF KANSAS",
+          "fail_year": "2009",
+          "acquirer_percentile": 31.7
+        },
+        {
+          "target_cert": 17309,
+          "acquirer_cert": 19333,
+          "target_name": "BANK OF LINCOLNWOOD",
+          "acquirer_name": "REPUBLIC BANK OF CHICAGO",
+          "fail_year": "2009",
+          "acquirer_percentile": 93.6
+        },
+        {
+          "target_cert": 5757,
+          "acquirer_cert": 18429,
+          "target_name": "CITIZENS NATIONAL BANK",
+          "acquirer_name": "MORTON COMMUNITY BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 96.6
+        },
+        {
+          "target_cert": 35175,
+          "acquirer_cert": 1040,
+          "target_name": "STRATEGIC CAPITAL BANK",
+          "acquirer_name": "MIDLAND STATES BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 72.1
+        },
+        {
+          "target_cert": 34843,
+          "acquirer_cert": 6161,
+          "target_name": "WESTSOUND BANK",
+          "acquirer_name": "KITSAP BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 96.6
+        },
+        {
+          "target_cert": 35461,
+          "acquirer_cert": 22134,
+          "target_name": "AMERICA WEST BANK",
+          "acquirer_name": "CACHE VALLEY BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 51.6
+        },
+        {
+          "target_cert": 57563,
+          "acquirer_cert": 57919,
+          "target_name": "CITIZENS COMMUNITY BANK",
+          "acquirer_name": "NORTH JERSEY COMMUNITY BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 59.7
+        },
+        {
+          "target_cert": 57943,
+          "acquirer_cert": 31203,
+          "target_name": "AMERICAN SOUTHERN BANK",
+          "acquirer_name": "BANK OF NORTH GEORGIA",
+          "fail_year": "2009",
+          "acquirer_percentile": 29.6
+        },
+        {
+          "target_cert": 34396,
+          "acquirer_cert": 6548,
+          "target_name": "FIRST BANK OF IDAHO, FSB",
+          "acquirer_name": "U.S. BANK, NATIONAL ASSOCIATION",
+          "fail_year": "2009",
+          "acquirer_percentile": 60.8
+        },
+        {
+          "target_cert": 34369,
+          "acquirer_cert": 58604,
+          "target_name": "MICHIGAN HERITAGE BANK",
+          "acquirer_name": "LEVEL ONE BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 28.1
+        },
+        {
+          "target_cert": 8266,
+          "acquirer_cert": 18531,
+          "target_name": "AMERICAN STERLING BANK",
+          "acquirer_name": "METCALF BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 72.0
+        },
+        {
+          "target_cert": 33824,
+          "acquirer_cert": 18113,
+          "target_name": "GREAT BASIN BANK OF NEVADA",
+          "acquirer_name": "NEVADA STATE BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 65.7
+        },
+        {
+          "target_cert": 34639,
+          "acquirer_cert": 28994,
+          "target_name": "CAPE FEAR BANK",
+          "acquirer_name": "FIRST FEDERAL SAVINGS AND LOAN ASSOCIATION OF CHARLESTON",
+          "fail_year": "2009",
+          "acquirer_percentile": 87.4
+        },
+        {
+          "target_cert": 18896,
+          "acquirer_cert": 5568,
+          "target_name": "COLORADO NATIONAL BANK",
+          "acquirer_name": "HERRING BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 76.6
+        },
+        {
+          "target_cert": 4754,
+          "acquirer_cert": 29546,
+          "target_name": "TEAMBANK, N.A.",
+          "acquirer_name": "GREAT SOUTHERN BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 99.2
+        },
+        {
+          "target_cert": 57558,
+          "acquirer_cert": 15771,
+          "target_name": "FREEDOM BANK OF GEORGIA",
+          "acquirer_name": "NORTHEAST GEORGIA BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 99.6
+        },
+        {
+          "target_cert": 34820,
+          "acquirer_cert": 33897,
+          "target_name": "SECURITY SAVINGS BANK",
+          "acquirer_name": "BANK OF NEVADA",
+          "fail_year": "2009",
+          "acquirer_percentile": 65.8
+        },
+        {
+          "target_cert": 16500,
+          "acquirer_cert": 3775,
+          "target_name": "CORN BELT BANK AND TRUST COMPANY",
+          "acquirer_name": "THE CARLINVILLE NATIONAL BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 40.0
+        },
+        {
+          "target_cert": 57342,
+          "acquirer_cert": 1281,
+          "target_name": "PINNACLE BANK",
+          "acquirer_name": "WASHINGTON TRUST BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 30.6
+        },
+        {
+          "target_cert": 34563,
+          "acquirer_cert": 21435,
+          "target_name": "RIVERSIDE BANK OF THE GULF COAST",
+          "acquirer_name": "TIB BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 94.6
+        },
+        {
+          "target_cert": 22574,
+          "acquirer_cert": 3430,
+          "target_name": "COUNTY BANK",
+          "acquirer_name": "WESTAMERICA BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 97.1
+        },
+        {
+          "target_cert": 57017,
+          "acquirer_cert": 12368,
+          "target_name": "FIRSTBANK FINANCIAL SERVICES",
+          "acquirer_name": "REGIONS BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 67.6
+        },
+        {
+          "target_cert": 30763,
+          "acquirer_cert": 8675,
+          "target_name": "SUBURBAN FEDERAL SAVINGS BANK",
+          "acquirer_name": "BANK OF ESSEX",
+          "fail_year": "2009",
+          "acquirer_percentile": 68.8
+        },
+        {
+          "target_cert": 33025,
+          "acquirer_cert": 22819,
+          "target_name": "1ST CENTENNIAL BANK",
+          "acquirer_name": "FIRST CALIFORNIA BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 99.7
+        },
+        {
+          "target_cert": 34959,
+          "acquirer_cert": 17266,
+          "target_name": "BANK OF CLARK COUNTY",
+          "acquirer_name": "UMPQUA BANK",
+          "fail_year": "2009",
+          "acquirer_percentile": 75.3
+        },
+        {
+          "target_cert": 19733,
+          "acquirer_cert": 19333,
+          "target_name": "NATIONAL BANK OF COMMERCE",
+          "acquirer_name": "REPUBLIC BANK OF CHICAGO",
+          "fail_year": "2009",
+          "acquirer_percentile": 95.2
+        },
+        {
+          "target_cert": 35379,
+          "acquirer_cert": 9846,
+          "target_name": "HAVEN TRUST BANK",
+          "acquirer_name": "BRANCH BANKING AND TRUST COMPANY",
+          "fail_year": "2008",
+          "acquirer_percentile": 74.5
+        },
+        {
+          "target_cert": 16490,
+          "acquirer_cert": 8675,
+          "target_name": "THE COMMUNITY BANK",
+          "acquirer_name": "BANK OF ESSEX",
+          "fail_year": "2008",
+          "acquirer_percentile": 63.6
+        },
+        {
+          "target_cert": 23595,
+          "acquirer_cert": 24045,
+          "target_name": "SECURITY PACIFIC BANK",
+          "acquirer_name": "PACIFIC WESTERN BANK",
+          "fail_year": "2008",
+          "acquirer_percentile": 85.4
+        },
+        {
+          "target_cert": 57654,
+          "acquirer_cert": 12181,
+          "target_name": "MAIN STREET BANK",
+          "acquirer_name": "MONROE BANK & TRUST",
+          "fail_year": "2008",
+          "acquirer_percentile": 49.6
+        },
+        {
+          "target_cert": 6782,
+          "acquirer_cert": 9463,
+          "target_name": "AMERIBANK, INC.",
+          "acquirer_name": "THE CITIZENS SAVINGS BANK",
+          "fail_year": "2008",
+          "acquirer_percentile": 92.6
+        },
+        {
+          "target_cert": 34194,
+          "acquirer_cert": 18113,
+          "target_name": "SILVER STATE BANK",
+          "acquirer_name": "NEVADA STATE BANK",
+          "fail_year": "2008",
+          "acquirer_percentile": 99.0
+        },
+        {
+          "target_cert": 35469,
+          "acquirer_cert": 12368,
+          "target_name": "INTEGRITY BANK",
+          "acquirer_name": "REGIONS BANK",
+          "fail_year": "2008",
+          "acquirer_percentile": 84.3
+        },
+        {
+          "target_cert": 57523,
+          "acquirer_cert": 867,
+          "target_name": "FIRST PRIORITY BANK",
+          "acquirer_name": "SUNTRUST BANK",
+          "fail_year": "2008",
+          "acquirer_percentile": 43.6
+        },
+        {
+          "target_cert": 57961,
+          "acquirer_cert": 32325,
+          "target_name": "FIRST HERITAGE BANK N.A.",
+          "acquirer_name": "MUTUAL OF OMAHA BANK",
+          "fail_year": "2008",
+          "acquirer_percentile": 87.5
+        },
+        {
+          "target_cert": 27011,
+          "acquirer_cert": 32325,
+          "target_name": "FIRST NATIONAL BANK OF NEVADA",
+          "acquirer_name": "MUTUAL OF OMAHA BANK",
+          "fail_year": "2008",
+          "acquirer_percentile": 83.3
+        }
+      ]
+    }
+  },
+  "weighted_default_mean_percentile": 73.1,
+  "weighted_refit_mean_percentile": 72.1,
+  "weighted_n": 347,
+  "best_refit_weights": {
+    "funding": 0.2,
+    "business": 0.2,
+    "size": 0.6,
+    "geo": 0.0
+  },
+  "best_refit_mean_percentile": 79.9,
+  "margin_pp": 5.0,
+  "decision": "default",
+  "note": "decision='default': the deal-count-weighted refit mean (72.1) did not beat the weighted default mean (73.1) by more than 5.0 percentile points across 347 real deals \u2014 kept the hand-set weights. The 2008Q1 quarter (340 matched deals) dominates this comparison and is far more reliable than 2022Q4's 7 deals; see per_quarter and refit for the quarter-level detail, including any single quarter where a refit did look better in isolation."
+}

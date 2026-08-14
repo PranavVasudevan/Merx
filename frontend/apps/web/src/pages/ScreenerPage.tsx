@@ -2,7 +2,23 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { api, type BankSearchResult } from '../api';
+import { ExportCsvButton } from '../components/ExportCsvButton';
+import type { CsvColumn } from '../csvExport';
+import type { SavedScreen } from '../types';
 import './ScreenerPage.css';
+
+type ScreenerRow = BankSearchResult['banks'][number];
+
+const CSV_COLUMNS: CsvColumn<ScreenerRow>[] = [
+  { key: 'name', label: 'Bank', value: (b) => b.name },
+  { key: 'cert', label: 'FDIC Cert', value: (b) => b.cert, source: 'fdic' },
+  { key: 'loc', label: 'Location', value: (b) => (b.country === 'US' ? b.state ?? '' : b.country ?? '') },
+  { key: 'assets_b', label: 'Assets ($B)', value: (b) => b.assets_b, source: 'fdic' },
+  { key: 'cluster', label: 'Behavioral cluster', value: (b) => b.cluster ?? '', source: 'derived' },
+  { key: 'roa_pct', label: 'ROA %', value: (b) => b.roa_pct, source: 'fdic' },
+  { key: 'npl_ratio_pct', label: 'NPL ratio %', value: (b) => b.npl_ratio_pct, source: 'fdic' },
+  { key: 'cet1_ratio', label: 'CET1 %', value: (b) => b.cet1_ratio, source: 'fdic' },
+];
 
 type SortKey = 'name' | 'state' | 'country' | 'assets_b' | 'cluster' | 'roa_pct' | 'npl_ratio_pct' | 'cet1_ratio';
 
@@ -22,6 +38,39 @@ export function ScreenerPage() {
   const [result, setResult] = useState<BankSearchResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [savedScreens, setSavedScreens] = useState<SavedScreen[]>([]);
+
+  useEffect(() => {
+    api.getSavedScreens().then((r) => setSavedScreens(r.items)).catch(() => setSavedScreens([]));
+  }, []);
+
+  async function saveCurrentScreen() {
+    const name = window.prompt('Name this screen:');
+    if (!name) return;
+    try {
+      const r = await api.saveScreen(name, { query, state, country, min_assets_b: minAssets, max_assets_b: maxAssets });
+      setSavedScreens(r.items);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
+  function loadScreen(s: SavedScreen) {
+    setQuery(String(s.filters.query ?? ''));
+    setState(String(s.filters.state ?? ''));
+    setCountry(String(s.filters.country ?? ''));
+    setMinAssets(s.filters.min_assets_b !== undefined ? String(s.filters.min_assets_b) : '');
+    setMaxAssets(s.filters.max_assets_b !== undefined ? String(s.filters.max_assets_b) : '');
+  }
+
+  async function deleteScreen(id: number) {
+    try {
+      const r = await api.deleteSavedScreen(id);
+      setSavedScreens(r.items);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
 
   useEffect(() => {
     setLoading(true);
@@ -61,7 +110,30 @@ export function ScreenerPage() {
   return (
     <div className="screener-page">
       <div className="panel">
-        <h2>Screener — {result?.count ?? '…'} banks (US $1B–$250B population + EU significant institutions)</h2>
+        <div className="screener-header-row">
+          <h2>Screener — {result?.count ?? '…'} banks (full US FDIC population + EU significant institutions)</h2>
+          <div className="screener-header-actions">
+            <button type="button" className="screener-save-btn" onClick={saveCurrentScreen}>
+              ☆ Save this screen
+            </button>
+            <ExportCsvButton
+              filename="banklens-screener.csv"
+              columns={CSV_COLUMNS}
+              rows={rows}
+              meta={{ sourceLabel: 'FDIC BankFind / EBA Transparency Exercise' }}
+            />
+          </div>
+        </div>
+        {savedScreens.length > 0 && (
+          <div className="screener-saved-screens">
+            {savedScreens.map((s) => (
+              <span key={s.id} className="screener-saved-screen-chip">
+                <button onClick={() => loadScreen(s)}>{s.name}</button>
+                <button className="screener-saved-screen-remove" onClick={() => deleteScreen(s.id)} aria-label={`Delete ${s.name}`}>×</button>
+              </span>
+            ))}
+          </div>
+        )}
         <div className="screener-filters">
           <input
             className="screener-input"

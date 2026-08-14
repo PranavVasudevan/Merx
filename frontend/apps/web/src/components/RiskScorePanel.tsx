@@ -1,15 +1,10 @@
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { motion } from 'motion/react';
-import { chartColors } from '../colors';
+import { chartColors, resemblanceZone } from '../colors';
+import { RISK_DISCLAIMER } from '../csvExport';
 import type { RiskScoreResult } from '../types';
 import './RiskScorePanel.css';
 import './charts.css';
-
-function riskZone(score: number, colors: ReturnType<typeof chartColors>): { color: string; label: string } {
-  if (score >= 0.5) return { color: colors.critical, label: 'High resemblance' };
-  if (score >= 0.15) return { color: colors.warning, label: 'Moderate resemblance' };
-  return { color: colors.good, label: 'Low resemblance' };
-}
 
 function DriverTip({ active, payload }: { active?: boolean; payload?: { payload: { feature: string; value: number; contribution: number } }[] }) {
   if (!active || !payload?.length) return null;
@@ -25,7 +20,8 @@ function DriverTip({ active, payload }: { active?: boolean; payload?: { payload:
 
 export function RiskScorePanel({ result }: { result: RiskScoreResult }) {
   const colors = chartColors();
-  const zone = riskZone(result.risk_score, colors);
+  const pctile = result.resemblance_percentile;
+  const zone = resemblanceZone(pctile);
   const data = [...result.drivers].sort((a, b) => a.contribution - b.contribution);
 
   return (
@@ -33,19 +29,24 @@ export function RiskScorePanel({ result }: { result: RiskScoreResult }) {
       <h2>Feature 13 · Deposit-Flight Risk (model trained on {result.model_trained_on}, validated vs real bank failures)</h2>
       <div className="risk-gauge-row">
         <div className="risk-score-value tabular" style={{ color: zone.color }}>
-          {(result.risk_score * 100).toFixed(1)}%
+          {pctile === null ? '—' : `${pctile.toFixed(0)}th pctile`}
         </div>
         <div className="risk-gauge-track">
           <motion.div
             className="risk-gauge-fill"
             style={{ background: zone.color }}
             initial={{ width: 0 }}
-            animate={{ width: `${Math.min(100, result.risk_score * 100)}%` }}
+            animate={{ width: `${pctile ?? 0}%` }}
             transition={{ duration: 0.7, ease: [0.85, 0, 0.15, 1] }}
           />
         </div>
         <span className="muted risk-zone-label">{zone.label}</span>
       </div>
+      <p className="muted chart-caption">
+        Decile {result.resemblance_decile ?? '—'} of 10 — rank among every bank scored this
+        quarter, not a probability of failure (the model is not calibrated for that; see
+        the calibration curve on <a href="/model">/model</a>).
+      </p>
 
       <ResponsiveContainer width="100%" height={150}>
         <BarChart data={data} layout="vertical" margin={{ top: 4, right: 16, left: 4, bottom: 0 }}>
@@ -63,6 +64,7 @@ export function RiskScorePanel({ result }: { result: RiskScoreResult }) {
       <p className="muted chart-caption">
         Red pushes risk up, blue pushes it down (log-odds contribution). {result.note}
       </p>
+      <p className="muted chart-caption">{RISK_DISCLAIMER}</p>
     </div>
   );
 }

@@ -1,0 +1,15 @@
+# Baseline security headers for static hosts that read this file natively
+# (Cloudflare Pages, Netlify) — frontend/apps/web/nginx.conf (the container
+# path) doesn't currently set any of its own, so this isn't a port of
+# existing headers, it's a new baseline applied consistently to both
+# deployment paths. Deliberately NOT a Content-Security-Policy: this app
+# loads ECharts canvas rendering, an OIDC redirect flow, and fetches from a
+# configurable API origin (VITE_API_BASE) — a CSP tight enough to matter but
+# untested against all of that risks breaking the app in ways that are hard
+# to catch before a real deploy; add one deliberately, tested against a real
+# build, rather than by default here.
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), camera=(), microphone=()

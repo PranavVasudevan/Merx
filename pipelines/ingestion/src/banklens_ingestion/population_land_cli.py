@@ -1,4 +1,6 @@
-"""Land the FDIC population slice (all US banks $1B-$250B) to Bronze, one or many quarters.
+"""Land the FDIC population (the full FDIC-insured universe, ~4,350 banks — widened
+from the original $1B-$250B MVP slice, see docs/audit/04-remediation-prompts.md B3)
+to Bronze, one or many quarters.
 
 This is the connector that produced the landed population files — except that until
 now it didn't exist. The Bronze partitions were created out-of-band, which is how
@@ -21,6 +23,7 @@ One quarter is ONE request: the band holds ~1,050 banks against a 10,000-row cei
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, timezone
 from pathlib import Path
 
 from .bronze.writer import write_partition
@@ -51,15 +54,26 @@ def land_quarter(src: FdicSource, repdte: str, data_dir: Path) -> int:
     rows, url = src.fetch_population(repdte)
     prov = Provenance.create(source=src.name, endpoint=url,
                              license=src.license, payload=rows)
+    # B9 (docs/audit/04-remediation-prompts.md): a `landed=<date>` sub-partition,
+    # not `population/repdte=X/records.json` directly — FDIC restates prior
+    # quarters, and a flat path meant every re-land silently overwrote the
+    # previous snapshot, so a number shown today could differ from the same
+    # number shown last month with no way to reproduce which was "right" (both
+    # were, as of when they were served). Bronze stays append-only in truth,
+    # not just in the module docstring's claim: `data.population(as_of=...)`
+    # picks the right snapshot from here. The landing date comes from the SAME
+    # instant as `prov.fetched_at`, not a second clock reading.
+    landed_date = datetime.fromisoformat(prov.fetched_at).strftime("%Y%m%d")
     write_partition(rows, prov, base_dir=data_dir / "bronze", source="fdic",
-                    parts=("population", f"repdte={repdte}"))
-    print(f"  {repdte}: {len(rows):>5} banks   checksum {prov.checksum[:12]}...")
+                    parts=("population", f"repdte={repdte}", f"landed={landed_date}"))
+    print(f"  {repdte}: {len(rows):>5} banks   checksum {prov.checksum[:12]}...   "
+          f"landed={landed_date}")
     return len(rows)
 
 
 def run(repdtes: list[str], data_dir: Path) -> None:
     src = FdicSource()
-    print(f"Landing FDIC population ($1B-$250B) for {len(repdtes)} quarter(s)...")
+    print(f"Landing the full FDIC population for {len(repdtes)} quarter(s)...")
     total = 0
     for q in repdtes:
         total += land_quarter(src, q, data_dir)
@@ -67,7 +81,7 @@ def run(repdtes: list[str], data_dir: Path) -> None:
 
 
 def main() -> None:
-    p = argparse.ArgumentParser(description="Land the FDIC $1B-$250B population to Bronze")
+    p = argparse.ArgumentParser(description="Land the full FDIC population to Bronze")
     p.add_argument("--repdte", default="20260331", help="latest report date (YYYYMMDD)")
     p.add_argument("--quarters", type=int, default=1,
                    help="how many quarters back from --repdte to land (default 1)")

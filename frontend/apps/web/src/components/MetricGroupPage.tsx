@@ -4,6 +4,8 @@ import { motion } from 'motion/react';
 import { api } from '../api';
 import { fmtAssets, pct } from '../metricFormat';
 import type { MetricGroup, PopulationMetricsResult } from '../types';
+import { ExportCsvButton } from './ExportCsvButton';
+import type { CsvColumn } from '../csvExport';
 import './MetricGroupPage.css';
 
 export interface MetricColumn {
@@ -85,6 +87,17 @@ export function MetricGroupPage({
     ? Math.max(...highlight.map((b) => Math.abs(b[defaultSort] as number)))
     : 1;
 
+  const csvColumns: CsvColumn<PopulationMetricsResult['banks'][number]>[] = [
+    { key: 'name', label: 'Bank', value: (b) => b.name, source: 'fdic' },
+    { key: 'cert_number', label: 'FDIC Cert', value: (b) => b.cert_number, source: 'fdic' },
+    { key: 'state', label: 'State', value: (b) => b.state ?? '', source: 'fdic' },
+    { key: 'total_assets', label: 'Total assets ($)', value: (b) => b.total_assets, source: 'fdic' },
+    ...columns.map((c) => ({
+      key: c.key, label: c.label, value: (b: PopulationMetricsResult['banks'][number]) => b[c.key] as string | number | null,
+      source: 'fdic' as const,
+    })),
+  ];
+
   return (
     <div className="metric-group-page">
       <div className="panel">
@@ -131,6 +144,12 @@ export function MetricGroupPage({
             placeholder="Filter by name or 2-letter state…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+          />
+          <ExportCsvButton
+            filename={`banklens-${group}.csv`}
+            columns={csvColumns}
+            rows={rows}
+            meta={{ vintage: result?.quarter, sourceLabel: 'FDIC Call Reports' }}
           />
         </div>
         <div className="metric-group-table-wrap">

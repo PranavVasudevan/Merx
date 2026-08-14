@@ -13,10 +13,15 @@ FROM python:3.13-slim
 WORKDIR /app
 
 # banklens_mcp.data imports duckdb unconditionally (the Gold-layer SQL query
-# engine backing list_banks — see CHANGELOG.md's DuckDB entry). Found live: a
-# container built without this crashes at import time on the first request.
-# prometheus-client backs bridge_server.py's /metrics endpoint (observability).
-RUN pip install --no-cache-dir duckdb prometheus-client
+# engine backing list_banks). Found live: a container built without this
+# crashes at import time on the first request. prometheus-client backs
+# bridge_server.py's /metrics endpoint (observability). gunicorn backs the
+# BANKLENS_SERVER=prod transport (bridge_server.py's wsgi_app) — installed
+# unconditionally so the SAME image serves both dev and prod, switched purely
+# by that env var at `docker run` time, not by building a different image.
+# reportlab (BSD-licensed, $0 cost) backs banklens_mcp.tearsheet's per-bank
+# PDF export (D1) — GET /api/banks/tearsheet.
+RUN pip install --no-cache-dir duckdb prometheus-client gunicorn reportlab
 
 # Preserve the exact relative directory depth the two REPO=Path(__file__)...
 # computations expect (bridge_server.py: parents[3]; data.py: parents[4]) —

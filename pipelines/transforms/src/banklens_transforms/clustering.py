@@ -13,9 +13,11 @@ for scale, robustness, and experiment tracking.
 
 from __future__ import annotations
 
+import json
 import math
 import random
 from collections import Counter
+from pathlib import Path
 
 # Behavioral features (loan concentration + funding mix). Deliberately NOT asset
 # size — the whole point is to cluster by behavior, then compare to size labels.
@@ -31,9 +33,12 @@ FEATURES = [
 
 
 # ---- feature matrix ------------------------------------------------------
-def build_matrix(gold_rows: list[dict], features: list[str] = FEATURES):
-    """Return (kept_rows, X) where X is standardized; missing values imputed to mean."""
-    # column means over present values
+def build_raw_matrix(gold_rows: list[dict], features: list[str] = FEATURES):
+    """Return (kept_rows, raw) — mean-imputed but NOT standardized. Split out of
+    `build_matrix` (C3) so fixed-centroid assignment can standardize a quarter's
+    raw values against a PERSISTED reference mu/sd instead of that quarter's
+    own (which is exactly the behavior that makes "fixed" centroids not
+    actually fixed)."""
     means = {}
     for f in features:
         vals = [g[f] for g in gold_rows if g.get(f) is not None]
@@ -44,13 +49,25 @@ def build_matrix(gold_rows: list[dict], features: list[str] = FEATURES):
         vec = [g[f] if g.get(f) is not None else means[f] for f in features]
         kept.append(g)
         raw.append(vec)
+    return kept, raw
 
-    # standardize (z-score) per column
+
+def standardize_with(raw: list[list[float]], mu: list[float], sd: list[float]) -> list[list[float]]:
+    """Standardize a raw feature matrix against an EXTERNAL mu/sd (e.g. a
+    persisted reference-quarter fit), not its own column statistics."""
+    return [[(row[j] - mu[j]) / sd[j] for j in range(len(mu))] for row in raw]
+
+
+def build_matrix(gold_rows: list[dict], features: list[str] = FEATURES):
+    """Return (kept_rows, X) where X is standardized against THIS OWN matrix's
+    column stats (per-quarter refit — the pre-C3 behavior); see
+    `build_raw_matrix`/`standardize_with` for the fixed-centroid path."""
+    kept, raw = build_raw_matrix(gold_rows, features)
     n = len(raw)
     cols = list(zip(*raw, strict=True)) if raw else []
     mu = [sum(c) / n for c in cols]
     sd = [math.sqrt(sum((v - mu[j]) ** 2 for v in c) / n) or 1.0 for j, c in enumerate(cols)]
-    X = [[(raw[i][j] - mu[j]) / sd[j] for j in range(len(features))] for i in range(n)]
+    X = standardize_with(raw, mu, sd)
     return kept, X
 
 
@@ -181,6 +198,68 @@ STABLE_CLUSTER_ID = {label: i for i, label in enumerate(CANONICAL_CLUSTER_LABELS
 def stable_cluster_id(label: str) -> int:
     """Time-stable id for a behavioral cluster label (see CANONICAL_CLUSTER_LABELS)."""
     return STABLE_CLUSTER_ID[label]
+
+
+FIXED_CENTROIDS_PATH = Path(__file__).resolve().parents[4] / "ml" / "clustering" / "fixed_centroids.json"
+
+
+def assign_fixed(X: list[list[float]], centroids: list[list[float]]) -> list[int]:
+    """C3 — nearest-centroid assignment against ALREADY-FITTED, persisted
+    centroids: no iteration, no refit. A bank near a decision boundary with a
+    stable balance sheet should get the SAME cluster label quarter to quarter;
+    `population()`'s per-quarter `kmeans()` refit can flip it purely because
+    that quarter's centroids landed in slightly different positions, even with
+    stable-cluster-id label matching (label_cluster/stable_cluster_id) papering
+    over the INTEGER but not the actual reassignment."""
+    return [min(range(len(centroids)), key=lambda c: _sqdist(x, centroids[c])) for x in X]
+
+
+def fit_fixed_centroids(gold_rows: list[dict], *, k: int = 7, features: list[str] = FEATURES,
+                        seed: int = 42) -> dict:
+    """Fit centroids ONCE on a reference quarter's population, in the SAME
+    standardized space `population()` normally refits per quarter — the
+    payload `save_fixed_centroids` persists and every other quarter's
+    `assign_fixed` call reuses unchanged."""
+    kept, X = build_matrix(gold_rows, features)
+    _, raw = build_raw_matrix(gold_rows, features)
+    n = len(raw)
+    cols = list(zip(*raw, strict=True)) if raw else []
+    mu = [sum(c) / n for c in cols]
+    sd = [math.sqrt(sum((v - mu[j]) ** 2 for v in c) / n) or 1.0 for j, c in enumerate(cols)]
+    labels, centroids, _ = kmeans(X, k, seed=seed)
+    raw_members: dict[int, list[dict]] = {}
+    for g, lab in zip(kept, labels, strict=True):
+        raw_members.setdefault(lab, []).append(g)
+    # Reorder centroids by STABLE id (not k-means' arbitrary integer), same
+    # scheme population() already uses, so a centroid's position in the
+    # persisted list is meaningful on its own.
+    ordered: dict[int, list[float]] = {}
+    stable_labels: dict[int, str] = {}
+    for lab, members in raw_members.items():
+        means = {f: sum((m.get(f) or 0) for m in members) / len(members) for f in features}
+        text = label_cluster(means)
+        sid = stable_cluster_id(text)
+        ordered[sid] = centroids[lab]
+        stable_labels[sid] = text
+    sids = sorted(ordered)
+    return {
+        "features": features, "mu": mu, "sd": sd, "k": k,
+        "stable_ids": sids,
+        "centroids": [ordered[s] for s in sids],
+        "cluster_labels": {s: stable_labels[s] for s in sids},
+    }
+
+
+def save_fixed_centroids(fit: dict, *, reference_quarter: str) -> None:
+    FIXED_CENTROIDS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    payload = {**fit, "reference_quarter": reference_quarter}
+    FIXED_CENTROIDS_PATH.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
+def load_fixed_centroids() -> dict | None:
+    if not FIXED_CENTROIDS_PATH.exists():
+        return None
+    return json.loads(FIXED_CENTROIDS_PATH.read_text(encoding="utf-8"))
 
 
 def label_cluster(centroid_means: dict) -> str:

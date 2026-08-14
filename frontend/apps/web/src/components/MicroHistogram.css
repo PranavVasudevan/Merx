@@ -1,0 +1,4 @@
+.micro-histogram { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+.micro-histogram-slot { height: 23px; }
+.micro-histogram svg { display: block; flex-shrink: 0; }
+.micro-histogram-label { font-size: var(--text-xs); white-space: nowrap; }

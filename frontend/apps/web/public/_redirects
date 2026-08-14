@@ -1,0 +1,6 @@
+# SPA fallback for static hosts that don't run nginx's try_files (see
+# frontend/apps/web/nginx.conf for the equivalent container-based rule) —
+# Cloudflare Pages and Netlify both read this file from the publish
+# directory natively. Every client-side route (react-router in App.tsx)
+# resolves to index.html and renders from there.
+/*  /index.html  200

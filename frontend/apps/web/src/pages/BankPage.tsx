@@ -6,7 +6,9 @@ import { api } from '../api';
 import { CandlestickChart } from '../components/CandlestickChart';
 import { CapitalChart } from '../components/CapitalChart';
 import { ConcentrationChart } from '../components/ConcentrationChart';
+import { CreditTrajectoryPanel } from '../components/CreditTrajectoryPanel';
 import { FilingDiffPanel } from '../components/FilingDiffPanel';
+import { IrrbbPanel } from '../components/IrrbbPanel';
 import { KpiTiles } from '../components/KpiTiles';
 import { MaFitPanel } from '../components/MaFitPanel';
 import { PeerClusterCard } from '../components/PeerClusterCard';
@@ -44,20 +46,37 @@ export function BankPage() {
   const [riskScore, setRiskScore] = useState<RiskScoreResult | null>(null);
   const [filingDiff, setFilingDiff] = useState<FilingDiffResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [tearsheetBusy, setTearsheetBusy] = useState(false);
+  const [tearsheetError, setTearsheetError] = useState<string | null>(null);
+  // C11 — which population every profile percentile is computed against.
+  const [peerBasis, setPeerBasis] = useState<'global' | 'size' | 'cluster'>('global');
+
+  async function downloadTearsheet() {
+    setTearsheetBusy(true);
+    setTearsheetError(null);
+    try {
+      await api.downloadTearsheet(cert);
+    } catch (e) {
+      setTearsheetError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setTearsheetBusy(false);
+    }
+  }
 
   useEffect(() => {
     setProfile(null);
     setError(null);
     setFilingDiff(null);
     Promise.all([
-      api.profile(cert), api.xray(cert), api.peerCluster(cert), api.maFit(cert, 8), api.riskScore(cert),
+      api.profile(cert, undefined, peerBasis), api.xray(cert), api.peerCluster(cert),
+      api.maFit(cert, 8), api.riskScore(cert),
     ])
       .then(([p, x, c, m, r]) => {
         setProfile(p); setXray(x); setCluster(c); setMaFit(m); setRiskScore(r);
       })
       .catch((e) => setError(String(e.message || e)));
     api.filingDiff(cert).then(setFilingDiff).catch(() => setFilingDiff(null));
-  }, [cert]);
+  }, [cert, peerBasis]);
 
   return (
     <div className="bank-page">
@@ -69,8 +88,28 @@ export function BankPage() {
             <h1 className="bank-page-title">{profile.name}</h1>
             <div className="bank-page-header-actions">
               <Link className="bank-page-header-link" to={`/trends?cert=${cert}`}>Trends →</Link>
+              <select
+                className="bank-page-peer-basis"
+                value={peerBasis}
+                onChange={(e) => setPeerBasis(e.target.value as 'global' | 'size' | 'cluster')}
+                title="Which population every profile percentile is computed against (C11)"
+              >
+                <option value="global">vs. whole population</option>
+                <option value="size">vs. size band</option>
+                <option value="cluster">vs. peer cluster</option>
+              </select>
+              <button
+                type="button"
+                className="bank-page-tearsheet-btn"
+                onClick={downloadTearsheet}
+                disabled={tearsheetBusy}
+                title="Download a PDF tearsheet: profile, X-Ray, capital, concentration, peer cluster, risk score and stress results"
+              >
+                ⭳ {tearsheetBusy ? 'Building PDF…' : 'PDF tearsheet'}
+              </button>
               <WatchlistButton cert={cert} />
             </div>
+            {tearsheetError && <span className="app-banner-error bank-page-tearsheet-error">{tearsheetError}</span>}
           </motion.div>
           <motion.div variants={itemVariants}>
             <KpiTiles profile={profile} />
@@ -84,6 +123,7 @@ export function BankPage() {
               {xray && <motion.div variants={itemVariants}><XrayPanel xray={xray} /></motion.div>}
               <motion.div variants={itemVariants}><ConcentrationChart profile={profile} /></motion.div>
               <motion.div variants={itemVariants}><CapitalChart profile={profile} /></motion.div>
+              <motion.div variants={itemVariants}><CreditTrajectoryPanel profile={profile} /></motion.div>
               <motion.div variants={itemVariants}>
                 {filingDiff ? (
                   <FilingDiffPanel diff={filingDiff} cert={cert} />
@@ -91,7 +131,7 @@ export function BankPage() {
                   <div className="panel">
                     <h2>Feature 12 · Filing Diff</h2>
                     <p className="muted">This bank appears in fewer than two landed
-                      quarters (it may have just entered the $1B–$250B slice), so
+                      quarters (it may be a new charter, or a data-landing gap), so
                       there's nothing to compare yet.</p>
                   </div>
                 )}
@@ -100,12 +140,15 @@ export function BankPage() {
             <div className="app-col">
               {cluster && <motion.div variants={itemVariants}><PeerClusterCard cluster={cluster} /></motion.div>}
               {riskScore && <motion.div variants={itemVariants}><RiskScorePanel result={riskScore} /></motion.div>}
-              {maFit && <motion.div variants={itemVariants}><MaFitPanel result={maFit} /></motion.div>}
+              {maFit && <motion.div variants={itemVariants}><MaFitPanel result={maFit} cert={cert} /></motion.div>}
             </div>
           </div>
 
           <motion.div variants={itemVariants}>
             <StressPanel cert={cert} key={cert} />
+          </motion.div>
+          <motion.div variants={itemVariants}>
+            <IrrbbPanel cert={cert} key={`irrbb-${cert}`} />
           </motion.div>
           <motion.div variants={itemVariants}>
             <PeerScatter cert={cert} key={`scatter-${cert}`} />

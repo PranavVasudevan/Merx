@@ -6,7 +6,7 @@ fdic.py). This is the EU's real analyst-grade bank-by-bank disclosure: ~120
 significant EU/EEA banks' balance sheet, capital and P&L, published semi-annually
 by the European Banking Authority.
 
-Two real, live files back this connector (both verified by hand against the 2025
+Three real, live files back this connector (all verified by hand against the 2025
 exercise — actual bytes fetched and inspected, not guessed from documentation):
 
   - ``TR_Metadata.xlsx``, sheet "List of Institutions": LEI -> bank name + country.
@@ -15,20 +15,44 @@ exercise — actual bytes fetched and inspected, not guessed from documentation)
     stdlib-only by design" convention (see pipelines/ingestion/pyproject.toml).
   - ``tr_oth.csv``: long format — one row per (bank, period, line-item). Assets,
     Liabilities, Capital, Leverage and P&L sheets are parsed here.
+  - ``tr_cre.csv``: the credit-risk/NPL cube (exposure class x NACE sector x
+    performing-status), 89 Item codes x every dimension combination. Only TWO
+    Item codes are decoded here — see ``_pivot_credit_risk_csv`` — everything
+    else in this cube is left unparsed.
 
-NOT parsed here, deliberately: ``tr_cre.csv`` (credit-risk/NPL cube — exposure
-class x NACE sector x performing-status, needs the SDD.xlsx data dictionary to
-decode correctly) and ``tr_sov.csv``/``tr_mrk.csv`` (sovereign/market risk). A
-wrong NPL number from a misread multi-dimensional cube is worse than an honest
-gap — see the "Next" section in this feature's docs once the mapping is verified.
-This is real ceiling of EU bank granularity available today, not a shortcut: EBA
-doesn't publish loan-category concentration or an uninsured-deposit split the way
-FDIC's Call Reports do.
+The full ``tr_cre.csv`` cube is genuinely NOT decoded here: most of its Item
+codes (exposure-class x SA/IRB x defaulted-status breakdowns) need dimension
+dictionaries — an ``Exposure`` class-code table and a ``Country`` code table —
+that neither ``SDD.xlsx`` nor the EBA's own "Mapped_templates" workbook publish
+in a form this connector could verify byte-for-byte. Guessing those codes would
+produce a wrong NPL/concentration number presented as real, which is worse than
+an honest gap. ``tr_sov.csv``/``tr_mrk.csv`` (sovereign/market risk) are not
+parsed at all, same reasoning.
+
+The two Item codes that ARE decoded were verified two independent ways before
+being trusted, not guessed from SDD.xlsx's item-label list alone:
+  1. Arithmetically, on live 2025Q3 data: for Item 2520603, the sum of
+     Perf_Status 1 ("performing") + Perf_Status 2 ("non-performing") equals
+     Perf_Status 0 ("total") for every (LEI, Period) sampled — confirming the
+     0/1/2 semantics without needing an external code table.
+  2. Against the EBA's own "2025_EU-wide_Transparency_exercise_Mapped_templates"
+     workbook, which lays out the same Item codes as human-readable template
+     cells: the "NPE" sheet's row 17 is literally labelled "Loans and advances
+     (including at amortised cost and fair value)" with columns "Gross carrying
+     amount" (-> Perf_Status 0), "Of which performing" (-> 1) and "Of which
+     non-performing" (-> 2); the "NACE" sheet's rows 11-29 list the 19 NACE
+     Rev.2 sections A-S in that exact order, matching NACE_codes 1-19 in the CSV
+     (row 30, "Loans and advances", is the NACE_codes=0 cross-sector total).
+
+This is the real ceiling of EU bank credit-risk granularity available today, not
+a shortcut: EBA doesn't publish US-style loan-category concentration (CRE vs
+C&I vs consumer) or an uninsured-deposit split the way FDIC's Call Reports do.
 """
 
 from __future__ import annotations
 
 import csv
+import http.cookiejar
 import io
 import time
 import urllib.error
@@ -42,6 +66,7 @@ from .base import Source
 _ASSET_BASE = "https://www.eba.europa.eu/assets/TE2025/Full_database/883401"
 INSTITUTIONS_URL = f"{_ASSET_BASE}/TR_Metadata.xlsx"
 FINANCIALS_URL = f"{_ASSET_BASE}/tr_oth.csv"
+CREDIT_RISK_URL = f"{_ASSET_BASE}/tr_cre.csv"
 
 _NS = {"m": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
 
@@ -101,6 +126,32 @@ _STAGE3_ITEMS: dict[str, str] = {
     "2521019": "npl_loans_amortised_cost",
 }
 
+# tr_cre.csv Item codes decoded here — see this module's docstring for how each
+# was verified. Every other Item code in the cube (89 total) is left alone.
+_CREDIT_RISK_NPL_ITEM = "2520603"    # "Loans and advances" gross carrying amount
+_CREDIT_RISK_NACE_ITEM = "2521301"   # "NACE | Gross carrying amount"
+
+# Perf_Status dimension values, decoded for the two items above only (verified
+# both arithmetically — Perf_Status 1 + Perf_Status 2 == Perf_Status 0 — and
+# against the Mapped_templates workbook's own column headers; see docstring).
+_PERF_TOTAL, _PERF_PERFORMING, _PERF_NONPERFORMING = "0", "1", "2"
+
+# NACE Rev.2 section codes this cube uses, 1-19 (verified against the EBA's own
+# "NACE" mapped-template sheet, rows 11-29 — see module docstring). NACE_codes
+# "0" is the cross-sector total. The human-readable A-S section labels live in
+# `banklens_transforms.silver_eba.NACE_SECTORS` (the Silver/decode layer, not
+# ingestion) — this connector only needs to validate the raw code is in range.
+_NACE_CODE_RANGE = range(1, 20)
+
+# The dimension columns that must all read as the cross-bank AGGREGATE ("0")
+# for a row to be the single-number total/NPL figure or a NACE sector slice —
+# every OTHER combination of these five columns is a finer cut of the same cube
+# (by exposure class, by counterparty country, by SA-vs-IRB approach, ...) that
+# this connector does not attempt to decode. Confirmed live: for the sampled
+# bank-period, summing NACE_codes 1-19 at this aggregate slice reproduces the
+# NACE_codes=0 total exactly.
+_AGGREGATE_DIMS = ("Portfolio", "Country", "Country_rank", "Exposure", "Status")
+
 
 class EbaSource(Source):
     """Fetch the EU-wide Transparency Exercise institution list + financials."""
@@ -114,15 +165,20 @@ class EbaSource(Source):
         self.delay = delay
         self.max_retries = max_retries
         self.user_agent = user_agent or "BankLens/0.1 (data pipeline; contact you@example.org)"
+        self._opener = urllib.request.build_opener(
+            urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
 
     # -- low-level -----------------------------------------------------------
-    def _get_bytes(self, url: str) -> bytes:
+    def _get_bytes(self, url: str, *, timeout: float | None = None) -> bytes:
         headers = {"User-Agent": self.user_agent, "Accept": "*/*"}
         last_err: Exception | None = None
         for attempt in range(1, self.max_retries + 1):
             try:
                 req = urllib.request.Request(url, headers=headers)
-                with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+                # Cookie-aware opener: some EBA assets (SDD.xlsx, the larger CSVs)
+                # reset a bare urlopen connection without it, same WAF-cookie
+                # discipline fdic.py already needs — see FdicSource._opener.
+                with self._opener.open(req, timeout=timeout or self.timeout) as resp:
                     body = resp.read()
                 time.sleep(self.delay)
                 return body
@@ -227,6 +283,67 @@ class EbaSource(Source):
         raw = self._get_bytes(FINANCIALS_URL)
         text = raw.decode("utf-8", errors="replace")
         return self._pivot_financials_csv(text), FINANCIALS_URL
+
+    # -- credit risk (tr_cre.csv, two Item codes only) ------------------------
+    @staticmethod
+    def _pivot_credit_risk_csv(text: str) -> list[dict]:
+        """``tr_cre.csv`` is a ~123MB, 89-Item-code cube most of which this
+        connector does NOT decode (see module docstring). This pulls out only
+        the two verified Item codes, at the cross-bank AGGREGATE dimension slice
+        (every ``_AGGREGATE_DIMS`` column == "0"), and pivots to one dict per
+        (LEI, Period):
+
+          - NPL item (2520603): ``npl_gross_carrying_eur_m`` (Perf_Status total),
+            ``npl_performing_eur_m`` (1), ``npl_nonperforming_eur_m`` (2).
+          - NACE item (2521301): ``nace_gross_carrying_eur_m``, a
+            ``{NACE_SECTORS key: amount}`` dict, one entry per sector actually
+            present (NACE_codes 0, the cross-sector total, is not stored — it's
+            recoverable as the sum of the per-sector values and storing it too
+            would invite the two silently drifting apart on a future re-land).
+
+        Pure function of the raw CSV text — no network — so it's unit-testable
+        without a live 123MB fetch, same discipline as `_pivot_financials_csv`.
+        """
+        reader = csv.DictReader(io.StringIO(text))
+        by_key: dict[tuple[str, str], dict] = defaultdict(dict)
+
+        for row in reader:
+            item = row.get("Item")
+            if item not in (_CREDIT_RISK_NPL_ITEM, _CREDIT_RISK_NACE_ITEM):
+                continue
+            if any(row.get(d) != "0" for d in _AGGREGATE_DIMS):
+                continue   # a finer cut of the cube (exposure class, country, ...) — skip
+            try:
+                value = float(row["Amount"])
+            except (TypeError, ValueError):
+                continue
+            key = (row["LEI_Code"], row["Period"])
+            perf = row.get("Perf_Status")
+
+            if item == _CREDIT_RISK_NPL_ITEM:
+                field = {_PERF_TOTAL: "npl_gross_carrying_eur_m",
+                        _PERF_PERFORMING: "npl_performing_eur_m",
+                        _PERF_NONPERFORMING: "npl_nonperforming_eur_m"}.get(perf)
+                if field is not None:
+                    by_key[key][field] = value
+            elif item == _CREDIT_RISK_NACE_ITEM and perf == _PERF_TOTAL:
+                nace_code = row.get("NACE_codes")
+                if nace_code and int(nace_code) in _NACE_CODE_RANGE:
+                    sectors = by_key[key].setdefault("nace_gross_carrying_eur_m", {})
+                    sectors[nace_code] = value
+
+        return [{"lei": lei, "period": period, **fields}
+               for (lei, period), fields in by_key.items()]
+
+    def fetch_credit_risk(self) -> tuple[list[dict], str]:
+        """Fetch + pivot ``tr_cre.csv``. ~123MB over the wire (the full cube, not
+        yet filtered — filtering happens client-side in `_pivot_credit_risk_csv`
+        so what's landed to Bronze is the narrow, decoded result, the same
+        "curate at fetch time" discipline `fetch_financials` already applies to
+        `tr_oth.csv`'s ~150 Item codes)."""
+        raw = self._get_bytes(CREDIT_RISK_URL, timeout=max(self.timeout, 180.0))
+        text = raw.decode("utf-8", errors="replace")
+        return self._pivot_credit_risk_csv(text), CREDIT_RISK_URL
 
     def fetch(self) -> list[dict]:
         """`Source`'s required abstract method. `fetch_institutions`/`fetch_financials`

@@ -1,0 +1,12 @@
+.pro-forma-panel { margin-top: var(--space-3); border-top: 1px solid var(--border); padding-top: var(--space-3); }
+.pro-forma-premium { max-width: 320px; margin-bottom: var(--space-3); }
+.pro-forma-grid { grid-template-columns: repeat(5, 1fr); }
+.pro-forma-subhead { font-size: var(--text-sm); margin: var(--space-4) 0 var(--space-2); }
+.pro-forma-county-list { display: flex; flex-direction: column; gap: 2px; }
+.pro-forma-county-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  padding: 3px 0;
+}

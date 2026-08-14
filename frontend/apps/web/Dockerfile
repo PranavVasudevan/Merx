@@ -4,15 +4,23 @@
 #   docker build -t banklens-web .
 #   docker run -p 8080:80 banklens-web
 #
-# Honest local-only note: the frontend calls the bridge at a hardcoded
-# http://localhost:8791/api (src/api.ts) — this works for local Docker/K8s
-# testing (the browser resolves "localhost" against the USER's machine, not the
-# container network, so it just needs the bridge's port published/forwarded to
-# the host), but would need to become configurable (build-time env or a reverse
-# proxy) for any real non-localhost deployment — that's Phase 5+ hardening.
+# The bridge URL and OIDC provider are build-time args (Vite inlines
+# import.meta.env.VITE_* at build time, not runtime — there is no server-side
+# process in the nginx stage to read env vars from). Both default to the
+# localhost bridge/Keycloak docker-compose.dev.yml starts, so a bare
+# `docker build` still works unchanged for local Docker/K8s testing (the
+# browser resolves "localhost" against the USER's machine, not the container
+# network). Pass real values for a non-localhost deployment:
+#   docker build --build-arg VITE_API_BASE=https://api.example.com/api \
+#                 --build-arg VITE_KEYCLOAK_URL=https://auth.example.com \
+#                 -t banklens-web .
 
 FROM node:22-slim AS build
 WORKDIR /app
+ARG VITE_API_BASE=http://localhost:8791/api
+ARG VITE_KEYCLOAK_URL=http://localhost:8081
+ENV VITE_API_BASE=${VITE_API_BASE}
+ENV VITE_KEYCLOAK_URL=${VITE_KEYCLOAK_URL}
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .

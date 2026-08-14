@@ -54,6 +54,33 @@ LOAN_SUBCOMPONENTS = {
     "consumer_other_loans": "consumer_other",  # within consumer
 }
 
+# Size bands (B3: docs/audit/04-remediation-prompts.md — widening the landed
+# population beyond the original $1B-$250B MVP slice made a flat population-wide
+# percentile misleading again: a $1.2B bank and a $900B GSIB now sit in the same
+# pool). Bounds are in whole USD, upper-bound-exclusive except the last band.
+# Every population-wide figure (screener, leaderboard, peer percentiles) should
+# be labelled with the band it covers; `percentile_rank_*_within_size` (C11) in
+# peers.add_percentile_ranks is the band-conditional counterpart to the existing
+# population-wide `percentile_rank_*` (a `_within_cluster` variant exists too).
+ASSET_BANDS: list[tuple[str, float, float]] = [
+    ("under_1b", 0.0, 1e9),
+    ("1b_10b", 1e9, 10e9),
+    ("10b_50b", 10e9, 50e9),
+    ("50b_250b", 50e9, 250e9),
+    ("over_250b", 250e9, float("inf")),
+]
+
+
+def asset_band(total_assets: float | None) -> str | None:
+    """Which `ASSET_BANDS` bucket `total_assets` (whole USD) falls in, or None
+    if assets aren't known."""
+    if total_assets is None:
+        return None
+    for label, lo, hi in ASSET_BANDS:
+        if lo <= total_assets < hi:
+            return label
+    return None
+
 
 def _pct(numerator, denominator) -> float | None:
     if numerator is None or denominator in (None, 0):
@@ -159,6 +186,19 @@ def net_charge_off_rate_pct(row: dict) -> float | None:
     return _pct(row.get("net_charge_offs"), row.get("total_loans_gross"))
 
 
+def charge_off_rates_by_category(row: dict) -> dict:
+    """C6 — per-category net-charge-off rate: net_charge_offs_<category> / that
+    category's OWN gross loan balance, using the SAME disjoint 8-leaf set
+    `concentration_ratios` uses (LOAN_CATEGORIES) — so a category's loss rate
+    and its concentration share are directly comparable, not two different
+    taxonomies. `None` per category where either side is undisclosed, never
+    silently defaulted to the blended `net_charge_off_rate_pct`."""
+    out: dict = {}
+    for col, label in LOAN_CATEGORIES.items():
+        out[f"charge_off_rate_pct_{label}"] = _pct(row.get(f"net_charge_offs_{label}"), row.get(col))
+    return out
+
+
 def allowance_to_loans_pct(row: dict) -> float | None:
     return _pct(row.get("allowance_for_credit_losses"), row.get("total_loans_gross"))
 
@@ -217,7 +257,7 @@ def qoq_delta(current, previous) -> dict | None:
     return {"abs": abs_change, "pct": pct_change}
 
 
-def _quarters_before(quarter: str, n: int) -> str:
+def quarters_before(quarter: str, n: int) -> str:
     """``quarter`` minus ``n`` quarters, e.g. ("2026Q1", 12) -> "2023Q1"."""
     year, q = int(quarter[:4]), int(quarter[5])
     total = year * 4 + (q - 1) - n
@@ -240,7 +280,7 @@ def growth_rate_nyr(history_desc: list[dict], years: int, field: str) -> float |
     quarter = current.get("quarter")
     if not quarter:
         return None
-    target = _quarters_before(quarter, years * 4)
+    target = quarters_before(quarter, years * 4)
     anchor = next((r for r in history_desc if r.get("quarter") == target), None)
     if anchor is None:
         return None
@@ -248,6 +288,75 @@ def growth_rate_nyr(history_desc: list[dict], years: int, field: str) -> float |
     if cur_val is None or past_val is None or past_val <= 0:
         return None
     return round(((cur_val / past_val) ** (1 / years) - 1) * 100, 4)
+
+
+def _trend_slope(values: list[float | None]) -> float | None:
+    """OLS slope of `values` (index = time, oldest first) — ratio-points per
+    quarter. `None` with fewer than 2 non-None points; a fabricated flat trend
+    from 0 or 1 real observations would be worse than an honest gap."""
+    pts = [(i, v) for i, v in enumerate(values) if v is not None]
+    if len(pts) < 2:
+        return None
+    n = len(pts)
+    mean_x = sum(p[0] for p in pts) / n
+    mean_y = sum(p[1] for p in pts) / n
+    den = sum((p[0] - mean_x) ** 2 for p in pts)
+    if den == 0:
+        return None
+    num = sum((p[0] - mean_x) * (p[1] - mean_y) for p in pts)
+    return round(num / den, 4)
+
+
+def credit_trajectory(history_desc: list[dict], *, window: int = 4) -> dict:
+    """C8 — per-bank credit-quality trajectory from up to `window` quarters of
+    its own landed Silver history (`history_desc[0]` = current quarter,
+    newest-first — same convention `growth_rate_nyr` uses). NPL ratio,
+    net-charge-off rate and allowance coverage are single-quarter SNAPSHOTS
+    everywhere else in the product; this is the trend/acceleration view B1's
+    backfill makes possible.
+
+    `npl_acceleration`: recent-half OLS slope minus earlier-half slope — a
+    rough second derivative, needs at least 4 quarters to split. `None` per
+    field with too little landed history, never a fabricated flat trend.
+
+    `deterioration_flag`: true only when at least 2 of the 3 signals that ARE
+    available (NPL trending up, NCO trending up, allowance coverage trending
+    down) move adversely together — a single noisy metric shouldn't flag a
+    bank alone.
+    """
+    quarters = history_desc[:window]
+    asc = list(reversed(quarters))  # oldest -> newest, for slope direction
+    npl = [npl_ratio_pct(r) for r in asc]
+    nco = [net_charge_off_rate_pct(r) for r in asc]
+    allow = [allowance_coverage_pct(r) for r in asc]
+
+    npl_trend, nco_trend, allow_trend = _trend_slope(npl), _trend_slope(nco), _trend_slope(allow)
+
+    npl_accel = None
+    if len(asc) >= 4:
+        half = len(asc) // 2
+        early, recent = _trend_slope(npl[:half]), _trend_slope(npl[half:])
+        if early is not None and recent is not None:
+            npl_accel = round(recent - early, 4)
+
+    adverse = signals = 0
+    for trend, adverse_if in ((npl_trend, lambda t: t > 0), (nco_trend, lambda t: t > 0),
+                              (allow_trend, lambda t: t < 0)):
+        if trend is not None:
+            signals += 1
+            if adverse_if(trend):
+                adverse += 1
+
+    return {
+        "npl_trend_pp_per_qtr": npl_trend,
+        "npl_acceleration": npl_accel,
+        "net_charge_off_trend_pp_per_qtr": nco_trend,
+        "allowance_coverage_trend_pp_per_qtr": allow_trend,
+        "deterioration_signal_count": adverse,
+        "deterioration_signals_available": signals,
+        "deterioration_flag": signals >= 2 and adverse >= 2,
+        "trajectory_quarters": len(quarters),
+    }
 
 
 def gold_features(row: dict, prev: dict | None = None, history: list[dict] | None = None) -> dict:
@@ -270,6 +379,7 @@ def gold_features(row: dict, prev: dict | None = None, history: list[dict] | Non
         "name": row.get("name"),
         "quarter": row.get("quarter"),
         "total_assets": row.get("total_assets"),
+        "asset_band": asset_band(row.get("total_assets")),
         # deposits / funding
         "uninsured_deposit_pct": uninsured_deposit_pct(row),
         "core_deposit_pct": core_deposit_pct(row),
@@ -299,10 +409,20 @@ def gold_features(row: dict, prev: dict | None = None, history: list[dict] | Non
         # asset quality
         "npl_ratio_pct": npl_ratio_pct(row),
         "net_charge_off_rate_pct": net_charge_off_rate_pct(row),
+        # C6 — per-category loss rates (concentration_ratio_<label>'s size
+        # counterpart), feeds stress.apply_category_loan_losses.
+        **charge_off_rates_by_category(row),
         "allowance_to_loans_pct": allowance_to_loans_pct(row),
         "allowance_coverage_pct": allowance_coverage_pct(row),
         "texas_ratio_pct": texas_ratio_pct(row),
         "noncurrent_assets_ratio_pct": row.get("noncurrent_assets_ratio_reported"),
+        # EU banks only (B2, from EBA's tr_cre.csv credit-risk cube — see
+        # banklens_transforms.silver_eba); None for FDIC-sourced rows, same
+        # "disclose absence, don't fabricate" contract as every other EU-only gap.
+        "npl_ratio_pct_supervisory": row.get("npl_ratio_pct_supervisory"),
+        "sector_concentration_hhi": row.get("sector_concentration_hhi"),
+        "sector_concentration_top_sector": row.get("sector_concentration_top_sector"),
+        "sector_concentration_top_pct": row.get("sector_concentration_top_pct"),
         # capital adequacy (straight from FDIC)
         "cet1_ratio": row.get("cet1_ratio"),
         "tier1_rbc_ratio": row.get("tier1_rbc_ratio"),
@@ -316,6 +436,10 @@ def gold_features(row: dict, prev: dict | None = None, history: list[dict] | Non
         # trailing growth (None until 3 years of quarterly history has landed)
         "growth_rate_3yr_pct": growth_rate_nyr(history, 3, "total_assets") if history else None,
         "deposit_growth_rate_3yr_pct": growth_rate_nyr(history, 3, "total_deposits") if history else None,
+        # C8 — credit-quality trajectory (trend/acceleration, not just a
+        # single-quarter snapshot); works with as few as 2 landed quarters,
+        # richer with more (see credit_trajectory).
+        **credit_trajectory(history or []),
     }
 
 

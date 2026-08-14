@@ -38,6 +38,24 @@ def grid_cell(lat: float, lon: float, cell_size: float = CELL_SIZE_DEG) -> tuple
     return (round(lat / cell_size), round(lon / cell_size))
 
 
+def encode_cell(cell: str | tuple[int, int]) -> str:
+    """A footprint's `cells` (and `deposits_by_cell` keys) are either a FIPS
+    county string or a `grid_cell` (lat_bucket, lon_bucket) int tuple — a
+    mixed type that isn't directly JSON/SQL-storable. This is the one
+    canonical string encoding both directions use (see `decode_cell`), so
+    `gold_db_cli.py` (which materializes footprints into DuckDB) and
+    `banklens_mcp.data`'s loader from that artifact never drift on how a
+    cell round-trips."""
+    return f"{cell[0]}:{cell[1]}" if isinstance(cell, tuple) else f"c:{cell}"
+
+
+def decode_cell(s: str) -> str | tuple[int, int]:
+    if s.startswith("c:"):
+        return s[2:]
+    lat_s, lon_s = s.split(":", 1)
+    return (int(lat_s), int(lon_s))
+
+
 def county_key(record: dict) -> str | None:
     """FIPS state+county for a branch row, zero-padded to the canonical 5 digits.
 
@@ -194,3 +212,37 @@ def county_concentration(entry: dict) -> dict:
         "hhi": herfindahl([s["share_pct"] for s in shares]),
         "shares": shares,
     }
+
+
+def merger_county_impact(county_table: dict, target_cert: int, acquirer_cert: int,
+                         hhi_threshold: float = 1800.0) -> list[dict]:
+    """C9 — for a proposed (target, acquirer) combination, every county where
+    BOTH sides currently hold deposits: before/after HHI (after = the two
+    banks' shares merged into one entity) and whether the combination pushes
+    that county across the Fed's Bank Merger Competitive Review screening
+    threshold (see `herfindahl`'s docstring — 1800 concentrated by default,
+    matching `banklens_mcp.tools.BANK_MERGER_HHI_CONCENTRATED`). Counties
+    where only one side (or neither) has branches are unaffected by the
+    combination and excluded — a merger can't concentrate a market neither
+    party is in.
+    """
+    out = []
+    for fips, entry in county_table.items():
+        by_cert = entry.get("by_cert") or {}
+        t_dep, a_dep = by_cert.get(target_cert), by_cert.get(acquirer_cert)
+        if not t_dep or not a_dep:
+            continue
+        before = county_concentration(entry)
+        combined_by_cert = dict(by_cert)
+        combined_by_cert[acquirer_cert] = t_dep + a_dep
+        combined_by_cert.pop(target_cert, None)
+        after = county_concentration({**entry, "by_cert": combined_by_cert})
+        hhi_before, hhi_after = before["hhi"] or 0.0, after["hhi"] or 0.0
+        out.append({
+            "fips": fips, "name": entry.get("name"), "state": entry.get("state"),
+            "hhi_before": before["hhi"], "hhi_after": after["hhi"],
+            "crosses_threshold": hhi_before < hhi_threshold <= hhi_after,
+            "already_above_threshold": hhi_before >= hhi_threshold,
+        })
+    out.sort(key=lambda c: c["hhi_after"] or 0, reverse=True)
+    return out

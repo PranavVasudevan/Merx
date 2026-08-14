@@ -3,6 +3,8 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { api, type BankSearchResult } from '../api';
 import type { CompareResult } from '../types';
+import { ExportCsvButton } from '../components/ExportCsvButton';
+import type { CsvColumn } from '../csvExport';
 import './ComparePage.css';
 
 const METRIC_LABELS: Record<string, string> = {
@@ -139,6 +141,20 @@ export function ComparePage() {
 
         {compare && (
           <div className="compare-table-wrap">
+            <div className="compare-export-row">
+              <ExportCsvButton
+                filename="banklens-compare.csv"
+                columns={[
+                  { key: 'metric', label: 'Metric', value: (m: string) => METRIC_LABELS[m] ?? m },
+                  ...compare.banks.map((b) => ({
+                    key: String(b.cert), label: b.name,
+                    value: (m: string) => b[m] as string | number | null, source: 'fdic' as const,
+                  })),
+                ] as CsvColumn<string>[]}
+                rows={compare.metrics}
+                meta={{ sourceLabel: 'FDIC Call Reports' }}
+              />
+            </div>
             <table className="compare-table">
               <thead>
                 <tr>

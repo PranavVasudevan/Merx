@@ -21,16 +21,53 @@ Two real corrections applied here, not left to the caller:
      (FDIC's own CERT numbers top out in the low hundred-thousands). The real
      LEI is preserved in a `lei` field for anyone who needs the actual identifier.
 
-What does NOT carry over, honestly: no loan-category concentration (no
-`concentration_ratio_*` — the X-Ray feature will show blanks for these banks, not
-fabricated zeros), no uninsured-deposit split, no branch-level geography. EBA's
-public disclosure is coarser than FDIC's Call Reports at this granularity — see
-`config/sources.yaml`'s `eba_transparency.data_quality_note`.
+What does NOT carry over, honestly: no US-style loan-CATEGORY concentration (no
+`concentration_ratio_*` by CRE/C&I/consumer/etc — the X-Ray feature will show
+blanks for these banks, not fabricated zeros), no uninsured-deposit split, no
+branch-level geography. EBA's public disclosure is coarser than FDIC's Call
+Reports at this granularity — see `config/sources.yaml`'s
+`eba_transparency.data_quality_note`.
+
+What DOES carry over as of the `tr_cre.csv` credit-risk cube being parsed
+(`banklens_ingestion.sources.eba.EbaSource.fetch_credit_risk`): a supervisory
+performing/non-performing split (`npl_ratio_pct_supervisory`) and a
+sector-concentration proxy (`sector_concentration_hhi`,
+`sector_concentration_top_sector`/`_top_pct`) — see the credit-risk block below.
 """
 
 from __future__ import annotations
 
 import zlib
+
+from .footprint import herfindahl
+
+# NACE Rev.2 section labels for codes 1-19, in the exact order the EBA's own
+# "NACE" mapped-template sheet lists them (its rows 11-29) — this IS the EBA's
+# published mapping for `tr_cre.csv`'s NACE_codes dimension, not an external
+# NACE table (see `banklens_ingestion.sources.eba`'s module docstring for how
+# it was verified; the raw numeric codes are decoded there, the human-readable
+# labels live here at the Silver/decode layer).
+NACE_SECTORS: dict[int, str] = {
+    1: "A Agriculture, forestry and fishing",
+    2: "B Mining and quarrying",
+    3: "C Manufacturing",
+    4: "D Electricity, gas, steam and air conditioning supply",
+    5: "E Water supply",
+    6: "F Construction",
+    7: "G Wholesale and retail trade",
+    8: "H Transport and storage",
+    9: "I Accommodation and food service activities",
+    10: "J Information and communication",
+    11: "K Financial and insurance activities",
+    12: "L Real estate activities",
+    13: "M Professional, scientific and technical activities",
+    14: "N Administrative and support service activities",
+    15: "O Public administration and defence, compulsory social security",
+    16: "P Education",
+    17: "Q Human health services and social work activities",
+    18: "R Arts, entertainment and recreation",
+    19: "S Other services",
+}
 
 _MILLIONS = 1_000_000
 _CERT_OFFSET = 900_000_000
@@ -102,12 +139,17 @@ _RATIO_PASSTHROUGH = ("cet1_ratio", "tier1_rbc_ratio", "total_rbc_ratio", "lever
 
 
 def to_bank_financials_eba(raw: dict, institution: dict, *, fx_rate: float,
-                           fx_date: str) -> dict:
+                           fx_date: str, credit_risk: dict | None = None) -> dict:
     """`raw`: one pivoted (LEI, Period) row from `EbaSource.fetch_financials`.
     `institution`: the matching entry from `EbaSource.fetch_institutions` (name +
     country). `fx_rate`/`fx_date`: the EUR->USD rate to convert with and its
     as-of date, from `sources/fx.py` — passed in rather than fetched here so this
     stays a pure function like `silver.to_bank_financials`, no network in Silver.
+    `credit_risk`: the matching (LEI, Period) row from
+    `EbaSource.fetch_credit_risk`, or None if the credit-risk cube hasn't been
+    landed (or has no row for this bank-period) — every field it would set stays
+    explicitly None, same "disclose, don't fabricate" contract as the deposit
+    fields below.
     """
     lei = raw["lei"]
     filing_date, quarter = _parse_period(raw.get("period"))
@@ -171,6 +213,34 @@ def to_bank_financials_eba(raw: dict, institution: dict, *, fx_rate: float,
         ratio = row.get(ratio_field)
         row[capital_field] = (round(ratio / 100.0 * rwa, 2)
                               if ratio is not None and rwa else None)
+
+    # ---- credit risk, from tr_cre.csv (B2: the two Item codes sources/eba.py
+    # decodes — see its module docstring for how they were verified) ----
+    # `npl_ratio_pct` (below) already exists via IFRS-9 Stage 3 loans from
+    # tr_oth.csv — an accounting-impairment-based proxy. This is a SEPARATE,
+    # additional figure from the credit-risk cube's own supervisory
+    # performing/non-performing split, which is the closer analogue to FDIC's
+    # delinquency-based "noncurrent loans" definition. Both are kept, distinctly
+    # named, rather than one silently overwriting the other.
+    row["npl_ratio_pct_supervisory"] = None
+    row["sector_concentration_hhi"] = None
+    row["sector_concentration_top_sector"] = None
+    row["sector_concentration_top_pct"] = None
+    if credit_risk is not None:
+        total = credit_risk.get("npl_gross_carrying_eur_m")
+        nonperforming = credit_risk.get("npl_nonperforming_eur_m")
+        if total and nonperforming is not None:
+            row["npl_ratio_pct_supervisory"] = round(nonperforming / total * 100, 4)
+
+        nace = credit_risk.get("nace_gross_carrying_eur_m")
+        if nace:
+            sector_total = sum(nace.values())
+            if sector_total > 0:
+                shares_pct = [v / sector_total * 100 for v in nace.values()]
+                row["sector_concentration_hhi"] = herfindahl(shares_pct)
+                top_code, top_amount = max(nace.items(), key=lambda kv: kv[1])
+                row["sector_concentration_top_sector"] = NACE_SECTORS.get(int(top_code))
+                row["sector_concentration_top_pct"] = round(top_amount / sector_total * 100, 2)
 
     # Fields FDIC-derived Silver rows have that EBA genuinely has no equivalent
     # for — explicit None, not omitted, so Gold/xray treat "not disclosed" the

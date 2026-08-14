@@ -24,6 +24,8 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 
+from banklens_mcp.authz import filter_authorized
+
 from . import providers
 from .mcp_client import MCPStdioClient
 from .personas import Persona
@@ -49,6 +51,12 @@ class AgentResult:
     provider: str = ""
     tool_calls: list[ToolCallRecord] = field(default_factory=list)
     turns: int = 0
+    # Caller roles this run was scoped to, and the tool set that survived
+    # intersecting persona.tool_names against them (G2) — recorded even when
+    # no tool from the excluded set was ever called, so the audit trail shows
+    # what was AVAILABLE for the run, not just what got used.
+    roles: tuple[str, ...] = field(default_factory=tuple)
+    effective_tools: tuple[str, ...] = field(default_factory=tuple)
 
 
 def _to_tool_schemas(mcp_tools: list[dict], allowed: tuple[str, ...]) -> list[dict]:
@@ -95,19 +103,35 @@ def _looks_like_stray_tool_call(text: str, tool_names: set[str]) -> bool:
 
 
 def run_agent(persona: Persona, question: str, *, model: str | None = None,
-             provider: str | None = None, on_event=None) -> AgentResult:
+             provider: str | None = None, on_event=None,
+             roles: list[str] | None = None) -> AgentResult:
     """Run one agent turn-loop for `question` under `persona`. `on_event(kind, payload)`
-    is called for live progress (kind in "tool_call", "tool_result", "final")."""
+    is called for live progress (kind in "tool_call", "tool_result", "final").
+
+    `roles`: the authenticated caller's roles (from bridge_server's JWT claims),
+    if this run has one. When given, persona.tool_names is intersected against
+    what G1's OPA policy (via authz.filter_authorized, the same primitive the
+    MCP server itself uses) actually permits those roles — a viewer asking
+    through the same persona as an analyst sees a strictly smaller tool set,
+    not just the persona's static list. `None` (a trusted local CLI run with
+    no caller-role context) skips the intersection entirely, preserving the
+    persona's full static tool set — see mcp_client.py for the matching
+    behavior on the MCP-transport side."""
     provider_name, client = providers.get_client(provider)
     model_id = providers.resolve_model(provider_name, model)
 
-    with MCPStdioClient(requester=f"agent:{persona.key}") as mcp:
+    persona_tools = list(persona.tool_names)
+    allowed = tuple(filter_authorized(persona_tools, roles)) if roles is not None else persona.tool_names
+
+    with MCPStdioClient(requester=f"agent:{persona.key}", roles=roles) as mcp:
         mcp_tools = mcp.list_tools()
-        tools = _to_tool_schemas(mcp_tools, persona.tool_names)
+        tools = _to_tool_schemas(mcp_tools, allowed)
 
         tool_names = {t["name"] for t in tools}
         messages: list[dict] = [{"role": "user", "content": question}]
-        result = AgentResult(persona=persona.key, question=question, answer="", provider=provider_name)
+        result = AgentResult(persona=persona.key, question=question, answer="", provider=provider_name,
+                             roles=tuple(roles) if roles is not None else (),
+                             effective_tools=tuple(sorted(tool_names)))
         seen_calls: dict[tuple, str] = {}
         consecutive_repeats = 0
 
@@ -187,6 +211,7 @@ def to_json(result: AgentResult) -> dict:
     return {
         "persona": result.persona, "question": result.question, "answer": result.answer,
         "provider": result.provider, "turns": result.turns,
+        "roles": list(result.roles), "effective_tools": list(result.effective_tools),
         "tool_calls": [{"name": c.name, "arguments": c.arguments, "result_preview": c.result_preview}
                        for c in result.tool_calls],
     }

@@ -23,6 +23,12 @@ spec:
           env:
             - name: BANKLENS_BRIDGE_HOST
               value: "0.0.0.0"
+          # Postgres creds (watchlist/agent-run/audit persistence) and LLM provider
+          # keys (agent endpoints) — see platform/k8s/base/secrets.yaml and
+          # platform/k8s/README.md for how these are provisioned for real.
+          envFrom:
+            - secretRef: { name: banklens-db-credentials }
+            - secretRef: { name: banklens-llm-keys }
           resources:
             # Deliberately modest — this is a stdlib http.server process serving
             # flat JSON reads, not a heavy service. Per the master plan's "small

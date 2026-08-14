@@ -1,6 +1,29 @@
 // Shapes returned by the REST bridge (services/api-gateway/src/bridge_server.py),
 // which itself wraps banklens_mcp.tools 1:1 — these mirror the tool outputs exactly.
 
+// B10: per-source landing vintage, read from the same _provenance.json every
+// Bronze landing already writes — see banklens_mcp.data.data_freshness.
+export interface DataFreshnessSource {
+  landed: boolean;
+  fetched_at: string | null;
+  endpoint: string | null;
+  record_count: number | null;
+  expected_next_publication: string | null;
+}
+
+export interface DataFreshnessResult {
+  sources: Record<string, DataFreshnessSource>;
+}
+
+// B7: FDIC's Summary of Deposits is landed annually, so every branch-derived
+// figure (footprints, county HHI, the branch map, M&A geo-overlap) can be up
+// to ~18 months stale relative to a quarterly financial figure — every tool
+// response that touches SOD data carries this, not just one hardcoded string.
+export interface SodVintage {
+  sod_year: number | null;
+  fetched_at: string | null;
+}
+
 export interface BankSummary {
   cert: number;
   name: string;
@@ -28,6 +51,8 @@ export interface BankProfile {
   cet1_ratio: number | null;
   leverage_ratio: number | null;
   peer_cluster: string | null;
+  // C11 — which population every "percentile" field below is computed against.
+  peer_basis: 'global' | 'size' | 'cluster';
   footprint: {
     branch_count: number;
     total_deposits: number;
@@ -35,6 +60,7 @@ export interface BankProfile {
     geo_basis: 'county' | 'grid';
     states: string[];
     county_count: number;
+    sod_vintage: SodVintage;
   } | null;
   concentration: {
     cre: MetricPctile;
@@ -54,6 +80,20 @@ export interface BankProfile {
     loan_to_deposit_pct: MetricPctile;
     core_deposit_pct: MetricPctile;
   };
+  // C8 — credit-quality trend/acceleration, not just today's level.
+  credit_trajectory: {
+    npl_ratio_pct: MetricPctile;
+    npl_trend_pp_per_qtr: number | null;
+    npl_acceleration: number | null;
+    net_charge_off_rate_pct: MetricPctile;
+    net_charge_off_trend_pp_per_qtr: number | null;
+    allowance_coverage_pct: MetricPctile;
+    allowance_coverage_trend_pp_per_qtr: number | null;
+    deterioration_flag: boolean;
+    deterioration_signal_count: number;
+    deterioration_signals_available: number;
+    trajectory_quarters: number;
+  };
 }
 
 export interface XrayFlag {
@@ -64,6 +104,9 @@ export interface XrayFlag {
   severity: 'low' | 'elevated' | 'high';
   note: string;
   peer_percentile?: number;
+  // C11 — 'within_cluster' (default, a behaviorally-similar peer group) or
+  // 'global' (fallback when this bank has no cluster assignment).
+  peer_percentile_basis?: 'within_cluster' | 'global';
 }
 
 export interface XrayResult {
@@ -112,6 +155,100 @@ export interface MaCandidate {
 export interface MaFitResult {
   target: string;
   candidates: MaCandidate[];
+  sod_vintage: SodVintage;
+}
+
+// C9 — M&A pro-forma calculator.
+export interface MaCountyImpact {
+  fips: string;
+  name: string | null;
+  state: string | null;
+  hhi_before: number | null;
+  hhi_after: number | null;
+  crosses_threshold: boolean;
+  already_above_threshold: boolean;
+}
+
+export interface MaProFormaResult {
+  target: { cert: number; name: string; total_assets: number; tangible_book_value: number };
+  acquirer: { cert: number; name: string; total_assets: number; tangible_book_value: number };
+  assumptions: {
+    premium_to_tbv_pct: number;
+    cost_synergies_pct_of_target_opex: number;
+    tax_rate_pct: number;
+  };
+  combined: {
+    combined_assets: number;
+    deal_price: number;
+    goodwill_created: number;
+    combined_cet1_ratio_pct: number | null;
+    tangible_book_value_dilution_pct: number | null;
+    annual_synergy_after_tax: number;
+    earn_back_years: number | null;
+  };
+  note: string;
+  county_impact: {
+    sod_vintage: SodVintage;
+    hhi_concentrated_threshold: number;
+    counties_affected: number;
+    counties_crossing_threshold: number;
+    counties: MaCountyImpact[];
+  };
+}
+
+export interface MaWeightDeal {
+  target_cert: number;
+  acquirer_cert: number;
+  target_name: string;
+  acquirer_name: string;
+  fail_year: string;
+  acquirer_percentile: number;
+}
+
+export interface MaWeightQuarterResult {
+  n_matched_deals: number;
+  n: number;
+  mean_percentile: number | null;
+  median_percentile: number | null;
+  deals: MaWeightDeal[];
+}
+
+export interface MaWeightValidationResult {
+  default_weights: { funding: number; business: number; size: number; geo: number };
+  overall_mean_percentile: number | null;
+  n_deals_total: number;
+  per_quarter: Record<string, MaWeightQuarterResult>;
+  refit: Record<string, { weights: Record<string, number> | null; n: number; mean_percentile: number | null }>;
+  // Deal-count-weighted DEFAULT-vs-REFIT comparison — this drives `decision`,
+  // not best_refit_mean_percentile (a small-n quarter can top that by chance).
+  weighted_default_mean_percentile: number | null;
+  weighted_refit_mean_percentile: number | null;
+  weighted_n: number;
+  best_refit_weights: Record<string, number> | null;
+  best_refit_mean_percentile: number | null;
+  margin_pp: number;
+  decision: 'refit' | 'default';
+  note: string;
+}
+
+// C10 — X-Ray forward-return validation.
+export interface XraySeverityStats {
+  n: number;
+  mean: number | null;
+  stdev: number | null;
+}
+
+export interface XrayValidationResult {
+  horizon_trading_days: number;
+  tickers_with_landed_price_data: number;
+  quarters_covered: string[];
+  by_severity: { low: XraySeverityStats; elevated: XraySeverityStats; high: XraySeverityStats };
+  high_vs_low_spread_pp: number | null;
+  z_score: number | null;
+  p_value: number | null;
+  significant_at_05: boolean;
+  n_total: number;
+  note: string;
 }
 
 export interface StressRatios {
@@ -138,6 +275,9 @@ export interface StressResult {
   fully_covered: boolean;
   capital_waterfall: {
     loan_loss: number;
+    // C6: non-empty only when the scenario used per-category loan-loss rates
+    // (run_segmented_stress_test) — decomposes loan_loss by category.
+    loan_loss_by_category: Record<string, number>;
     afs_mark_loss: number;
     htm_realized_loss: number;
     total_capital_hit: number;
@@ -149,6 +289,93 @@ export interface StressResult {
     htm_sold_fraction: number;
     htm_unrealized_loss_memo: number;
   };
+  // E3 — the real starting/ending capital DOLLARS behind before/after's ratios
+  // (already computed server-side, previously unreturned) — what a capital-bridge
+  // waterfall needs to show "starting CET1 -> stressed CET1" without inventing a
+  // number. Optional: only present from stress-test/-compare/-bulk callers that
+  // run the C4-era engine (every current one does; the `?` guards older cached data).
+  capital_dollars?: {
+    cet1_before: number; cet1_after: number;
+    tier1_before: number; tier1_after: number;
+    total_before: number; total_after: number;
+  };
+  // C4: which duration each rate-shock leg actually used — 'disclosed' (real
+  // FDIC maturity data, not yet landed by any connector), 'fallback_default'
+  // (the flat 4y/6y assumption), or 'user_override' (an explicit slider value).
+  duration_sources?: {
+    afs: 'disclosed' | 'fallback_default' | 'user_override';
+    htm: 'disclosed' | 'fallback_default' | 'user_override';
+    afs_duration_used: number;
+    htm_duration_used: number;
+  };
+  correlated_severity?: 'mild' | 'moderate' | 'severe';
+  derived_shock?: { loan_loss_pct: number; deposit_outflow_pct: number; rate_shock_bps: number };
+}
+
+// C4 — multi-period projection: the shock phased in over a horizon, with
+// disclosed PPNR earning back part of each period's loss.
+export interface StressProjectionPeriod {
+  quarter_offset: number;
+  shock_fraction_applied: number;
+  gross_capital_hit: number;
+  ppnr_offset_applied: number;
+  net_capital_hit: number;
+  after: StressRatios;
+  passes: Record<keyof StressRatios, boolean>;
+  passes_all: boolean;
+}
+
+export interface StressProjectionResult {
+  name: string;
+  quarter: string;
+  horizon_quarters: number;
+  phase_in: boolean;
+  ppnr_offset_applied: boolean;
+  ppnr_quarterly_estimated: number | null;
+  path: StressProjectionPeriod[];
+  breach_quarter: number | null;
+  survives_full_horizon: boolean;
+}
+
+// C4 — quarters of on-balance-sheet liquidity under a SUSTAINED (not one-time)
+// quarterly deposit-outflow rate.
+export interface LiquiditySurvivalResult {
+  applicable: boolean;
+  reason?: string;
+  quarters_survived: number | null;
+  breach_quarter: number | null;
+  max_quarters_checked?: number;
+  quarterly_outflow_pct?: number;
+}
+
+export type CorrelatedStressResult = StressResult;
+
+// C5 — Interest Rate Risk in the Banking Book (EVE / NII sensitivity).
+export interface IrrbbScenario {
+  scenario: 'parallel' | 'steepener';
+  shock_bps?: number;
+  short_bps?: number;
+  long_bps?: number;
+  eve_delta: number;
+  eve_delta_pct_of_equity: number | null;
+  nii_delta_12mo: number;
+}
+
+export interface IrrbbResult {
+  name: string;
+  quarter: string;
+  parallel: IrrbbScenario;
+  non_parallel: IrrbbScenario;
+  inputs: {
+    securities_total: number;
+    securities_blended_duration_years: number;
+    securities_duration_source: 'disclosed' | 'fallback_default';
+    loans_total: number;
+    loans_assumed_duration_years: number;
+    deposits_total: number;
+    deposits_assumed_duration_years: number;
+  };
+  bucket_coarseness: string;
 }
 
 export interface RiskDriver {
@@ -159,6 +386,11 @@ export interface RiskDriver {
 
 export interface RiskScoreResult {
   risk_score: number;
+  // C1: risk_score is the model's raw sigmoid output, not a calibrated
+  // probability of failure — see the model card's calibration_curve. Every
+  // UI surface should display resemblance_percentile/_decile instead.
+  resemblance_percentile: number | null;
+  resemblance_decile: number | null;
   drivers: RiskDriver[];
   cert: number;
   name: string;
@@ -215,6 +447,9 @@ export interface BankTrendsResult {
   metrics: string[];
   quarters: string[];
   series: BankTrendPoint[];
+  // C3: 'fixed' when peer_cluster_label above comes from persisted reference-
+  // quarter centroids; 'refit' fallback if none are persisted yet.
+  cluster_mode: 'fixed' | 'refit';
 }
 
 export interface BriefingMover {
@@ -238,6 +473,8 @@ export interface RiskLeaderboardEntrant {
   cert: number;
   name: string;
   risk_score: number;
+  resemblance_percentile: number | null;
+  resemblance_decile: number | null;
 }
 
 export interface QuarterlyBriefingResult {
@@ -252,6 +489,16 @@ export interface QuarterlyBriefingResult {
     count: number;
     by_transition: Record<string, number>;
     sample: ClusterMigration[];
+    // C3: "fixed_centroids" when a reference-quarter fit is persisted (the
+    // real migration signal); "refit" fallback otherwise.
+    method: 'fixed_centroids' | 'refit';
+    refit_comparison: {
+      fixed_centroids_available: boolean;
+      refit_migration_count?: number;
+      fixed_migration_count?: number;
+      refit_only_count?: number;
+      note: string;
+    };
   };
   risk_leaderboard_entrants: RiskLeaderboardEntrant[];
   risk_model_trained: boolean;
@@ -294,6 +541,8 @@ export interface RiskLeaderboardEntry {
   cert: number;
   name: string;
   risk_score: number;
+  resemblance_percentile: number | null;
+  resemblance_decile: number | null;
 }
 
 export interface RiskLeaderboardResult {
@@ -317,6 +566,41 @@ export interface CompareResult {
 export interface WatchlistItem {
   cert: number;
   created_at: string;
+  note: string | null;
+}
+
+// D2 — threshold rules on a watched bank, evaluated after every quarterly
+// refresh (see pipelines/orchestration/src/banklens_orchestration/alerts_cli.py).
+export type WatchlistRuleType =
+  'metric_threshold' | 'metric_delta' | 'xray_severity_increase' | 'risk_leaderboard_entry';
+
+export interface WatchlistRule {
+  id: number;
+  user_sub: string;
+  cert: number;
+  rule_type: WatchlistRuleType;
+  metric: string | null;
+  operator: 'gt' | 'lt' | null;
+  threshold: number | null;
+  top_n: number | null;
+  created_at: string;
+}
+
+export interface SavedScreen {
+  id: number;
+  name: string;
+  filters: Record<string, string | number | undefined>;
+  created_at: string;
+}
+
+export interface AlertItem {
+  id: number;
+  cert: number;
+  rule_id: number | null;
+  message: string;
+  quarter: string | null;
+  triggered_at: string;
+  seen: boolean;
 }
 
 export interface AuditLogEntry {
@@ -429,6 +713,11 @@ export interface HeatmapBank {
 export interface HeatmapResult {
   quarter: string;
   metrics: string[];
+  /** Every Gold metric with a computed percentile_rank_<metric> — the real,
+   * server-side catalog a metric picker should be built from (not a
+   * hand-duplicated frontend list, which could drift from what's actually
+   * computed). */
+  available_metrics: string[];
   banks: HeatmapBank[];
 }
 
@@ -540,6 +829,34 @@ export interface ModelCardDriverPoint {
   risk_score: number;
 }
 
+export interface ModelCardCI {
+  lo: number | null;
+  median: number | null;
+  hi: number | null;
+}
+
+export interface ModelCardBootstrap {
+  n_boot: number;
+  n_boot_used: number;
+  coefficients: Record<string, ModelCardCI>;
+  bias: ModelCardCI;
+  auc: ModelCardCI;
+}
+
+export interface ModelCardPrPoint {
+  threshold: number;
+  precision: number | null;
+  recall: number | null;
+  tp: number;
+  fp: number;
+}
+
+export interface ModelCardCalibrationPoint {
+  mean_predicted: number;
+  observed_rate: number;
+  n: number;
+}
+
 export interface ModelCardResult {
   features: string[];
   weights: number[];
@@ -552,6 +869,10 @@ export interface ModelCardResult {
   leave_one_out: ModelCardLeaveOneOut[];
   scored_quarter: string;
   driver_points: ModelCardDriverPoint[];
+  imputation_rates: Record<string, number>;
+  bootstrap: ModelCardBootstrap | null;
+  pr_curve: ModelCardPrPoint[];
+  calibration_curve: ModelCardCalibrationPoint[];
 }
 
 // ---- geography + market share ----
@@ -576,6 +897,7 @@ export interface CountyConcentration {
 
 export interface CountyConcentrationResult {
   as_of: string;
+  sod_vintage: SodVintage;
   hhi_concentrated_threshold: number;
   county_count: number;
   concentrated_count: number;
@@ -595,6 +917,7 @@ export interface BranchMapResult {
   excluded_non_contiguous: number;
   bank_names: Record<number, string>;
   branches: BranchPoint[];
+  sod_vintage: SodVintage;
 }
 
 // ---- M&A network + stress lab ----
@@ -640,6 +963,33 @@ export interface BulkStressResult {
   results: BulkStressBankResult[];
 }
 
+// E3 — (deposit_outflow x rate_shock) grid for one bank, loan_loss_pct held
+// fixed. Powers the Stress Lab's CET1 surface heatmap.
+export interface StressSurfaceCell {
+  deposit_outflow_pct: number;
+  rate_shock_bps: number;
+  cet1_after: number;
+  passes_cet1: boolean;
+}
+
+export interface StressSurfaceResult {
+  cert: number;
+  name: string;
+  quarter: string;
+  loan_loss_pct: number;
+  deposit_outflow_values: number[];
+  rate_shock_values: number[];
+  steps: number;
+  cells: StressSurfaceCell[];
+  cet1_minimum_pct: number;
+  // True if any cell fell back to the flat 4y/6y AFS/HTM duration assumption
+  // (no per-bank maturity data disclosed) rather than a disclosed duration.
+  fallback_duration_used: boolean;
+  // Same disclosure contract as StressResult.legs_not_applied, collected once
+  // across the whole grid rather than repeated per cell.
+  legs_not_applied: { leg: string; reason: string; requested_pct?: number; requested_bps?: number }[];
+}
+
 export interface StressComparisonResult {
   cert: number;
   name: string;
@@ -673,4 +1023,82 @@ export interface FilingsCoverageResult {
   filers: number;
   chunks: number;
   by_confidence: Record<string, number>;
+}
+
+export interface MarketCoverageResult {
+  eligible: number;
+  landed: number;
+  coverage_pct: number;
+  oldest_bar_age_days: number | null;
+  updated_at: string | null;
+  landed_yet: boolean;
+}
+
+// ---- E2: cross-bank market view (/market) ----
+
+export interface MarketOverviewBank {
+  cert: number;
+  name: string;
+  ticker: string | null;
+  has_price_data: boolean;
+}
+
+export interface MarketRebasedPoint {
+  date: string;
+  value: number;
+}
+
+export interface MarketPerformanceSeries {
+  cert: number;
+  name: string;
+  ticker: string | null;
+  series: MarketRebasedPoint[];
+}
+
+export interface MarketScatterPoint {
+  cert: number;
+  name: string;
+  return_pct: number | null;
+  volatility_pct: number | null;
+}
+
+export interface MarketCorrelationMatrix {
+  certs: number[];
+  labels: string[];
+  /** Pairwise Pearson correlation of daily returns; null where fewer than 10 shared trading days. */
+  matrix: (number | null)[][];
+}
+
+export interface MarketMetricsRow {
+  cert: number;
+  name: string;
+  ticker: string | null;
+  total_return_pct: number | null;
+  realized_volatility_pct: number | null;
+  vol_vs_peer_median_pct: number | null;
+  max_drawdown_pct: number | null;
+  /** Beta vs an equal-weighted basket of every priced bank in view — see MarketOverviewResult.benchmark. */
+  beta_vs_peer_basket: number | null;
+  tangible_book_value_usd: number | null;
+  /** Always null today — see MarketOverviewResult.per_share_metrics_note. */
+  price_to_tangible_book_value: number | null;
+  /** Always null today — see MarketOverviewResult.per_share_metrics_note. */
+  price_to_earnings: number | null;
+  bars_used: number;
+}
+
+export interface MarketOverviewResult {
+  quarter: string;
+  window_days: number;
+  requested_count: number;
+  priced_count: number;
+  coverage_note: string;
+  banks: MarketOverviewBank[];
+  performance_series: MarketPerformanceSeries[];
+  scatter: MarketScatterPoint[];
+  correlation: MarketCorrelationMatrix;
+  metrics: MarketMetricsRow[];
+  benchmark: 'equal_weighted_peer_basket';
+  per_share_metrics_available: false;
+  per_share_metrics_note: string;
 }

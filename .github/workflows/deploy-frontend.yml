@@ -1,0 +1,74 @@
+name: Deploy frontend (Cloudflare Pages)
+
+# Free-hosting deployment path (see docs/audit/04-remediation-prompts.md, A11):
+# the frontend is a static Vite build with no server-side process, so it can
+# run on Cloudflare Pages' free tier rather than the nginx container in
+# frontend/apps/web/Dockerfile (that Dockerfile is still the right choice for
+# local Docker/K8s testing — this workflow is the OTHER deployment path, not
+# a replacement for it).
+#
+# Requires two repo secrets to actually publish:
+#   CLOUDFLARE_API_TOKEN   — a token scoped to Cloudflare Pages:Edit
+#   CLOUDFLARE_ACCOUNT_ID  — the target Cloudflare account
+# and reads the deployed bridge/OIDC URLs from repo variables (Settings ->
+# Secrets and variables -> Actions -> Variables), so this file never needs a
+# real URL hardcoded into it:
+#   VITE_API_BASE, VITE_OIDC_AUTHORITY, VITE_OIDC_CLIENT_ID, VITE_OIDC_ROLES_CLAIM
+# All four fall back to the same localhost defaults api.ts/auth.ts already
+# have if the variables aren't set, so this workflow degrades to building the
+# same thing `npm run build` produces locally — it just won't be reachable
+# from anywhere but localhost until the variables point at a real bridge.
+#
+# Gated on CLOUDFLARE_API_TOKEN being present so this workflow is a no-op
+# (not a red X) on a fork or before Cloudflare is wired up.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "frontend/apps/web/**"
+      - ".github/workflows/deploy-frontend.yml"
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    name: Build + publish to Cloudflare Pages
+    runs-on: ubuntu-latest
+    if: ${{ vars.CLOUDFLARE_PAGES_PROJECT != '' }}
+    defaults:
+      run:
+        working-directory: frontend/apps/web
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/apps/web/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        env:
+          VITE_API_BASE: ${{ vars.VITE_API_BASE }}
+          VITE_OIDC_AUTHORITY: ${{ vars.VITE_OIDC_AUTHORITY }}
+          VITE_OIDC_CLIENT_ID: ${{ vars.VITE_OIDC_CLIENT_ID }}
+          VITE_OIDC_ROLES_CLAIM: ${{ vars.VITE_OIDC_ROLES_CLAIM }}
+          VITE_KEYCLOAK_URL: ${{ vars.VITE_KEYCLOAK_URL }}
+        run: npm run build
+
+      - name: Publish to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: ${{ vars.CLOUDFLARE_PAGES_PROJECT }}
+          directory: frontend/apps/web/dist
+          # The SPA fallback (_redirects) and baseline security headers
+          # (_headers) live in frontend/apps/web/public/ and are copied into
+          # dist/ by `npm run build` automatically — nothing extra needed here.
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}

@@ -66,6 +66,16 @@ _DOLLAR_FIELDS = {
     # named accordingly so nobody divides them by a loan denominator by accident.
     "NCLNLS": "noncurrent_loans",
     "NTLNLS": "net_charge_offs",
+    # C6 — net charge-offs by the same 8-leaf disjoint category set
+    # gold.LOAN_CATEGORIES uses for concentration ratios.
+    "NTRECONS": "net_charge_offs_construction",
+    "NTREMULT": "net_charge_offs_multifamily",
+    "NTRENRES": "net_charge_offs_nonfarm_nonres",
+    "NTRERES": "net_charge_offs_residential_mortgage",
+    "NTREAG": "net_charge_offs_farmland",
+    "NTAG": "net_charge_offs_agricultural",
+    "NTCI": "net_charge_offs_c_and_i",
+    "NTCON": "net_charge_offs_consumer",
     "LNATRES": "allowance_for_credit_losses",
     "P3ASSET": "assets_past_due_30_89",
     "P9ASSET": "assets_past_due_90_plus",

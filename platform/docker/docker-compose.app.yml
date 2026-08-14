@@ -1,7 +1,7 @@
 # BankLens application services (bridge + quant terminal), containerized.
-# Separate from docker-compose.dev.yml (that one is the DATA infra tier —
-# Postgres/ClickHouse/MinIO/Redis — which is scaffolded but not yet wired into
-# any real code; this file is the actual app tier that's genuinely running today).
+# Separate from docker-compose.dev.yml (that one is the DATA/observability/auth
+# infra tier — Postgres, Prometheus, Grafana, Keycloak, OPA; this file is the
+# actual app tier that's genuinely running today).
 #
 # Run from the repo root:
 #   docker compose -f platform/docker/docker-compose.app.yml up --build

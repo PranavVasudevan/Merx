@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import * as echarts from 'echarts/core';
-import { GraphChart, HeatmapChart, TreemapChart } from 'echarts/charts';
+import {
+  BoxplotChart, GraphChart, HeatmapChart, ScatterChart, TreemapChart,
+} from 'echarts/charts';
 import {
   GridComponent, LegendComponent, TitleComponent, TooltipComponent, VisualMapComponent,
 } from 'echarts/components';
@@ -11,8 +13,10 @@ import { onThemeChange } from '../colors';
 // Tree-shaken registration. Importing the `echarts` barrel instead would pull ~1MB
 // minified; registering only what's used keeps the vendor chunk to the charts this
 // app actually renders. Anything new must be added here or it silently won't draw.
+// BoxplotChart + ScatterChart: GroupComparisonChart.tsx's per-cluster/size-band/
+// state/peer-set boxplot with a jittered beeswarm overlay.
 echarts.use([
-  TreemapChart, HeatmapChart, GraphChart,
+  TreemapChart, HeatmapChart, GraphChart, BoxplotChart, ScatterChart,
   GridComponent, TooltipComponent, VisualMapComponent, LegendComponent, TitleComponent,
   CanvasRenderer,
 ]);

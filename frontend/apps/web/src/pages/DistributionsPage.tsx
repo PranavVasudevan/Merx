@@ -6,7 +6,10 @@ import {
 import { motion } from 'motion/react';
 import { api } from '../api';
 import { chartColors } from '../colors';
-import type { MetricDistributionResult } from '../types';
+import type { HistogramBin, MetricDistributionResult } from '../types';
+import { ExportCsvButton } from '../components/ExportCsvButton';
+import { BankSearch } from '../components/BankSearch';
+import { GroupComparisonChart } from '../components/GroupComparisonChart';
 import '../components/charts.css';
 import './DistributionsPage.css';
 
@@ -39,6 +42,38 @@ function fmt(v: number): string {
   return `${v.toFixed(1)}%`;
 }
 
+function ordinal(n: number): string {
+  const mod100 = n % 100;
+  if (mod100 >= 11 && mod100 <= 13) return `${n}th`;
+  switch (n % 10) {
+    case 1: return `${n}st`;
+    case 2: return `${n}nd`;
+    case 3: return `${n}rd`;
+    default: return `${n}th`;
+  }
+}
+
+// The histogram is already fetched for the chart itself, so a selected bank's
+// percentile is estimated from those same bins (linear interpolation within the
+// bin containing its value) rather than adding another request. This is real,
+// derived-from-landed-data math, just bin-resolution-limited near the edges —
+// hence "~" in the label rather than claiming exact-rank precision.
+function estimatePercentileFromHistogram(value: number, histogram: HistogramBin[], total: number): number {
+  if (total <= 0 || histogram.length === 0) return 0;
+  let cumulative = 0;
+  for (let i = 0; i < histogram.length; i++) {
+    const bin = histogram[i];
+    const isLast = i === histogram.length - 1;
+    if (i === 0 && value < bin.lower) break;
+    if (!isLast && value >= bin.upper) { cumulative += bin.count; continue; }
+    const width = bin.upper - bin.lower;
+    const frac = width > 0 ? Math.min(Math.max((value - bin.lower) / width, 0), 1) : 0;
+    cumulative += bin.count * frac;
+    return (cumulative / total) * 100;
+  }
+  return (cumulative / total) * 100;
+}
+
 function ChartTooltipBox({ active, payload }: {
   active?: boolean; payload?: { payload: { lower: number; upper: number; count: number } }[];
 }) {
@@ -56,6 +91,9 @@ export function DistributionsPage() {
   const [metric, setMetric] = useState('texas_ratio_pct');
   const [result, setResult] = useState<MetricDistributionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [bank, setBank] = useState<{ cert: number; name: string } | null>(null);
+  const [bankValue, setBankValue] = useState<number | null>(null);
+  const [bankValueLoaded, setBankValueLoaded] = useState(false);
   const colors = chartColors();
 
   useEffect(() => {
@@ -65,8 +103,27 @@ export function DistributionsPage() {
       .catch((e: Error) => setError(e.message));
   }, [metric]);
 
+  // A bank's own value for the metric currently on screen — fetched via the
+  // existing /compare route (real Gold field, single cert so the bulk-licensing
+  // gate never engages) rather than adding a new endpoint.
+  useEffect(() => {
+    if (!bank) { setBankValue(null); setBankValueLoaded(false); return; }
+    setBankValueLoaded(false);
+    api.compareBanks([bank.cert], [metric])
+      .then((r) => {
+        const row = r.banks[0];
+        const v = row ? row[metric] : null;
+        setBankValue(typeof v === 'number' ? v : null);
+        setBankValueLoaded(true);
+      })
+      .catch(() => { setBankValue(null); setBankValueLoaded(true); });
+  }, [metric, bank]);
+
   const label = METRIC_OPTIONS.flatMap((g) => g.options).find((o) => o.value === metric)?.label ?? metric;
   const chartData = result?.histogram.map((h) => ({ ...h, mid: (h.lower + h.upper) / 2 })) ?? [];
+  const bankPercentile = result && bankValue !== null
+    ? estimatePercentileFromHistogram(bankValue, result.histogram, result.count)
+    : null;
 
   return (
     <div className="distributions-page">
@@ -78,19 +135,48 @@ export function DistributionsPage() {
           the 1st/99th percentile, so a handful of extreme outliers can't flatten the
           rest of the chart into one bar.
         </p>
-        <select className="distributions-select" value={metric} onChange={(e) => setMetric(e.target.value)}>
-          {METRIC_OPTIONS.map((g) => (
-            <optgroup key={g.group} label={g.group}>
-              {g.options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </optgroup>
-          ))}
-        </select>
+        <div className="distributions-controls">
+          <select className="distributions-select" value={metric} onChange={(e) => setMetric(e.target.value)}>
+            {METRIC_OPTIONS.map((g) => (
+              <optgroup key={g.group} label={g.group}>
+                {g.options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </optgroup>
+            ))}
+          </select>
+          <BankSearch onSelect={(cert, name) => setBank({ cert, name })} />
+          {bank && (
+            <span className="distributions-bank-chip">
+              {bank.name}
+              <button
+                type="button"
+                className="distributions-bank-chip-clear"
+                onClick={() => setBank(null)}
+                aria-label="Clear selected bank"
+              >
+                ×
+              </button>
+            </span>
+          )}
+        </div>
         {error && <p className="app-banner-error">{error}</p>}
       </div>
 
       {result && (
         <div className="panel">
-          <h2>{label} — {result.count} banks, {result.quarter}</h2>
+          <div className="distributions-header-row">
+            <h2>{label} — {result.count} banks, {result.quarter}</h2>
+            <ExportCsvButton
+              filename={`banklens-distribution-${metric}.csv`}
+              columns={[
+                { key: 'lower', label: 'Bin lower', value: (h) => h.lower, source: 'derived' },
+                { key: 'upper', label: 'Bin upper', value: (h) => h.upper, source: 'derived' },
+                { key: 'count', label: 'Bank count', value: (h) => h.count, source: 'derived' },
+              ]}
+              rows={result.histogram}
+              meta={{ vintage: result.quarter, sourceLabel: 'FDIC Call Reports (derived distribution)' }}
+              label="Download chart data"
+            />
+          </div>
           <div className="distributions-stats">
             <div className="distributions-stat"><span className="muted">Min</span><span className="tabular">{fmt(result.min)}</span></div>
             <div className="distributions-stat"><span className="muted">P25</span><span className="tabular">{fmt(result.p25)}</span></div>
@@ -101,6 +187,21 @@ export function DistributionsPage() {
             <div className="distributions-stat"><span className="muted">Max</span><span className="tabular">{fmt(result.max)}</span></div>
           </div>
 
+          {bank && (
+            <p className="distributions-bank-readout">
+              {!bankValueLoaded ? (
+                <>Loading {bank.name}'s value…</>
+              ) : bankValue === null ? (
+                <>{bank.name} has no reported value for {label.toLowerCase()} this quarter — not plotted.</>
+              ) : (
+                <>
+                  <Link to={`/bank/${bank.cert}`}>{bank.name}</Link>: {fmt(bankValue)}
+                  {bankPercentile !== null && <> — ~{ordinal(Math.round(bankPercentile))} percentile of the population</>}
+                </>
+              )}
+            </p>
+          )}
+
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={chartData} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
               <XAxis dataKey="mid" tickFormatter={fmt} tick={{ fill: colors.muted, fontSize: 10.5 }}
@@ -109,6 +210,13 @@ export function DistributionsPage() {
               <Tooltip content={<ChartTooltipBox />} cursor={{ fill: 'var(--surface-2)' }} />
               <ReferenceLine x={result.median} stroke={colors.critical} strokeDasharray="3 3"
                 label={{ value: 'median', fill: colors.critical, fontSize: 10, position: 'top' }} />
+              {bank && bankValue !== null && (
+                <ReferenceLine x={bankValue} stroke={colors.violet} strokeWidth={2}
+                  label={{
+                    value: `${bank.name}${bankPercentile !== null ? ` (~${ordinal(Math.round(bankPercentile))} pctile)` : ''}`,
+                    fill: colors.violet, fontSize: 10, position: 'insideTopLeft',
+                  }} />
+              )}
               <Bar dataKey="count" radius={[3, 3, 0, 0]} fill={colors.blue}
                 animationDuration={600} animationEasing="ease-out" />
             </BarChart>
@@ -133,6 +241,11 @@ export function DistributionsPage() {
           )}
         </div>
       )}
+
+      {/* E5 — a metric's distribution SHAPE across clusters/size bands/states/
+          peer sets, standalone from the single global histogram above so it
+          doesn't entangle with that panel's own state. */}
+      <GroupComparisonChart />
     </div>
   );
 }

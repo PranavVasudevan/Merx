@@ -1,0 +1,24 @@
+.export-csv-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: border-color var(--duration-fast) ease, color var(--duration-fast) ease;
+}
+
+.export-csv-btn:hover:not(:disabled) {
+  border-color: var(--cat-blue);
+  color: var(--cat-blue);
+}
+
+.export-csv-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

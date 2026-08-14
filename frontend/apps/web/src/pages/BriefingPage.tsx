@@ -30,9 +30,9 @@ export function BriefingPage() {
       <div className="panel">
         <h2>Quarterly briefing</h2>
         <p className="muted briefing-subtitle">
-          What changed across the $1B–$250B population between the two most recently
-          landed quarters — not a per-bank drill-down (see Trends and Filing Diff for
-          that).
+          What changed across the full landed FDIC population between the two most
+          recently landed quarters — not a per-bank drill-down (see Trends and Filing
+          Diff for that).
         </p>
         {error && <p className="app-banner-error">{error}</p>}
       </div>
@@ -63,7 +63,7 @@ export function BriefingPage() {
               <div className="briefing-churn">
                 {b.entered.length > 0 && (
                   <div>
-                    <h3 className="briefing-subhead">Newly in the $1B–$250B slice</h3>
+                    <h3 className="briefing-subhead">Newly in the population</h3>
                     <p className="muted briefing-name-list">{b.entered.join(' · ')}</p>
                   </div>
                 )}
@@ -104,11 +104,14 @@ export function BriefingPage() {
           <div className="panel">
             <h2>Behavioral cluster migrations</h2>
             <p className="muted chart-caption briefing-cluster-caveat">
-              Clusters are recomputed independently each quarter — a bank near a
-              cluster boundary can show a real label change here even with a stable
-              balance sheet. High counts on one transition often mean many banks sit
-              near that same boundary, not that they all coordinated a real behavioral
-              shift.
+              {b.cluster_migrations.method === 'fixed_centroids'
+                ? 'Assigned against fixed reference-quarter centroids, not a fresh refit each ' +
+                  'quarter — a bank near a cluster boundary with a stable balance sheet keeps the ' +
+                  'same label instead of flipping on refit noise.'
+                : 'Clusters are recomputed independently each quarter — a bank near a cluster ' +
+                  'boundary can show a label change here even with a stable balance sheet. Run ' +
+                  'cluster_centroids_cli to enable fixed-centroid assignment and remove this noise.'}
+              {' '}{b.cluster_migrations.refit_comparison.note}
             </p>
             <div className="briefing-transitions">
               {topTransitions.map(([pair, count]) => (
@@ -140,7 +143,9 @@ export function BriefingPage() {
               <div className="briefing-entrants">
                 {b.risk_leaderboard_entrants.map((r) => (
                   <Link className="briefing-entrant-row" key={r.cert} to={`/bank/${r.cert}`}>
-                    <span className="tabular briefing-entrant-score">{(r.risk_score * 100).toFixed(1)}%</span>
+                    <span className="tabular briefing-entrant-score">
+                      {r.resemblance_percentile === null ? '—' : `${r.resemblance_percentile.toFixed(0)}th pctile`}
+                    </span>
                     <span>{r.name}</span>
                   </Link>
                 ))}

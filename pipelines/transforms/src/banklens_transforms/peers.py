@@ -11,6 +11,8 @@ a LOW `percentile_rank_cet1_ratio` means unusually thin capital.
 
 from __future__ import annotations
 
+from collections import defaultdict
+
 # Metrics we rank a bank against its peers on. Computed ONCE here and reused by every
 # consumer (profile percentiles, X-Ray peer context, the metric-group tables, the
 # heatmap) — the same "build Gold once" contract the rest of this layer follows.
@@ -53,12 +55,54 @@ def percentile_rank(value: float | None, population: list[float | None]) -> floa
     return round(count_leq / len(vals) * 100, 1)
 
 
+def _add_conditional_ranks(gold_rows: list[dict], metrics: list[str], *,
+                           group_field: str, suffix: str) -> None:
+    """Shared helper for the `_within_size`/`_within_cluster` passes below:
+    group rows by `group_field`, rank each group against only its own peers,
+    and set `percentile_rank_<metric><suffix>` on every row — `None` (not
+    absent) for rows whose `group_field` is unknown, so every row carries the
+    same key set regardless of data completeness."""
+    by_group: dict[str, list[dict]] = defaultdict(list)
+    for g in gold_rows:
+        key = g.get(group_field)
+        if key is not None:
+            by_group[key].append(g)
+    for rows in by_group.values():
+        for m in metrics:
+            population = [g.get(m) for g in rows]
+            for g in rows:
+                g[f"percentile_rank_{m}{suffix}"] = percentile_rank(g.get(m), population)
+    for g in gold_rows:
+        if g.get(group_field) is None:
+            for m in metrics:
+                g.setdefault(f"percentile_rank_{m}{suffix}", None)
+
+
 def add_percentile_ranks(gold_rows: list[dict], metrics: list[str] = RANK_METRICS) -> list[dict]:
-    """Attach ``percentile_rank_<metric>`` to every row, computed across all rows."""
+    """Attach THREE percentile bases to every row, all in the same single pass
+    (C11) — the "build Gold once" contract this layer follows everywhere else:
+
+      ``percentile_rank_<metric>``                — population-wide (global)
+      ``percentile_rank_<metric>_within_size``     — against same-`asset_band` peers
+      ``percentile_rank_<metric>_within_cluster``  — against same-`peer_cluster_label` peers
+
+    The conditional bases exist because widening the landed population beyond
+    the original $1B-$250B slice (B3) put a $1.2B community bank and a $900B
+    GSIB in the same pool: a population-wide percentile is now partly a size
+    percentile in disguise for any metric correlated with scale, and a peer
+    cluster (behavioral similarity — funding mix, loan mix, size — see
+    `clustering.py`) is often the more relevant comparison set than either raw
+    size or the whole population. Rows with an unknown `asset_band` or
+    `peer_cluster_label` get `None` for that conditional field, same as any
+    other undetermined percentile — never silently dropped from the row.
+    """
     for m in metrics:
         population = [g.get(m) for g in gold_rows]
         for g in gold_rows:
             g[f"percentile_rank_{m}"] = percentile_rank(g.get(m), population)
+
+    _add_conditional_ranks(gold_rows, metrics, group_field="asset_band", suffix="_within_size")
+    _add_conditional_ranks(gold_rows, metrics, group_field="peer_cluster_label", suffix="_within_cluster")
     return gold_rows
 
 

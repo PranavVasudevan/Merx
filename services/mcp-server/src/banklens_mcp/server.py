@@ -27,6 +27,7 @@ import time
 from banklens_common import db as common_db
 
 from . import data
+from .authz import AuthorizationError, authorize_tool
 from .tools import TOOLS, TOOL_BY_NAME
 
 PROTOCOL_VERSION = "2025-06-18"
@@ -38,6 +39,13 @@ _pg_warned = False
 # connection, so this is safe to hold as module state rather than threading
 # it through every call.
 _requester = "unknown"
+# Set from `initialize`'s params.roles — the MCP spec has no standard field
+# for this (stdio has no per-request auth header to carry it, same reason
+# _requester exists), so a client asserts its caller's roles once at session
+# setup, same lifecycle as clientInfo. Defaults to no roles at all, not
+# ["viewer"]: a client that never declares roles gets every tool denied
+# rather than silently granted viewer-tier access.
+_roles: list[str] = []
 
 
 def _result(mid, result):
@@ -115,12 +123,15 @@ def handle(msg: dict):
     mid = msg.get("id")
 
     if method == "initialize":
-        global _requester
+        global _requester, _roles
         params = msg.get("params") or {}
         proto = params.get("protocolVersion", PROTOCOL_VERSION)
         client_name = (params.get("clientInfo") or {}).get("name")
         if client_name:
             _requester = str(client_name)
+        roles = params.get("roles")
+        if isinstance(roles, list):
+            _roles = [str(r) for r in roles]
         return _result(mid, {
             "protocolVersion": proto,
             "capabilities": {"tools": {"listChanged": False}},
@@ -143,6 +154,14 @@ def handle(msg: dict):
             return _error(mid, -32602, f"unknown tool: {name}")
         start = time.time()
         try:
+            # Authorization runs before coercion/execution — an unauthorized call
+            # shouldn't pay for (or leak anything through timing of) argument
+            # handling or the handler itself. Still inside this same try: a denial
+            # is an in-band tool error (isError: true), not a raised exception that
+            # would kill the process for every other in-flight call — same
+            # "malformed input can't crash the server" contract the coercion
+            # comment below already established for bad arguments.
+            authorize_tool(name, _roles)
             # Coercion lives INSIDE the try: a malformed, non-dict `arguments` value
             # (e.g. a client sending a bare string instead of an object — not valid
             # per the protocol, but a client shouldn't be able to crash the whole

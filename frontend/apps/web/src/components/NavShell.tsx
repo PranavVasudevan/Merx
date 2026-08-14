@@ -4,8 +4,12 @@ import type { User } from 'oidc-client-ts';
 import { motion } from 'motion/react';
 import { api } from '../api';
 import { roles } from '../auth';
+import { RISK_DISCLAIMER } from '../csvExport';
 import { BankSearch } from './BankSearch';
 import { CommandPalette } from './CommandPalette';
+import { DataFreshnessStrip } from './DataFreshnessStrip';
+import { DisclaimerModal } from './DisclaimerModal';
+import { QuarterSelector } from './QuarterSelector';
 import { SkinToggle } from './SkinToggle';
 import { NAV_GROUPS } from '../navGroups';
 import './NavShell.css';
@@ -15,7 +19,6 @@ const ANALYST_ONLY_PATHS = new Set(['/assistant', '/activity', '/stress-lab']);
 export function NavShell({ user, onLogout }: { user: User; onLogout: () => void }) {
   const navigate = useNavigate();
   const [backendUp, setBackendUp] = useState<boolean | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const userRoles = roles(user);
   const isAnalyst = userRoles.includes('analyst');
 
@@ -35,6 +38,8 @@ export function NavShell({ user, onLogout }: { user: User; onLogout: () => void 
 
   return (
     <div className="app-shell-redesigned">
+      <DisclaimerModal />
+
       {/* Sidebar */}
       <motion.aside
         initial={{ x: -288 }}
@@ -100,6 +105,7 @@ export function NavShell({ user, onLogout }: { user: User; onLogout: () => void 
               <div className="app-status-dot" />
               <span className="text-xs font-mono text-muted uppercase tracking-wider">Live • FDIC Connected</span>
             </div>
+            <QuarterSelector />
           </div>
 
           <div className="app-header-center">
@@ -117,8 +123,12 @@ export function NavShell({ user, onLogout }: { user: User; onLogout: () => void 
         </main>
 
         {/* Footer */}
-        <footer className="app-footer-redesigned muted">
-          BankLens · data from FDIC BankFind, SEC EDGAR, Tiingo
+        <footer className="app-footer-redesigned">
+          <div className="muted app-footer-with-freshness">
+            <span>BankLens · data from FDIC BankFind, SEC EDGAR, Fed NIC, FRED, EBA, Tiingo</span>
+            <DataFreshnessStrip />
+          </div>
+          <div className="muted app-footer-disclaimer">{RISK_DISCLAIMER}</div>
         </footer>
       </div>
     </div>
