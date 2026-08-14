@@ -1,46 +1,55 @@
-/* BankLens Redesigned Theme — Vibrant Glassmorphism Quant Terminal */
+/* BankLens Theme — restrained financial-terminal palette.
+   Charcoal/graphite surfaces, warm off-white text, a single muted amber/bronze
+   accent. No translucency, no blur, no glow — depth comes from flat surface
+   steps (--surface / --surface-2 / --surface-elevated) and hairline borders. */
 
 :root {
   color-scheme: dark;
 
-  /* Deep Space Palette */
-  --page: #0a0e1a;
-  --surface: rgba(15, 23, 42, 0.4);
-  --surface-2: rgba(30, 41, 59, 0.5);
-  --surface-elevated: rgba(51, 65, 85, 0.6);
+  --page: #14130f;
+  --surface: #1c1a17;
+  --surface-2: #242220;
+  --surface-elevated: #2c2a26;
 
   /* Text Hierarchy */
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
+  --text-primary: #f2ede4;
+  --text-secondary: #b8b0a3;
+  --text-muted: #8a8276;
 
   /* Borders & Dividers */
-  --border: rgba(148, 163, 196, 0.12);
-  --border-strong: rgba(148, 163, 196, 0.24);
-  --gridline: rgba(148, 163, 196, 0.08);
+  --border: #322f2a;
+  --border-strong: #46423b;
+  --gridline: #26241f;
+  --baseline: #46423b;
 
-  /* Vibrant Categorical Palette */
-  --cat-blue: #3b82f6;
-  --cat-green: #10b981;
-  --cat-magenta: #ec4899;
-  --cat-yellow: #fbbf24;
-  --cat-aqua: #06b6d4;
-  --cat-orange: #f97316;
-  --cat-violet: #a78bfa;
-  --cat-red: #ef4444;
+  /* Single restrained accent */
+  --accent: #b8863f;
+
+  /* Categorical Palette — desaturated, no purple/neon */
+  --cat-blue: #5b84a8;
+  --cat-green: #6f9e6a;
+  --cat-magenta: #a85f78;
+  --cat-yellow: #c9a227;
+  --cat-aqua: #4f8f8a;
+  --cat-orange: #b1653c;
+  --cat-violet: #8a7f74;
+  --cat-red: #b1503f;
 
   /* Sequential & Diverging */
-  --seq-100: #1e293b;
-  --seq-300: #334155;
-  --seq-450: #3b82f6;
-  --seq-600: #60a5fa;
-  --div-pos: #10b981;
-  --div-neg: #ef4444;
+  --seq-100: #241f18;
+  --seq-300: #4a3a26;
+  --seq-450: #8a6a3a;
+  --seq-600: #c9a35a;
+  --div-pos: #6f9e6a;
+  --div-neg: #b1503f;
+  --div-mid: #322f2a;
 
   /* Status Indicators */
-  --status-good: #10b981;
-  --status-warning: #f59e0b;
-  --status-critical: #ef4444;
+  --status-good: #6f9e6a;
+  --status-warning: #c9a227;
+  --status-serious: #b1653c;
+  --status-critical: #b1503f;
+  --success-text: #7fae78;
 
   /* Spacing & Typography */
   --space-1: 4px;
@@ -58,29 +67,24 @@
   --text-sm: 12px;
   --text-xs: 11px;
 
-  /* Radius & Motion */
-  --radius-sm: 6px;
-  --radius: 10px;
-  --radius-lg: 14px;
-  --radius-pill: 999px;
+  /* Radius & Motion — small, consistent radii; no pill shapes */
+  --radius-sm: 4px;
+  --radius: 6px;
+  --radius-lg: 8px;
+  --radius-pill: 6px;
 
   --ease-organic: cubic-bezier(0.85, 0, 0.15, 1);
   --duration-fast: 140ms;
   --duration-base: 320ms;
   --duration-slow: 520ms;
 
-  /* Glassmorphism Effects */
-  --glass-blur: blur(20px);
-  --glass-glow: 0 0 0 1px rgba(148, 163, 196, 0.1),
-                0 8px 32px rgba(0, 0, 0, 0.5),
-                0 0 40px -8px rgba(59, 130, 246, 0.3);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 2px 6px rgba(0, 0, 0, 0.4), 0 8px 20px rgba(0, 0, 0, 0.3);
+  --shadow-float: 0 4px 12px rgba(0, 0, 0, 0.45), 0 12px 28px rgba(0, 0, 0, 0.35);
 
-  --shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5), 0 16px 40px rgba(0, 0, 0, 0.4);
-
-  /* Panel Styling */
-  --panel-blur: var(--glass-blur);
-  --panel-glow: var(--glass-glow);
+  /* Panel Styling — hairline only, no blur/glow */
+  --panel-blur: none;
+  --panel-glow: 0 0 0 1px var(--border);
 }
 
 * { box-sizing: border-box; }
@@ -88,10 +92,7 @@ html, body, #root { height: 100%; }
 
 body {
   margin: 0;
-  background:
-    radial-gradient(1400px 700px at 20% -20%, rgba(59, 130, 246, 0.08), transparent 60%),
-    radial-gradient(1000px 600px at 100% 10%, rgba(167, 139, 250, 0.06), transparent 55%),
-    var(--page);
+  background: var(--page);
   color: var(--text-primary);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: var(--text-base);
@@ -101,7 +102,7 @@ body {
 .tabular { font-variant-numeric: tabular-nums; }
 
 :focus-visible {
-  outline: 2px solid var(--cat-blue);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
@@ -110,20 +111,15 @@ body {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  backdrop-filter: var(--panel-blur);
-  box-shadow: var(--panel-glow);
   padding: var(--space-4) var(--space-5);
   transition: border-color var(--duration-fast) var(--ease-organic),
-              box-shadow var(--duration-fast) var(--ease-organic),
-              transform var(--duration-fast) var(--ease-organic);
+              box-shadow var(--duration-fast) var(--ease-organic);
 }
 
 @media (hover: hover) {
   .panel:hover {
     border-color: var(--border-strong);
-    box-shadow: 0 0 0 1px rgba(148, 163, 196, 0.15),
-                0 12px 40px rgba(0, 0, 0, 0.6),
-                0 0 50px -8px rgba(59, 130, 246, 0.4);
+    box-shadow: var(--shadow);
   }
 }
 
@@ -159,7 +155,6 @@ body {
   border-radius: var(--radius-pill);
   letter-spacing: .02em;
   transition: background-color var(--duration-fast) var(--ease-organic);
-  backdrop-filter: blur(6px);
 }
 
 .chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
@@ -177,31 +172,6 @@ a { color: var(--cat-blue); transition: color var(--duration-fast) var(--ease-or
   background: var(--gridline);
   border: none;
   margin: var(--space-4) 0;
-}
-
-/* Glass Panel Utility */
-.glass-panel {
-  background: var(--surface);
-  backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--glass-glow);
-  transition: all var(--duration-fast) var(--ease-organic);
-}
-
-.glass-panel:hover {
-  border-color: var(--border-strong);
-  box-shadow: 0 0 0 1px rgba(148, 163, 196, 0.15),
-              0 12px 40px rgba(0, 0, 0, 0.6),
-              0 0 50px -8px rgba(59, 130, 246, 0.4);
-}
-
-/* Gradient Text */
-.gradient-text {
-  background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 50%, #3b82f6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 /* Loading States */

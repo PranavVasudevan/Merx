@@ -1,8 +1,12 @@
 //! Capital Buffer Simulator (Feature 16) — real Rust port of
 //! `pipelines/transforms/src/banklens_transforms/stress.py`, ported line-for-line
 //! (not reimagined) so the two engines are provably interchangeable: same
-//! inputs, same outputs, verified in `tests/parity.rs` against real landed
-//! bank data by shelling out to the Python reference and diffing.
+//! inputs, same outputs. Byte-for-byte parity against the Python reference was
+//! verified locally before this landed (see `CHANGELOG.md`'s Phase 9 entry) —
+//! there is no committed automated parity harness that shells out to Python and
+//! diffs on every CI run; the `tests` module below (deterministic cases plus
+//! proptest property tests) is what actually runs in CI, see
+//! `.github/workflows/ci.yml`'s `rust` job.
 //!
 //! Deliberately transparent, deterministic math — NOT a model — because
 //! stress-test logic must be auditable. QuantLib is bridged in later for real

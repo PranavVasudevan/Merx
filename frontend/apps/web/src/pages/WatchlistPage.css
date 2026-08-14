@@ -75,6 +75,7 @@
 }
 
 .watchlist-row-rules { flex: 2 1 300px; display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+.watchlist-peer-sets { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
 
 .watchlist-rule-chip {
   display: inline-flex;

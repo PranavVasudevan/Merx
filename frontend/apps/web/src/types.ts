@@ -15,6 +15,31 @@ export interface DataFreshnessResult {
   sources: Record<string, DataFreshnessSource>;
 }
 
+// D9/G9: one Gold metric traced back to its Bronze source — see
+// banklens_mcp.data.metric_lineage. `provenance_available: false` means the
+// bank/quarter's Silver row was built without a Bronze provenance reference
+// (a disclosed gap, e.g. EU/EBA rows or a legacy un-provenanced landing).
+export interface MetricLineageSourceField {
+  silver_field: string;
+  fdic_field: string;
+  value: number | null;
+}
+
+export interface MetricLineageResult {
+  cert: number;
+  metric: string;
+  quarter: string | null;
+  gold_function: string;
+  formula: string;
+  metric_value: number | null;
+  source_fields: MetricLineageSourceField[];
+  bronze_partition: string | null;
+  checksum: string | null;
+  fetched_at: string | null;
+  source_url: string | null;
+  provenance_available: boolean;
+}
+
 // B7: FDIC's Summary of Deposits is landed annually, so every branch-derived
 // figure (footprints, county HHI, the branch map, M&A geo-overlap) can be up
 // to ~18 months stale relative to a quarterly financial figure — every tool
@@ -130,6 +155,41 @@ export interface XrayResult {
     cet1_ratio: number | null;
     leverage_ratio: number | null;
   };
+}
+
+// D4 — holding-company roll-up (B4's Fed NIC FR Y-9C data).
+export interface SiblingCharter {
+  cert: number;
+  name: string;
+  total_assets: number | null;
+}
+
+export interface HoldingCompanyResult {
+  cert: number;
+  name: string;
+  has_holding_company: boolean;
+  holding_company_rssd?: number;
+  sibling_charters?: SiblingCharter[];
+  charter_level?: { total_assets: number | null; cet1_ratio: number | null; leverage_ratio: number | null };
+  holding_company?: {
+    rssd: number;
+    period: string;
+    name: string | null;
+    short_name: string | null;
+    total_assets: number | null;
+    total_liabilities: number | null;
+    total_equity_capital: number | null;
+    risk_weighted_assets: number | null;
+    tier1_capital: number | null;
+    total_capital: number | null;
+    net_income: number | null;
+    goodwill: number | null;
+    cet1_ratio: number | null;
+    tier1_capital_ratio: number | null;
+    total_capital_ratio: number | null;
+    tier1_leverage_ratio: number | null;
+  } | null;
+  note?: string;
 }
 
 export interface PeerClusterResult {
@@ -405,6 +465,8 @@ export interface FilingDiffFlag {
   change: number;
   unit: string;
   z: number | null;
+  // C12 — how many historical same-span observations the z was computed from.
+  n: number;
   direction: 'up' | 'down';
   note: string;
 }
@@ -418,12 +480,18 @@ export interface FilingDiffLineItem {
   unit: string;
   change: number | null;
   z: number | null;
+  // C12 — sample size behind z, why z is null below MIN_OBSERVATIONS, and the
+  // (bank-typical-magnitude-scaled) materiality floor actually applied.
+  n: number;
+  z_reason: string | null;
+  materiality_floor?: number;
   direction: 'up' | 'down' | null;
   flagged: boolean;
   note: string;
 }
 
 export interface FilingDiffResult {
+  cert: number | null;
   name: string;
   from_quarter: string;
   to_quarter: string;
@@ -431,6 +499,33 @@ export interface FilingDiffResult {
   n_flags: number;
   flags: FilingDiffFlag[];
   line_items: FilingDiffLineItem[];
+}
+
+// C13 — population-level multiple-testing context.
+export interface FilingDiffFdrFlag {
+  cert: number | null;
+  name: string | null;
+  item: string;
+  metric: string;
+  change: number;
+  unit: string;
+  z: number;
+  p: number;
+  flagged_raw: boolean;
+}
+
+export interface FilingDiffPopulationSummary {
+  quarters_available: string[];
+  n_banks_diffed: number;
+  n_banks_skipped_insufficient_history: number;
+  n_tests: number;
+  z_threshold: number;
+  raw_flag_count: number;
+  expected_false_positives_at_threshold: number;
+  fdr_alpha: number;
+  fdr_flag_count: number;
+  fdr_flags: FilingDiffFdrFlag[];
+  note: string;
 }
 
 // ---- trends + quarterly briefing ----
@@ -593,6 +688,14 @@ export interface SavedScreen {
   created_at: string;
 }
 
+// D5 — named, persisted peer sets.
+export interface PeerSetItem {
+  id: number;
+  name: string;
+  certs: number[];
+  created_at: string;
+}
+
 export interface AlertItem {
   id: number;
   cert: number;
@@ -674,6 +777,9 @@ export interface PopulationMetricsResult {
   metrics: string[];
   count: number;
   banks: PopulationMetricRow[];
+  // D5 — non-null when `certs` restricted this to a peer set; percentiles
+  // are then computed WITHIN that set, not the full population.
+  peer_set_size?: number | null;
 }
 
 export interface DataQualityExclusion {
@@ -718,6 +824,8 @@ export interface HeatmapResult {
    * hand-duplicated frontend list, which could drift from what's actually
    * computed). */
   available_metrics: string[];
+  // D5 — non-null when `certs` restricted this to a peer set.
+  peer_set_size?: number | null;
   banks: HeatmapBank[];
 }
 
@@ -746,6 +854,8 @@ export interface MetricDistributionResult {
   metric: string;
   quarter: string;
   count: number;
+  // D5 — non-null when `certs` restricted this to a peer set.
+  peer_set_size?: number | null;
   min: number;
   max: number;
   mean: number;

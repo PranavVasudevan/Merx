@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { api, type BankSearchResult } from '../api';
-import type { FilingDiffResult } from '../types';
+import type { FilingDiffPopulationSummary, FilingDiffResult } from '../types';
 import './FilingDiffPage.css';
 
 function fmtValue(v: number | null, kind: 'dollar' | 'ratio'): string {
@@ -27,6 +27,13 @@ export function FilingDiffPage() {
   const [quarterB, setQuarterB] = useState<string | undefined>(undefined);
   const [diff, setDiff] = useState<FilingDiffResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // C13 — population-level multiple-testing context.
+  const [popSummary, setPopSummary] = useState<FilingDiffPopulationSummary | null>(null);
+  const [showFdrOnly, setShowFdrOnly] = useState(false);
+
+  useEffect(() => {
+    api.filingDiffPopulationSummary().then(setPopSummary).catch(() => setPopSummary(null));
+  }, []);
 
   useEffect(() => {
     if (query.trim().length < 2) { setResults([]); return; }
@@ -121,45 +128,78 @@ export function FilingDiffPage() {
         {error && <p className="app-banner-error">{error}</p>}
       </div>
 
-      {diff && (
+      {popSummary && (
         <div className="panel">
-          <h2><Link to={`/bank/${cert}`}>{diff.name}</Link> — {diff.from_quarter} → {diff.to_quarter}</h2>
-          <p className="muted">{diff.n_flags} of {diff.line_items.length} tracked items flagged as unusual.</p>
-          <div className="filing-diff-table-wrap">
-            <table className="filing-diff-table">
-              <thead>
-                <tr>
-                  <th className="filing-diff-th">Item</th>
-                  <th className="filing-diff-th filing-diff-th-right">{diff.from_quarter}</th>
-                  <th className="filing-diff-th filing-diff-th-right">{diff.to_quarter}</th>
-                  <th className="filing-diff-th filing-diff-th-right">Change</th>
-                  <th className="filing-diff-th filing-diff-th-right">z</th>
-                </tr>
-              </thead>
-              <tbody>
-                {diff.line_items.map((li) => (
-                  <tr key={li.metric} className={li.flagged ? 'filing-diff-row-flagged' : ''}>
-                    <td className="filing-diff-td-name">
-                      {li.flagged && (
-                        <span className={`filing-diff-arrow ${li.direction === 'up' ? 'filing-diff-up' : 'filing-diff-down'}`}>
-                          {li.direction === 'up' ? '▲' : '▼'}
-                        </span>
-                      )}
-                      {li.item}
-                    </td>
-                    <td className="tabular filing-diff-td-right">{fmtValue(li.quarter_a_value, li.kind)}</td>
-                    <td className="tabular filing-diff-td-right">{fmtValue(li.quarter_b_value, li.kind)}</td>
-                    <td className="tabular filing-diff-td-right">
-                      {li.change === null ? '—' : `${li.change > 0 ? '+' : ''}${li.change}${li.unit}`}
-                    </td>
-                    <td className="tabular muted filing-diff-td-right">{li.z !== null ? li.z.toFixed(2) : '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <h2>Multiple-testing context (C13)</h2>
+          <p className="muted filing-diff-subtitle">{popSummary.note}</p>
+          <div className="filing-diff-fdr-stats">
+            <span>{popSummary.n_banks_diffed} banks · {popSummary.n_tests} tests</span>
+            <span>Raw flags: <b>{popSummary.raw_flag_count}</b></span>
+            <span>Expected by chance: <b>{popSummary.expected_false_positives_at_threshold}</b></span>
+            <span>FDR-controlled flags: <b>{popSummary.fdr_flag_count}</b></span>
           </div>
+          <label className="filing-diff-fdr-toggle">
+            <input type="checkbox" checked={showFdrOnly} onChange={(e) => setShowFdrOnly(e.target.checked)} />
+            Show only FDR-controlled flags below (fewer, more likely real)
+          </label>
         </div>
       )}
+
+      {diff && (() => {
+        const fdrKeys = new Set(
+          (popSummary?.fdr_flags ?? [])
+            .filter((f) => f.cert === diff.cert)
+            .map((f) => f.metric),
+        );
+        const isFlagged = (li: FilingDiffResult['line_items'][number]) =>
+          showFdrOnly ? li.flagged && fdrKeys.has(li.metric) : li.flagged;
+        return (
+          <div className="panel">
+            <h2><Link to={`/bank/${cert}`}>{diff.name}</Link> — {diff.from_quarter} → {diff.to_quarter}</h2>
+            <p className="muted">{diff.n_flags} of {diff.line_items.length} tracked items flagged as unusual
+              {showFdrOnly && ` (${[...fdrKeys].filter((m) => diff.line_items.some((li) => li.metric === m && li.flagged)).length} survive FDR control)`}.
+            </p>
+            <div className="filing-diff-table-wrap">
+              <table className="filing-diff-table">
+                <thead>
+                  <tr>
+                    <th className="filing-diff-th">Item</th>
+                    <th className="filing-diff-th filing-diff-th-right">{diff.from_quarter}</th>
+                    <th className="filing-diff-th filing-diff-th-right">{diff.to_quarter}</th>
+                    <th className="filing-diff-th filing-diff-th-right">Change</th>
+                    <th className="filing-diff-th filing-diff-th-right">z (n)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {diff.line_items.map((li) => {
+                    const flagged = isFlagged(li);
+                    return (
+                      <tr key={li.metric} className={flagged ? 'filing-diff-row-flagged' : ''}>
+                        <td className="filing-diff-td-name">
+                          {flagged && (
+                            <span className={`filing-diff-arrow ${li.direction === 'up' ? 'filing-diff-up' : 'filing-diff-down'}`}>
+                              {li.direction === 'up' ? '▲' : '▼'}
+                            </span>
+                          )}
+                          {li.item}
+                        </td>
+                        <td className="tabular filing-diff-td-right">{fmtValue(li.quarter_a_value, li.kind)}</td>
+                        <td className="tabular filing-diff-td-right">{fmtValue(li.quarter_b_value, li.kind)}</td>
+                        <td className="tabular filing-diff-td-right">
+                          {li.change === null ? '—' : `${li.change > 0 ? '+' : ''}${li.change}${li.unit}`}
+                        </td>
+                        <td className="tabular muted filing-diff-td-right" title={li.z_reason ?? undefined}>
+                          {li.z !== null ? `${li.z.toFixed(2)} (n=${li.n})` : (li.z_reason ? 'n/a*' : '—')}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

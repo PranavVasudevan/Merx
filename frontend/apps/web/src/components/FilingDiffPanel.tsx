@@ -22,7 +22,7 @@ export function FilingDiffPanel({ diff, cert }: { diff: FilingDiffResult; cert: 
               <span className="tabular fdiff-change">
                 {f.change > 0 ? '+' : ''}{f.change}{f.unit}
               </span>
-              <span className="muted tabular fdiff-z">{f.z !== null ? `z=${f.z.toFixed(1)}` : ''}</span>
+              <span className="muted tabular fdiff-z">{f.z !== null ? `z=${f.z.toFixed(1)} (n=${f.n})` : ''}</span>
             </div>
           ))}
         </div>

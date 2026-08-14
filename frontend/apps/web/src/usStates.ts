@@ -1,8 +1,9 @@
 // Standard USPS state abbreviations — used to populate state-filter dropdowns.
-// CONTIGUOUS_STATES excludes AK/HI, which the branch map can't render (see
-// albers.ts and GeographyPage's disclosed excluded_non_contiguous count); the
-// county-concentration table has no such restriction, so MarketSharePage uses the
-// full list.
+// CONTIGUOUS_STATES (AK/HI excluded) is kept for any consumer that still wants a
+// lower-48-only list, but GeographyPage's branch map now renders AK/HI too (see
+// BranchMapCanvas.tsx / usTopology.ts's Albers-USA insets, and E7 in
+// docs/audit/04-remediation-prompts.md) and uses the full US_STATES list, same as
+// MarketSharePage's county-concentration table.
 export const US_STATES: { code: string; name: string }[] = [
   { code: 'AL', name: 'Alabama' }, { code: 'AK', name: 'Alaska' }, { code: 'AZ', name: 'Arizona' },
   { code: 'AR', name: 'Arkansas' }, { code: 'CA', name: 'California' }, { code: 'CO', name: 'Colorado' },

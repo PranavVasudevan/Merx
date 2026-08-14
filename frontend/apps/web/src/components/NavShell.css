@@ -1,4 +1,4 @@
-/* BankLens NavShell Redesigned - Sidebar + Glassmorphism Layout */
+/* BankLens NavShell - Sidebar + Main Layout */
 
 .app-shell-redesigned {
   display: flex;
@@ -11,9 +11,7 @@
 .app-sidebar {
   width: 288px;
   background: var(--surface);
-  backdrop-filter: var(--glass-blur);
   border-right: 1px solid var(--border);
-  box-shadow: var(--glass-glow);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -34,13 +32,10 @@
 
 .app-logo-redesigned {
   font-size: var(--text-2xl);
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: -0.02em;
   margin: 0;
-  background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 50%, #3b82f6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary);
 }
 
 .app-tagline-redesigned {

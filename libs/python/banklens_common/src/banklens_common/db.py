@@ -131,6 +131,33 @@ CREATE TABLE IF NOT EXISTS alerts (
     seen BOOLEAN NOT NULL DEFAULT FALSE
 );
 CREATE INDEX IF NOT EXISTS alerts_user_idx ON alerts (user_sub, triggered_at DESC);
+
+-- D5 — named, persisted peer sets: an arbitrary hand-picked list of certs
+-- (built from search, a screener result, a cluster, or an M&A candidate
+-- list), same storage shape as saved_screens above.
+CREATE TABLE IF NOT EXISTS peer_sets (
+    id BIGSERIAL PRIMARY KEY,
+    user_sub TEXT NOT NULL,
+    name TEXT NOT NULL,
+    certs JSONB NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL
+);
+CREATE INDEX IF NOT EXISTS peer_sets_user_idx ON peer_sets (user_sub);
+
+-- D7 — analyst annotations keyed on (user, cert, quarter). `quarter` nullable:
+-- a note can be pinned to a specific landed quarter (renders as an event
+-- marker on that bank's trend chart) or left general (quarter IS NULL).
+-- `note_md` allows basic markdown (bold/italic/links), rendered client-side.
+CREATE TABLE IF NOT EXISTS annotations (
+    id BIGSERIAL PRIMARY KEY,
+    user_sub TEXT NOT NULL,
+    cert INTEGER NOT NULL,
+    quarter TEXT,
+    note_md TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL
+);
+CREATE INDEX IF NOT EXISTS annotations_cert_idx ON annotations (cert, created_at DESC);
+CREATE INDEX IF NOT EXISTS annotations_user_idx ON annotations (user_sub);
 """
 
 # Feature 17 (Tier 6 capstone) — real SEC 10-K Item 1A chunks + embeddings.
@@ -478,6 +505,62 @@ def delete_saved_screen(user_sub: str, screen_id: int) -> None:
     conn = get_conn()
     conn.execute(
         "DELETE FROM saved_screens WHERE id = %s AND user_sub = %s", (screen_id, user_sub))
+
+
+def save_peer_set(user_sub: str, name: str, certs: list[int],
+                   ts: datetime.datetime | None = None) -> int:
+    conn = get_conn()
+    row = conn.execute(
+        "INSERT INTO peer_sets (user_sub, name, certs, created_at) VALUES (%s, %s, %s, %s) "
+        "RETURNING id",
+        (user_sub, name, json.dumps(certs), ts or datetime.datetime.now(datetime.timezone.utc)),
+    ).fetchone()
+    return row[0]
+
+
+def fetch_peer_sets(user_sub: str) -> list[dict]:
+    conn = get_conn()
+    cols = ("id", "name", "certs", "created_at")
+    rows = conn.execute(
+        f"SELECT {', '.join(cols)} FROM peer_sets WHERE user_sub = %s ORDER BY created_at DESC",
+        (user_sub,),
+    ).fetchall()
+    return [dict(zip(cols, row, strict=True)) for row in rows]
+
+
+def delete_peer_set(user_sub: str, peer_set_id: int) -> None:
+    conn = get_conn()
+    conn.execute(
+        "DELETE FROM peer_sets WHERE id = %s AND user_sub = %s", (peer_set_id, user_sub))
+
+
+def add_annotation(user_sub: str, cert: int, note_md: str, quarter: str | None = None,
+                    ts: datetime.datetime | None = None) -> int:
+    conn = get_conn()
+    row = conn.execute(
+        "INSERT INTO annotations (user_sub, cert, quarter, note_md, created_at) "
+        "VALUES (%s, %s, %s, %s, %s) RETURNING id",
+        (user_sub, cert, quarter, note_md, ts or datetime.datetime.now(datetime.timezone.utc)),
+    ).fetchone()
+    return row[0]
+
+
+def fetch_annotations(cert: int) -> list[dict]:
+    """All annotations for a bank across every user — notes are a shared
+    analyst workspace, not a private-per-user list (unlike the watchlist)."""
+    conn = get_conn()
+    cols = ("id", "user_sub", "cert", "quarter", "note_md", "created_at")
+    rows = conn.execute(
+        f"SELECT {', '.join(cols)} FROM annotations WHERE cert = %s ORDER BY created_at DESC",
+        (cert,),
+    ).fetchall()
+    return [dict(zip(cols, row, strict=True)) for row in rows]
+
+
+def delete_annotation(user_sub: str, annotation_id: int) -> None:
+    conn = get_conn()
+    conn.execute(
+        "DELETE FROM annotations WHERE id = %s AND user_sub = %s", (annotation_id, user_sub))
 
 
 def alert_already_recorded(rule_id: int, quarter: str) -> bool:

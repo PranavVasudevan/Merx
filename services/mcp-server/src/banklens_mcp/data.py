@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import os
 import tempfile
+import threading
 from collections import defaultdict
 from pathlib import Path
 
@@ -322,9 +323,24 @@ def population(repdte: str | None = None, as_of: str | None = None,
     key = f"pop:{repdte}:{as_of or 'latest'}:{effective_mode}"
     if as_of is None:
         _note_pop_cache_use(repdte)   # the LRU only bounds the (unbounded-growth-risk) default path
-    if key in _cache:
+    if key in _cache:                 # warm path: never touches the lock
         return _cache[key]
+    with _cache_lock:
+        # Double-checked: another thread may have filled this key (this exact
+        # quarter/as_of/mode) while we were waiting for the lock -- without
+        # this re-check, two concurrent cold requests for the SAME quarter
+        # would both pay the full Gold/percentile/k-means computation below.
+        if key in _cache:
+            return _cache[key]
+        _cache[key] = _compute_population(repdte, as_of, effective_mode, fixed)
+    return _cache[key]
 
+
+def _compute_population(repdte: str, as_of: str | None, effective_mode: str,
+                        fixed: dict | None) -> dict:
+    """The actual population() computation, called at most once per (repdte,
+    as_of, effective_mode) — see population()'s cache-fill wrapper above,
+    which holds `_cache_lock` for the duration of this call."""
     conn = _gold_conn()
     if conn is not None:
         if as_of is not None:
@@ -354,7 +370,7 @@ def population(repdte: str | None = None, as_of: str | None = None,
             if cid is not None:
                 cluster_members[cid].append(g["cert_number"])
                 cluster_labels[cid] = g.get("peer_cluster_label")
-        _cache[key] = {
+        return {
             "quarter": repdte, "gold": gold_rows,
             "by_cert": {g["cert_number"]: g for g in gold_rows},
             "silver_by_cert": silver_by_cert,
@@ -362,7 +378,6 @@ def population(repdte: str | None = None, as_of: str | None = None,
             "cluster_labels": cluster_labels,
             "cluster_mode": "refit",
         }
-        return _cache[key]
 
     silver = _silver_for(repdte, as_of)
     # QoQ needs the same bank's prior quarter. Without this every qoq_* field is None,
@@ -400,7 +415,14 @@ def population(repdte: str | None = None, as_of: str | None = None,
     # and US-GAAP (FDIC) accounting bases, and EU banks' filing period doesn't match
     # the US repdte. Directionally real, not a precise apples-to-apples rank.
     combined_gold = gold + eu_gold
-    add_percentile_ranks(combined_gold)
+    # C11: add_percentile_ranks' `_within_cluster` pass groups by
+    # `peer_cluster_label` — that field isn't assigned until the clustering
+    # block below runs, so this call MUST come after it (moved here from
+    # right after `combined_gold` was built, which computed every
+    # `_within_cluster` percentile as None for 100% of the population; live-
+    # verified before this fix). `_within_size` doesn't have this dependency
+    # (`asset_band` comes from gold_features, already set by this point) but
+    # is computed in the same single pass regardless.
 
     silver_by_cert = {}
     for s, g in zip(silver, gold, strict=True):
@@ -465,7 +487,11 @@ def population(repdte: str | None = None, as_of: str | None = None,
                 g["peer_cluster_label"] = text
                 members[sid].append(g)
 
-    _cache[key] = {
+    # C11 — after peer_cluster_label is assigned above, not before (see the
+    # comment where this call used to sit, right after combined_gold's build).
+    add_percentile_ranks(combined_gold)
+
+    return {
         "quarter": repdte,
         "gold": combined_gold,
         "by_cert": {g["cert_number"]: g for g in combined_gold},
@@ -474,7 +500,6 @@ def population(repdte: str | None = None, as_of: str | None = None,
         "cluster_members": {lab: [g["cert_number"] for g in ms] for lab, ms in members.items()},
         "cluster_labels": cluster_labels,
     }
-    return _cache[key]
 
 
 def cluster_diagnostics(repdte: str | None = None) -> dict:
@@ -739,10 +764,15 @@ def footprints() -> dict[int, dict]:
     return _cache["footprints"]
 
 
-# Not projectable on a contiguous-US Albers canvas without a real inset (which needs
-# boundary data this app doesn't have landed) — 634 of 76,120 branches (0.83%), see
-# geography tool docstrings for the disclosed count.
-NON_CONTIGUOUS_STATES = {"AK", "HI", "PR", "GU", "VI", "AS", "MP"}
+# Territories with no boundary data landed in usTopology.ts's Albers-USA insets
+# (which only cover the 50 states + DC) — these branches are excluded from the
+# branch map and disclosed via excluded_non_contiguous. AK/HI ARE now included:
+# us-atlas's states-albers-10m.json/counties-albers-10m.json ship real AK/HI
+# insets built with the same geoAlbersUsa() convention branch points are
+# projected through, so no boundary data is missing for them. See
+# get_branch_map's docstring for the (much narrower) corrupt-coordinate filter
+# that replaced the old blanket AK/HI exclusion.
+NON_CONTIGUOUS_STATES = {"PR", "GU", "VI", "AS", "MP"}
 
 
 def sod_raw() -> list[dict]:
@@ -1011,6 +1041,25 @@ def data_freshness() -> dict:
             "expected_next_publication": expected_next,
         }
     return out
+
+
+def population_provenance(repdte: str) -> dict | None:
+    """G9: Bronze provenance for the FDIC population partition backing one landed
+    REPDTE quarter — the exact `_provenance.json` written when that partition was
+    landed (source URL, fetch timestamp, content checksum), same file format
+    `data_freshness()` reads. `None` if the quarter was never landed or its
+    partition has no `_provenance.json` (older/manually-placed partitions)."""
+    snaps = _pop_snapshots(repdte)
+    if not snaps:
+        return None
+    partition_dir = _POP_DIR / f"repdte={repdte}" / f"landed={snaps[-1]}"
+    prov_path = partition_dir / "_provenance.json"
+    try:
+        prov = json.loads(prov_path.read_text(encoding="utf-8-sig"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    prov["partition_path"] = str(prov_path.relative_to(REPO)).replace("\\", "/")
+    return prov
 
 
 def _avg(rows, key):

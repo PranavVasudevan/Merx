@@ -1,10 +1,10 @@
 import type {
   AgentRunEntry, AlertItem, AssistantResult, AuditLogEntry, BankProfile, BankTrendsResult, BranchMapResult,
   BulkStressResult, CandlesResult, ClusterDiagnosticsResult, CompareResult,
-  CountyConcentrationResult, DataFreshnessResult, FilingDiffResult, FilingSearchResponse,
-  FilingsCoverageResult, HeatmapResult, MaFitResult, MaProFormaResult, MaWeightValidationResult,
+  CountyConcentrationResult, DataFreshnessResult, FilingDiffPopulationSummary, FilingDiffResult, FilingSearchResponse,
+  FilingsCoverageResult, HeatmapResult, HoldingCompanyResult, MaFitResult, MaProFormaResult, MaWeightValidationResult,
   MarketCoverageResult, MarketOverviewResult, MarketSnapshot,
-  MetricDistributionResult, MetricGroup, ModelCardResult, NetworkGraphResult, PeerClusterResult,
+  MetricDistributionResult, MetricGroup, MetricLineageResult, ModelCardResult, NetworkGraphResult, PeerClusterResult, PeerSetItem,
   PopulationBank, PopulationMetricsResult, QuarterlyBriefingResult, RiskLeaderboardResult,
   CorrelatedStressResult, IrrbbResult, LiquiditySurvivalResult, RiskScoreResult, SavedScreen,
   StressComparisonResult, StressProjectionResult, StressResult, StressSurfaceResult, TreemapResult,
@@ -139,12 +139,18 @@ export const api = {
       tax_rate_pct: opts.taxRatePct,
     }),
   maWeightValidation: () => get<MaWeightValidationResult>('/ma-weight-validation'),
+  // D4 — holding-company roll-up (B4's Fed NIC data).
+  holdingCompany: (cert: number) => get<HoldingCompanyResult>('/banks/holding-company', { cert }),
   // C10 — X-Ray forward-return validation.
   xrayValidation: () => get<XrayValidationResult>('/xray-forward-return-validation'),
   stressTest: (cert: number, loan_loss_pct: number, deposit_outflow_pct: number, rate_shock_bps: number) =>
     get<StressResult>('/banks/stress-test', { cert, loan_loss_pct, deposit_outflow_pct, rate_shock_bps }),
   filingDiff: (cert: number, quarter_a?: string, quarter_b?: string) =>
     get<FilingDiffResult>('/banks/filing-diff', { cert, quarter_a, quarter_b }),
+  // C13 — population-level multiple-testing context (expected false positives
+  // at the raw threshold + a Benjamini-Hochberg FDR-controlled flag set).
+  filingDiffPopulationSummary: () =>
+    get<FilingDiffPopulationSummary>('/filing-diff-population-summary'),
   bankTrends: (cert: number) => get<BankTrendsResult>('/banks/trends', { cert }),
   riskScore: (cert: number, quarter?: string | null) =>
     get<RiskScoreResult>('/banks/risk-score', { cert, quarter: quarter ?? undefined }),
@@ -185,6 +191,11 @@ export const api = {
   saveScreen: (name: string, filters: Record<string, string | number | undefined>) =>
     post<{ items: SavedScreen[] }>('/screens', { name, filters }),
   deleteSavedScreen: (screen_id: number) => del<{ items: SavedScreen[] }>('/screens', { screen_id }),
+  // D5 — named, persisted peer sets.
+  getPeerSets: () => get<{ items: PeerSetItem[] }>('/peer-sets'),
+  savePeerSet: (name: string, certs: number[]) =>
+    post<{ items: PeerSetItem[] }>('/peer-sets', { name, certs }),
+  deletePeerSet: (peer_set_id: number) => del<{ items: PeerSetItem[] }>('/peer-sets', { peer_set_id }),
   getAlerts: (opts: { limit?: number; unseenOnly?: boolean } = {}) =>
     get<{ items: AlertItem[] }>('/alerts', {
       limit: opts.limit ?? 50, unseen_only: opts.unseenOnly ? 'true' : undefined,
@@ -196,17 +207,22 @@ export const api = {
     post<AssistantResult>('/assistant/ask', { persona, question }),
   agentRuns: (limit = 50) => get<{ items: AgentRunEntry[] }>('/activity/agent-runs', { limit }),
   auditLog: (limit = 50) => get<{ items: AuditLogEntry[] }>('/activity/audit-log', { limit }),
-  populationMetrics: (group: MetricGroup, opts: { limit?: number; sortBy?: string; descending?: boolean; quarter?: string | null } = {}) =>
+  // `certs` (D5): restrict to a named peer set — server recomputes
+  // percentiles WITHIN the given set rather than just filtering rows.
+  populationMetrics: (group: MetricGroup, opts: { limit?: number; sortBy?: string; descending?: boolean; quarter?: string | null; certs?: number[] | null } = {}) =>
     get<PopulationMetricsResult>('/population-metrics', {
       group, limit: opts.limit ?? 2000, sort_by: opts.sortBy,
       descending: opts.descending === false ? 'false' : undefined, quarter: opts.quarter ?? undefined,
+      certs: opts.certs?.length ? opts.certs.join(',') : undefined,
     }),
-  metricDistribution: (metric: string, bins = 30, quarter?: string | null) =>
-    get<MetricDistributionResult>('/metric-distribution', { metric, bins, quarter: quarter ?? undefined }),
-  percentileHeatmap: (top_n = 40, sort_by = 'total_assets', metrics?: string[], quarter?: string | null) =>
+  metricDistribution: (metric: string, bins = 30, quarter?: string | null, certs?: number[] | null) =>
+    get<MetricDistributionResult>('/metric-distribution', {
+      metric, bins, quarter: quarter ?? undefined, certs: certs?.length ? certs.join(',') : undefined,
+    }),
+  percentileHeatmap: (top_n = 40, sort_by = 'total_assets', metrics?: string[], quarter?: string | null, certs?: number[] | null) =>
     get<HeatmapResult>('/percentile-heatmap', {
       top_n, sort_by, metrics: metrics && metrics.length > 0 ? metrics.join(',') : undefined,
-      quarter: quarter ?? undefined,
+      quarter: quarter ?? undefined, certs: certs?.length ? certs.join(',') : undefined,
     }),
   assetTreemap: (group_by: 'peer_cluster_label' | 'state' | 'country' = 'peer_cluster_label', quarter?: string | null) =>
     get<TreemapResult>('/asset-treemap', { group_by, quarter: quarter ?? undefined }),
@@ -258,6 +274,11 @@ export const api = {
     get<FilingSearchResponse>('/filings/search', { query, top_n }),
   filingsCoverage: () => get<FilingsCoverageResult>('/filings/coverage'),
   dataFreshness: () => get<DataFreshnessResult>('/data-freshness'),
+  // G9 — "how is this computed?": traces one bank's metric back to the Gold
+  // function/formula, Silver/FDIC source field(s), and the Bronze partition
+  // (path/checksum/fetch time) it was landed from.
+  metricLineage: (cert: number, metric: string, quarter?: string | null) =>
+    get<MetricLineageResult>('/metric-lineage', { cert, metric, quarter: quarter ?? undefined }),
   // D1 — server-side per-bank PDF tearsheet; triggers a browser download
   // rather than returning parsed data (see downloadBinary above).
   downloadTearsheet: (cert: number) =>

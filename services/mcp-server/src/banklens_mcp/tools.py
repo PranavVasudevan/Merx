@@ -174,10 +174,30 @@ def get_bank_profile(cert: int, as_of: str = None, quarter: str = None,
     }
 
 
+def _sibling_charters(rssd: int, exclude_cert: int) -> list[dict]:
+    """D4 — every OTHER landed FDIC charter reporting the same holding-company
+    RSSD as `exclude_cert`, so a multi-bank holding company renders as one
+    group with its member charters listed rather than one bank's page
+    silently ignoring that it has siblings."""
+    pop = data.population()
+    out = []
+    for c, silver in pop["silver_by_cert"].items():
+        if c == exclude_cert or silver.get("holding_company_rssd") != rssd:
+            continue
+        g = pop["by_cert"].get(c)
+        if g is None:
+            continue
+        out.append({"cert": c, "name": g["name"], "total_assets": g.get("total_assets")})
+    out.sort(key=lambda b: b["total_assets"] or 0, reverse=True)
+    return out
+
+
 def get_holding_company(cert: int) -> dict:
-    """B4 — this bank charter's holding company (Fed NIC FR Y-9C, real data),
-    with consolidated financials alongside the charter-level ones so a caller
-    can see which figures are charter-level versus consolidated at the group.
+    """B4/D4 — this bank charter's holding company (Fed NIC FR Y-9C, real
+    data), with consolidated financials alongside the charter-level ones so a
+    caller can see which figures are charter-level versus consolidated at the
+    group, plus every sibling FDIC charter that rolls up to the same holding
+    company (D4's "multi-charter holding company renders as one entity").
     """
     g = _need_bank(cert)
     silver = data.population()["silver_by_cert"].get(cert) or {}
@@ -187,9 +207,11 @@ def get_holding_company(cert: int) -> dict:
         return {"cert": cert, "name": g["name"], "has_holding_company": False,
                "note": "FDIC reports no separate holding company for this charter — "
                        "it files (or would file) with the SEC at the bank level directly."}
+    siblings = _sibling_charters(rssd, cert)
     if holdco is None:
         return {"cert": cert, "name": g["name"], "has_holding_company": True,
                "holding_company_rssd": rssd, "holding_company": None,
+               "sibling_charters": siblings,
                "note": "This bank's holding company (RSSD "
                        f"{rssd}) has no landed FR Y-9C filing — not every holding company "
                        "reports Y-9C (e.g. below the reporting-exemption asset threshold), "
@@ -197,6 +219,7 @@ def get_holding_company(cert: int) -> dict:
     return {
         "cert": cert, "name": g["name"], "has_holding_company": True,
         "holding_company_rssd": rssd,
+        "sibling_charters": siblings,
         "charter_level": {"total_assets": g.get("total_assets"),
                           "cet1_ratio": g.get("cet1_ratio"),
                           "leverage_ratio": g.get("leverage_ratio")},
@@ -432,6 +455,26 @@ def diff_filings(cert: int, quarter_a: str = None, quarter_b: str = None) -> dic
             f"CERT {cert} appears in only {len(rows)} landed quarter(s); a filing diff "
             f"needs at least two.")
     return diff(build_quarters(rows), quarter_a, quarter_b)
+
+
+_FILING_DIFF_POPULATION_SUMMARY_PATH = (
+    Path(__file__).resolve().parents[4] / "ml" / "filing_diff" / "population_summary.json")
+
+
+def get_filing_diff_population_summary() -> dict:
+    """C13 governance — multiple-testing context for filing_diff's per-bank z
+    flags: at the raw z>=2.0 threshold, how many of the flags shown across the
+    whole population are expected by chance alone, and the Benjamini-Hochberg
+    FDR-controlled alternative flag set. Persisted by
+    filing_diff_population_cli.py (diffing 5,000+ banks x 13 items is real
+    compute), not recomputed per request — same pattern as the deposit-flight
+    model card and the M&A weight validation.
+    """
+    if not _FILING_DIFF_POPULATION_SUMMARY_PATH.exists():
+        raise ValueError(
+            "Filing-diff population summary not run yet; run "
+            "filing_diff_population_cli (scripts/filing_diff_population.ps1).")
+    return json.loads(_FILING_DIFF_POPULATION_SUMMARY_PATH.read_text(encoding="utf-8"))
 
 
 def _prior_year_deposits(cert: int, current_quarter: str | None) -> float | None:
@@ -771,6 +814,88 @@ def get_data_freshness() -> dict:
     return {"sources": data.data_freshness()}
 
 
+# G9 — bounded, representative subset: the FDIC-sourced Silver fields and Gold
+# ratios that feed get_risk_score's features_from() (deposit_flight.py), plus
+# the raw fields they're built from. NOT the full Gold schema — a metric not
+# listed here raises ValueError rather than a guess (see get_metric_lineage).
+# Each entry: gold_function (the function that computes it, or None for a
+# direct FDIC passthrough), formula, and (silver_field, fdic_code) pairs.
+_METRIC_LINEAGE: dict[str, dict] = {
+    "total_assets": {"gold_function": None,
+                     "formula": "direct FDIC field (silver.to_bank_financials passthrough)",
+                     "fields": [("total_assets", "ASSET")]},
+    "total_deposits": {"gold_function": None,
+                       "formula": "direct FDIC field (silver.to_bank_financials passthrough)",
+                       "fields": [("total_deposits", "DEP")]},
+    "total_equity": {"gold_function": None,
+                     "formula": "direct FDIC field (silver.to_bank_financials passthrough)",
+                     "fields": [("total_equity", "EQ")]},
+    "securities_total": {"gold_function": None,
+                         "formula": "direct FDIC field (silver.to_bank_financials passthrough)",
+                         "fields": [("securities_total", "SC")]},
+    "securities_htm": {"gold_function": None,
+                       "formula": "silver.to_bank_financials: SCHA if FDIC-reported, else "
+                                  "securities_total - securities_afs",
+                       "fields": [("securities_htm", "SCHA")]},
+    "cet1_ratio": {"gold_function": None,
+                  "formula": "direct FDIC field (silver.to_bank_financials passthrough, already a %)",
+                  "fields": [("cet1_ratio", "IDT1CER")]},
+    "uninsured_deposit_pct": {"gold_function": "gold.uninsured_deposit_pct",
+                              "formula": "uninsured_deposits / total_deposits * 100",
+                              "fields": [("uninsured_deposits", "DEPUNINS"), ("total_deposits", "DEP")]},
+    "loan_to_deposit_pct": {"gold_function": "gold.loan_to_deposit_pct",
+                            "formula": "total_loans_net / total_deposits * 100",
+                            "fields": [("total_loans_net", "LNLSNET"), ("total_deposits", "DEP")]},
+    "htm_to_equity": {"gold_function": "deposit_flight.features_from",
+                      "formula": "securities_htm / total_equity * 100",
+                      "fields": [("securities_htm", "SCHA"), ("total_equity", "EQ")]},
+    "securities_to_assets": {"gold_function": "deposit_flight.features_from",
+                             "formula": "securities_total / total_assets * 100",
+                             "fields": [("securities_total", "SC"), ("total_assets", "ASSET")]},
+}
+
+
+def get_metric_lineage(cert: int, metric: str, quarter: str = None) -> dict:
+    """G9 — where one metric's number actually came from: the Gold function
+    (or formula) that computed it, the exact Silver/FDIC source field(s) and
+    their raw values, and the originating Bronze partition's path, checksum
+    and fetch timestamp (resolved at query time from that partition's own
+    `_provenance.json` — the same file `get_data_freshness` reads, see
+    `data.population_provenance`). Covers the bounded set of FDIC-sourced
+    capital/financial fields feeding `get_risk_score`, not the full Gold
+    schema — an untracked `metric` raises rather than guessing.
+    """
+    spec = _METRIC_LINEAGE.get(metric)
+    if spec is None:
+        raise ValueError(
+            f"lineage not tracked for metric '{metric}'. Tracked: {sorted(_METRIC_LINEAGE)}")
+    pop = data.population(quarter)
+    repdte = pop["quarter"]
+    silver = pop["silver_by_cert"].get(cert)
+    if silver is None:
+        raise ValueError(f"CERT {cert} not in the population slice for {repdte}.")
+    gold_row = pop["by_cert"].get(cert) or {}
+    # Gold-computed ratios (uninsured_deposit_pct, loan_to_deposit_pct) live on the
+    # Gold row; direct FDIC passthroughs (total_assets, cet1_ratio, ...) live on
+    # Silver instead. Features private to deposit_flight.py (htm_to_equity,
+    # securities_to_assets) are on neither — None there is a disclosed gap, not a bug.
+    metric_value = gold_row[metric] if metric in gold_row else silver.get(metric)
+    prov = data.population_provenance(repdte)
+    return {
+        "cert": cert, "metric": metric, "quarter": repdte,
+        "gold_function": spec["gold_function"] or "silver.to_bank_financials (direct passthrough)",
+        "formula": spec["formula"],
+        "metric_value": metric_value,
+        "source_fields": [{"silver_field": f, "fdic_field": code, "value": silver.get(f)}
+                          for f, code in spec["fields"]],
+        "provenance_available": prov is not None,
+        "bronze_partition": prov.get("partition_path") if prov else None,
+        "checksum": prov.get("checksum") if prov else None,
+        "fetched_at": prov.get("fetched_at") if prov else None,
+        "source_url": prov.get("endpoint") if prov else None,
+    }
+
+
 def get_macro_data() -> dict:
     """B5 — landed FRED macro series (Treasury yield curve, Fed funds,
     unemployment, CRE price index): `{series_id: {latest: {date, value},
@@ -845,14 +970,36 @@ METRIC_GROUPS: dict[str, list[str]] = {
 _IDENTITY = ["cert_number", "name", "state", "country", "total_assets", "peer_cluster_label"]
 
 
+def _percentile_of(value: float, all_values: list[float]) -> float:
+    below = sum(1 for v in all_values if v < value)
+    return round(below / len(all_values) * 100, 1)
+
+
+def _apply_peer_set_percentiles(rows: list[dict], metrics: list[str]) -> None:
+    """D5 — when a caller restricts a population view to a named peer set
+    (`certs`), the Gold layer's `percentile_rank_*` fields still mean "rank
+    among the FULL population". Overwrites each row's `percentile_rank_<metric>`
+    in place with a rank computed ONLY within this filtered subset, so what's
+    displayed is honestly "percentile within your peer set"."""
+    for m in metrics:
+        values = [r[m] for r in rows if r.get(m) is not None]
+        if len(values) < 2:
+            continue
+        for r in rows:
+            if r.get(m) is not None:
+                r[f"percentile_rank_{m}"] = _percentile_of(r[m], values)
+
+
 def get_population_metrics(group: str, limit: int = 2000, sort_by: str = None,
-                           descending: bool = True, quarter: str = None) -> dict:
+                           descending: bool = True, quarter: str = None,
+                           certs: list[int] = None) -> dict:
     """One named metric group across the whole population, with peer percentiles.
 
     Powers the earnings / credit / funding / capital / concentration views. Returns
     identity columns plus the group's metrics and any `percentile_rank_*` already
     computed for them, so a page never has to re-derive a rank the Gold layer holds.
-    `quarter` (D3, REPDTE): a DIFFERENT landed quarter than the latest.
+    `quarter` (D3, REPDTE): a DIFFERENT landed quarter than the latest. `certs`
+    (D5): restrict to a named peer set and recompute percentiles WITHIN it.
     """
     metrics = METRIC_GROUPS.get(group)
     if metrics is None:
@@ -861,8 +1008,11 @@ def get_population_metrics(group: str, limit: int = 2000, sort_by: str = None,
     if sort_by is not None and sort_by not in metrics:
         raise ValueError(f"cannot sort '{group}' by '{sort_by}' — not in that group")
 
+    cert_filter = set(certs) if certs else None
     rows = []
     for g in pop["gold"]:
+        if cert_filter is not None and g.get("cert_number") not in cert_filter:
+            continue
         row = {k: g.get(k) for k in _IDENTITY}
         for m in metrics:
             row[m] = g.get(m)
@@ -871,13 +1021,17 @@ def get_population_metrics(group: str, limit: int = 2000, sort_by: str = None,
                 row[f"percentile_rank_{m}"] = pr
         rows.append(row)
 
+    if cert_filter is not None:
+        _apply_peer_set_percentiles(rows, metrics)
+
     if sort_by:
         rows = [r for r in rows if r.get(sort_by) is not None]
         rows.sort(key=lambda r: r[sort_by], reverse=descending)
     else:
         rows.sort(key=lambda r: r.get("total_assets") or 0, reverse=True)
     return {"group": group, "quarter": pop["quarter"], "metrics": metrics,
-            "count": len(rows), "banks": rows[:limit]}
+            "count": len(rows), "banks": rows[:limit],
+            "peer_set_size": len(cert_filter) if cert_filter is not None else None}
 
 
 # A curated cross-group set for the heatmap — one glance across risk, credit, and
@@ -892,7 +1046,7 @@ HEATMAP_METRICS = [
 
 def get_percentile_heatmap(
     top_n: int = 40, sort_by: str = "total_assets", metrics: list[str] | None = None,
-    quarter: str | None = None,
+    quarter: str | None = None, certs: list[int] | None = None,
 ) -> dict:
     """A bank x metric percentile matrix for `top_n` banks (by `sort_by`, default the
     largest by assets). Powers /heatmap. Cells are `percentile_rank_<metric>`
@@ -907,23 +1061,39 @@ def get_percentile_heatmap(
     all-null column or a KeyError. Falls back to the curated HEATMAP_METRICS
     set (unchanged default behavior) when `metrics` is None or empty after
     filtering. `quarter` (D3, REPDTE): a DIFFERENT landed quarter than the latest.
+    `certs` (D5): restrict to a named peer set — cells then show percentile
+    WITHIN that set, and `top_n`/`sort_by` narrow within the set.
     """
     pop = data.population(quarter)
     rows = [g for g in pop["gold"] if g.get(sort_by) is not None]
+    if certs:
+        cert_set = set(certs)
+        rows = [g for g in rows if g.get("cert_number") in cert_set]
     rows.sort(key=lambda g: g[sort_by], reverse=True)
     rows = rows[:top_n]
     selected = [m for m in metrics if m in RANK_METRICS] if metrics else []
     selected = selected or HEATMAP_METRICS
+
+    if certs:
+        peer_rows = [{**{m: g.get(m) for m in selected}} for g in rows]
+        _apply_peer_set_percentiles(peer_rows, selected)
+        cells_by_idx = [
+            [peer_rows[i].get(f"percentile_rank_{m}") for m in selected]
+            for i in range(len(rows))
+        ]
+    else:
+        cells_by_idx = [[g.get(f"percentile_rank_{m}") for m in selected] for g in rows]
+
     return {
         "quarter": pop["quarter"], "metrics": selected,
         # The full real Gold-computed catalog, so the frontend's metric picker
         # is sourced from what actually has data rather than a hand-duplicated
         # list that can drift from this one.
         "available_metrics": RANK_METRICS,
+        "peer_set_size": len(certs) if certs else None,
         "banks": [{
-            "cert": g["cert_number"], "name": g["name"],
-            "cells": [g.get(f"percentile_rank_{m}") for m in selected],
-        } for g in rows],
+            "cert": g["cert_number"], "name": g["name"], "cells": cells_by_idx[i],
+        } for i, g in enumerate(rows)],
     }
 
 
@@ -933,6 +1103,13 @@ TREND_METRICS = [
     "total_assets", "uninsured_deposit_pct", "loan_to_deposit_pct", "cet1_ratio",
     "roa_pct", "net_interest_margin_pct", "npl_ratio_pct", "texas_ratio_pct",
     "brokered_deposit_pct", "max_loan_concentration_pct",
+    # C15 — quarter-isolated counterparts of roa_pct/net_interest_margin_pct
+    # (and roe/efficiency, tracked even though not separately charted here) —
+    # FDIC's YTD-annualized ratios plot a Q1 value and a Q4 value on the same
+    # line as if they were comparable, which they aren't. /trends charts these
+    # instead of the raw YTD fields for the two metrics selectable there.
+    "roa_pct_quarterly", "net_interest_margin_pct_quarterly",
+    "roe_pct_quarterly", "efficiency_ratio_pct_quarterly",
 ]
 
 
@@ -968,6 +1145,64 @@ def get_bank_trends(cert: int) -> dict:
         "quarters": [s["quarter"] for s in series],
         "series": [{**{"quarter": s["quarter"]}, **{m: s.get(m) for m in TREND_METRICS},
                    "peer_cluster_label": s.get("peer_cluster_label")} for s in series],
+    }
+
+
+MAX_BULK_TRENDS_CERTS = 40  # a readable peer-set small-multiples view, not an unbounded scan
+
+
+def get_bulk_bank_trends(certs: list[int]) -> dict:
+    """E10 — the SAME per-quarter trajectory get_bank_trends returns for one bank,
+    for an entire named peer set at once, so /trends' small-multiples view (one
+    chart per metric, one line per bank in the set, plus a peer-median band) can
+    render without N sequential HTTP round trips.
+
+    This is NOT N calls to get_bank_trends glued together: that would reload every
+    quarter's data.population() once per bank (N x Q population loads). Here the
+    quarter loop is on the OUTSIDE — data.population(q, cluster_mode="fixed") is
+    loaded ONCE PER QUARTER and every requested cert's row is pulled out of that
+    same call, so an N-bank peer set costs the same Q population loads a single
+    bank's get_bank_trends already pays (each cached after its first load), not
+    N times as many. Follows compare_banks/run_bulk_stress_test's existing
+    "one cross-bank tool, a bounded MAX_* cap, a `skipped` list for certs with
+    no landed history" pattern rather than inventing a new shape.
+    """
+    if not certs:
+        raise ValueError("certs must be a non-empty list")
+    if len(certs) > MAX_BULK_TRENDS_CERTS:
+        raise ValueError(f"at most {MAX_BULK_TRENDS_CERTS} banks per bulk trends request, got {len(certs)}")
+    quarters = list(reversed(data.available_quarters()))  # oldest first, for charting
+    cluster_mode = "refit"
+    series_by_cert: dict[int, list[dict]] = {c: [] for c in certs}
+    names: dict[int, str] = {}
+    for q in quarters:
+        pop = data.population(q, cluster_mode="fixed")
+        cluster_mode = pop.get("cluster_mode", cluster_mode)
+        by_cert = pop["by_cert"]
+        for c in certs:
+            g = by_cert.get(c)
+            if g is None:
+                continue
+            names[c] = g["name"]
+            series_by_cert[c].append({
+                **{"quarter": g["quarter"]}, **{m: g.get(m) for m in TREND_METRICS},
+                "peer_cluster_label": g.get("peer_cluster_label"),
+            })
+    banks, skipped = [], []
+    for c in certs:
+        series = series_by_cert[c]
+        if not series:
+            skipped.append({"cert": c, "reason": "no landed history in any of "
+                             f"{', '.join(quarters) if quarters else 'no landed quarters'}"})
+            continue
+        banks.append({
+            "cert": c, "name": names[c],
+            "quarters": [s["quarter"] for s in series],
+            "series": series,
+        })
+    return {
+        "metrics": TREND_METRICS, "quarters": quarters, "cluster_mode": cluster_mode,
+        "requested": len(certs), "banks": banks, "skipped": skipped,
     }
 
 
@@ -1148,18 +1383,23 @@ def get_asset_treemap(group_by: str = "peer_cluster_label", quarter: str = None)
     }
 
 
-def get_metric_distribution(metric: str, bins: int = 30, quarter: str = None) -> dict:
+def get_metric_distribution(metric: str, bins: int = 30, quarter: str = None,
+                            certs: list[int] = None) -> dict:
     """Histogram + order statistics for one Gold metric across the population.
 
     Real analysis rather than data shipping, so it belongs server-side: the binning,
     the percentile cuts, and — importantly — the disclosure of which institutions were
     excluded and why. A distribution rendered without naming its exclusions would be a
     quietly misleading chart, which is the thing `data_quality` exists to prevent.
-    `quarter` (D3, REPDTE): a DIFFERENT landed quarter than the latest.
+    `quarter` (D3, REPDTE): a DIFFERENT landed quarter than the latest. `certs`
+    (D5): restrict the distribution to a named peer set instead of the full population.
     """
     pop = data.population(quarter)
+    cert_filter = set(certs) if certs else None
     values, excluded = [], []
     for g in pop["gold"]:
+        if cert_filter is not None and g.get("cert_number") not in cert_filter:
+            continue
         silver = pop["silver_by_cert"].get(g.get("cert_number")) or {}
         # Exclusion is checked BEFORE the null check: a non-deposit-funded charter's
         # deposit-sensitive metric is usually None (division by ~zero deposits), which
@@ -1202,6 +1442,7 @@ def get_metric_distribution(metric: str, bins: int = 30, quarter: str = None) ->
 
     return {
         "metric": metric, "quarter": pop["quarter"], "count": n,
+        "peer_set_size": len(cert_filter) if cert_filter is not None else None,
         "min": lo, "max": hi, "mean": round(sum(vals) / n, 4),
         "p10": q(0.10), "p25": q(0.25), "median": q(0.50), "p75": q(0.75), "p90": q(0.90),
         "histogram_range": {"lower": p_lo, "upper": p_hi,
@@ -1404,42 +1645,53 @@ def get_county_concentration(state: str = None, top_n: int = 100) -> dict:
     }
 
 
-# A generous contiguous-US bounding box (Census CONUS extent + margin). Needed
-# because a handful of SOD rows carry a nominally-domestic STALPBR alongside a
-# corrupt or foreign coordinate — verified live: 13 rows tagged with Pacific
-# freely-associated-state codes (PW/FM/MH — Palau, Micronesia, Marshall Islands,
-# not covered by NON_CONTIGUOUS_STATES) carry latitudes above 90 (impossible) or
-# longitudes near 150-160, and one row tagged "NJ" carries a UK-area coordinate
-# (50.4, -4.4) — an FDIC source data error, not this app's bug. Rendering these
-# on an Albers-fit-to-bounds canvas silently squashed the whole contiguous US into
-# a sliver: the fit stretches to whatever the data's extremes are.
-_CONUS_LAT_RANGE = (20.0, 50.0)
-_CONUS_LON_RANGE = (-130.0, -60.0)
+# A generous lat/lon box spanning the 50 states + DC (CONUS + Alaska + Hawaii),
+# each with margin — NOT just CONUS. frontend/apps/web/src/usTopology.ts's
+# us-atlas topology ships real Alaska/Hawaii Albers-USA insets (built with the
+# same geoAlbersUsa() convention branch points are projected through), so AK/HI
+# branches render correctly and are no longer excluded here.
+#
+# The box still exists to catch a small number of genuinely corrupt SOD rows —
+# verified live against the landed 76,120-row dataset: 11 rows tagged with
+# Pacific freely-associated-state codes (PW/FM/MH — Palau, Micronesia, Marshall
+# Islands; real countries, not covered by NON_CONTIGUOUS_STATES) carry
+# impossible latitudes (>90) or stray Pacific-basin coordinates far outside any
+# US state, and one row tagged "NJ" carries a UK-area coordinate (50.4, -4.4) —
+# an FDIC source data error, not this app's bug. Real state extents in the
+# landed data: CONUS+DC lat 24.5-49.0 / lon -124.4 to -67.0; AK lat 53.8-71.3 /
+# lon -166.2 to -131.6; HI lat 19.2-22.2 / lon -159.7 to -155.0 — so this box's
+# margins (17-72.5 lat, -172 to -65 lon) comfortably contain all real branches
+# while still excluding all 12 known-bad rows (confirmed by direct check of the
+# landed data, not just the boundary math).
+_US_LAT_RANGE = (17.0, 72.5)
+_US_LON_RANGE = (-172.0, -65.0)
 
 
 def get_branch_map(state: str = None) -> dict:
     """Feature 15 map data — every landed branch's real coordinates, deposits and
-    county, for a hand-rolled canvas projection (no tiles, no map-provider network
-    calls). Restricted to the contiguous 48 states + DC: Albers USA's Alaska/Hawaii/
-    territory insets need real boundary data this app doesn't have landed, so those
-    branches (plus a handful of corrupt-coordinate rows, see _CONUS_LAT_RANGE) are
-    counted and disclosed (excluded_non_contiguous), not silently dropped.
+    county, for a d3-geo Albers-USA canvas projection (us-atlas topology, no
+    tiles, no map-provider network calls — see usTopology.ts). Covers the 50
+    states + DC, including Alaska/Hawaii (rendered via us-atlas's pre-built
+    Albers-USA insets). Excluded: US territories with no landed boundary data
+    (PR/GU/VI/AS/MP, see data.NON_CONTIGUOUS_STATES) and a small number of
+    genuinely corrupt-coordinate SOD rows (see _US_LAT_RANGE/_US_LON_RANGE) —
+    both counted and disclosed (excluded_non_contiguous), not silently dropped.
     """
     raw = data.sod_raw()
     names = _full_universe_names()
 
-    def in_conus(r: dict) -> bool:
+    def in_scope(r: dict) -> bool:
         if r.get("STALPBR") in data.NON_CONTIGUOUS_STATES:
             return False
         lat, lon = r.get("SIMS_LATITUDE"), r.get("SIMS_LONGITUDE")
         if lat is None or lon is None:
             return False
-        return _CONUS_LAT_RANGE[0] <= lat <= _CONUS_LAT_RANGE[1] and _CONUS_LON_RANGE[0] <= lon <= _CONUS_LON_RANGE[1]
+        return _US_LAT_RANGE[0] <= lat <= _US_LAT_RANGE[1] and _US_LON_RANGE[0] <= lon <= _US_LON_RANGE[1]
 
-    excluded = sum(1 for r in raw if not in_conus(r))
+    excluded = sum(1 for r in raw if not in_scope(r))
     branches = []
     for r in raw:
-        if not in_conus(r):
+        if not in_scope(r):
             continue
         st = r.get("STALPBR")
         if state and (st or "").upper() != state.upper():
@@ -1720,6 +1972,12 @@ TOOLS = [
                     "underperform in the market, validated against landed Tiingo price history.",
      "inputSchema": {"type": "object", "properties": {}},
      "handler": get_xray_forward_return_validation},
+    {"name": "get_filing_diff_population_summary",
+     "description": "Feature 12 (C13) governance — expected false positives at the raw filing-diff "
+                    "z threshold across the whole population, plus a Benjamini-Hochberg "
+                    "FDR-controlled alternative flag set.",
+     "inputSchema": {"type": "object", "properties": {}},
+     "handler": get_filing_diff_population_summary},
     {"name": "run_stress_test",
      "description": "Feature 16 — stress capital ratios under loan-loss / deposit-outflow / rate shocks.",
      "inputSchema": {"type": "object", "properties": {
@@ -1823,10 +2081,12 @@ TOOLS = [
                                     "defaults to the curated HEATMAP_METRICS set."}}},
      "handler": get_percentile_heatmap},
     {"name": "get_asset_treemap",
-     "description": "Every bank sized by assets, grouped by behavioral cluster or "
-                    "state, with X-Ray risk severity for client-side coloring.",
+     "description": "Every bank sized by assets, grouped by behavioral cluster, "
+                    "state or country (the only grouping that produces a genuine "
+                    "pan-European view), with X-Ray risk severity for client-side "
+                    "coloring.",
      "inputSchema": {"type": "object", "properties": {
-         "group_by": {"type": "string", "enum": ["peer_cluster_label", "state"]}}},
+         "group_by": {"type": "string", "enum": ["peer_cluster_label", "state", "country"]}}},
      "handler": get_asset_treemap},
     {"name": "get_metric_distribution",
      "description": "Histogram, order statistics and disclosed data-quality exclusions "
@@ -1871,6 +2131,16 @@ TOOLS = [
                     "expected next publication) for every registered data source.",
      "inputSchema": {"type": "object", "properties": {}},
      "handler": get_data_freshness},
+    {"name": "get_metric_lineage",
+     "description": "G9 — provenance for one bank's metric: the Gold function/formula that "
+                    "computed it, the Silver/FDIC source field(s) and raw values, and the "
+                    "originating Bronze partition path, checksum and fetch timestamp. Covers "
+                    "the FDIC capital/financial fields feeding get_risk_score, not the full "
+                    "Gold schema.",
+     "inputSchema": {"type": "object", "properties": {
+         "cert": _CERT, "metric": {"type": "string"}, "quarter": {"type": "string"}},
+         "required": ["cert", "metric"]},
+     "handler": get_metric_lineage},
     {"name": "get_macro_data",
      "description": "B5 — landed FRED macro series (Treasury yield curve, Fed funds, "
                     "unemployment, CRE price index).",

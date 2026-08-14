@@ -115,6 +115,7 @@ ROUTE_TIERS: dict[str, str] = {
     "/api/banks/ma-pro-forma": "viewer",
     "/api/ma-weight-validation": "viewer",
     "/api/xray-forward-return-validation": "viewer",
+    "/api/filing-diff-population-summary": "viewer",
     "/api/banks/filing-diff": "viewer",
     "/api/banks/risk-score": "viewer",
     "/api/banks/candles": "viewer",
@@ -123,6 +124,7 @@ ROUTE_TIERS: dict[str, str] = {
     "/api/market/overview": "viewer",
     "/api/macro": "viewer",
     "/api/data-freshness": "viewer",
+    "/api/metric-lineage": "viewer",
     "/api/banks/holding-company": "viewer",
     "/api/risk-leaderboard": "viewer",
     "/api/compare": "viewer",
@@ -130,6 +132,8 @@ ROUTE_TIERS: dict[str, str] = {
     "/api/watchlist/note": "viewer",
     "/api/watchlist/rules": "viewer",
     "/api/screens": "viewer",
+    "/api/peer-sets": "viewer",
+    "/api/annotations": "viewer",
     "/api/alerts": "viewer",
     "/api/alerts/seen": "viewer",
     "/api/population-metrics": "viewer",
@@ -191,6 +195,8 @@ ROUTES = [
     ("GET", "/api/ma-weight-validation", lambda q, claims: tools.get_ma_weight_validation()),
     ("GET", "/api/xray-forward-return-validation",
      lambda q, claims: tools.get_xray_forward_return_validation()),
+    ("GET", "/api/filing-diff-population-summary",
+     lambda q, claims: tools.get_filing_diff_population_summary()),
     ("GET", "/api/banks/stress-test", lambda q, claims: tools.run_stress(
         _cap(q["cert"]), loan_loss_pct=_f(q.get("loan_loss_pct"), 3.0),
         deposit_outflow_pct=_f(q.get("deposit_outflow_pct"), 15.0),
@@ -208,6 +214,8 @@ ROUTES = [
         top_n=int(q.get("top_n", 20)), window_days=int(q.get("window_days", 180)))),
     ("GET", "/api/macro", lambda q, claims: tools.get_macro_data()),
     ("GET", "/api/data-freshness", lambda q, claims: tools.get_data_freshness()),
+    ("GET", "/api/metric-lineage", lambda q, claims: tools.get_metric_lineage(
+        _cap(q["cert"]), q["metric"], quarter=q.get("quarter"))),
     ("GET", "/api/banks/holding-company", lambda q, claims: tools.get_holding_company(_cap(q["cert"]))),
     ("GET", "/api/risk-leaderboard", lambda q, claims: tools.get_risk_leaderboard(
         top_n=int(q.get("top_n", 25)), state=q.get("state"), cluster_label=q.get("cluster_label"),
@@ -219,12 +227,15 @@ ROUTES = [
         "items": common_db.fetch_watchlist(_require_sub(claims))}),
     ("GET", "/api/population-metrics", lambda q, claims: tools.get_population_metrics(
         q["group"], limit=int(q.get("limit", 2000)), sort_by=q.get("sort_by"),
-        descending=q.get("descending", "true").lower() != "false", quarter=q.get("quarter"))),
+        descending=q.get("descending", "true").lower() != "false", quarter=q.get("quarter"),
+        certs=_certs(q["certs"]) if q.get("certs") else None)),
     ("GET", "/api/metric-distribution", lambda q, claims: tools.get_metric_distribution(
-        q["metric"], bins=int(q.get("bins", 30)), quarter=q.get("quarter"))),
+        q["metric"], bins=int(q.get("bins", 30)), quarter=q.get("quarter"),
+        certs=_certs(q["certs"]) if q.get("certs") else None)),
     ("GET", "/api/percentile-heatmap", lambda q, claims: tools.get_percentile_heatmap(
         top_n=int(q.get("top_n", 40)), sort_by=q.get("sort_by", "total_assets"),
-        metrics=q["metrics"].split(",") if q.get("metrics") else None, quarter=q.get("quarter"))),
+        metrics=q["metrics"].split(",") if q.get("metrics") else None, quarter=q.get("quarter"),
+        certs=_certs(q["certs"]) if q.get("certs") else None)),
     ("GET", "/api/asset-treemap", lambda q, claims: tools.get_asset_treemap(
         group_by=q.get("group_by", "peer_cluster_label"), quarter=q.get("quarter"))),
     ("GET", "/api/banks/trends", lambda q, claims: tools.get_bank_trends(_cap(q["cert"]))),
@@ -286,6 +297,13 @@ ROUTES = [
         "items": common_db.fetch_watchlist_rules(_require_sub(claims))}),
     ("GET", "/api/screens", lambda q, claims: {
         "items": common_db.fetch_saved_screens(_require_sub(claims))}),
+    # D5 — named, persisted peer sets.
+    ("GET", "/api/peer-sets", lambda q, claims: {
+        "items": common_db.fetch_peer_sets(_require_sub(claims))}),
+    # D7 — analyst annotations for one bank, shared across users (not
+    # per-caller like watchlist/peer-sets/screens above).
+    ("GET", "/api/annotations", lambda q, claims: {
+        "items": common_db.fetch_annotations(_cap(q["cert"]))}),
     ("GET", "/api/alerts", lambda q, claims: {
         "items": common_db.fetch_alerts(
             _require_sub(claims), limit=int(q.get("limit", 50)),
@@ -302,6 +320,7 @@ POST_ROUTES = [
     ("POST", "/api/watchlist/note", lambda body, claims: _watchlist_note(body, claims)),
     ("POST", "/api/watchlist/rules", lambda body, claims: _watchlist_rule_add(body, claims)),
     ("POST", "/api/screens", lambda body, claims: _screen_save(body, claims)),
+    ("POST", "/api/peer-sets", lambda body, claims: _peer_set_save(body, claims)),
     ("POST", "/api/alerts/seen", lambda body, claims: _alert_mark_seen(body, claims)),
     ("POST", "/api/assistant/ask", lambda body, claims: _assistant_ask(body, claims)),
 ]
@@ -310,6 +329,7 @@ DELETE_ROUTES = [
     ("DELETE", "/api/watchlist", lambda q, claims: _watchlist_remove(q, claims)),
     ("DELETE", "/api/watchlist/rules", lambda q, claims: _watchlist_rule_remove(q, claims)),
     ("DELETE", "/api/screens", lambda q, claims: _screen_remove(q, claims)),
+    ("DELETE", "/api/peer-sets", lambda q, claims: _peer_set_remove(q, claims)),
     # G4 — deletes every row stored against the caller's own user_sub across
     # every table listed in export_user_data (see docs/privacy.md).
     ("DELETE", "/api/privacy/data", lambda q, claims: common_db.delete_user_data(_require_sub(claims))),
@@ -390,6 +410,24 @@ def _screen_remove(query: dict, claims: dict) -> dict:
     sub = _require_sub(claims)
     common_db.delete_saved_screen(sub, int(query["screen_id"]))
     return {"items": common_db.fetch_saved_screens(sub)}
+
+
+def _peer_set_save(body: dict, claims: dict) -> dict:
+    sub = _require_sub(claims)
+    name = (body.get("name") or "").strip()
+    if not name:
+        raise ValueError("a peer set needs a non-empty name")
+    certs = [int(c) for c in (body.get("certs") or [])]
+    if len(certs) < 2:
+        raise ValueError("a peer set needs at least 2 banks")
+    common_db.save_peer_set(sub, name, certs)
+    return {"items": common_db.fetch_peer_sets(sub)}
+
+
+def _peer_set_remove(query: dict, claims: dict) -> dict:
+    sub = _require_sub(claims)
+    common_db.delete_peer_set(sub, int(query["peer_set_id"]))
+    return {"items": common_db.fetch_peer_sets(sub)}
 
 
 def _alert_mark_seen(body: dict, claims: dict) -> dict:

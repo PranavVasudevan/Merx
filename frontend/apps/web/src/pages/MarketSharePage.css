@@ -47,3 +47,62 @@
 .ms-share-row:hover { background: var(--surface); }
 .ms-share-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ms-share-pct { text-align: right; font-weight: 650; }
+
+/* E8 — choropleth heading + legend */
+.market-share-map-heading { font-size: var(--text-sm); margin: var(--space-3) 0 var(--space-2); }
+
+.market-share-map-legend { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); font-size: var(--text-xs); }
+.market-share-legend-label { flex-shrink: 0; }
+.market-share-legend-bar { position: relative; flex: 1; max-width: 320px; height: 10px; border-radius: 5px; }
+.market-share-legend-threshold {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: var(--status-critical);
+  transform: translateX(-1px);
+}
+.market-share-legend-flag { display: inline-flex; align-items: center; gap: 5px; color: var(--text-muted); margin-left: var(--space-2); }
+.market-share-legend-flag i { width: 9px; height: 9px; border: 1.5px solid var(--status-critical); border-radius: 2px; display: inline-block; }
+
+/* E8 — acquirer/target pro-forma picker */
+.market-share-proforma-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  margin-bottom: var(--space-3);
+}
+.market-share-proforma-field { display: flex; flex-direction: column; gap: 4px; min-width: 220px; }
+.market-share-proforma-label { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: .04em; }
+.market-share-proforma-picked { font-size: var(--text-xs); font-weight: 600; }
+.market-share-proforma-btn {
+  padding: 8px var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+.market-share-proforma-btn:not(:disabled):hover { background: var(--surface-2); }
+.market-share-proforma-btn:disabled { opacity: .5; cursor: not-allowed; }
+.market-share-proforma-clear { padding: 8px var(--space-3); border-radius: var(--radius-sm); border: 1px solid transparent; background: transparent; color: var(--text-muted); font-size: var(--text-sm); cursor: pointer; }
+.market-share-proforma-clear:hover { color: var(--text-primary); }
+
+.market-share-proforma-summary { margin-bottom: var(--space-2); }
+.market-share-toggle { display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; margin-top: 4px; }
+.market-share-toggle-btn { padding: 5px var(--space-3); border: none; background: var(--surface); color: var(--text-muted); font-size: var(--text-xs); font-weight: 600; cursor: pointer; }
+.market-share-toggle-btn.active { background: var(--text-primary); color: var(--surface); }
+
+/* E8 — click-through county detail panel */
+.market-share-detail-panel { margin-top: var(--space-2); padding: var(--space-3); border-radius: var(--radius-sm); background: var(--surface-2); }
+.market-share-detail-head { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+.market-share-detail-name { font-weight: 650; font-size: var(--text-sm); }
+.market-share-detail-close { margin-left: auto; border: none; background: none; color: var(--text-muted); font-size: var(--text-base); line-height: 1; cursor: pointer; padding: 2px 6px; }
+.market-share-detail-close:hover { color: var(--text-primary); }
+.market-share-detail-stats { font-size: var(--text-xs); margin-bottom: var(--space-2); }

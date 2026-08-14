@@ -71,6 +71,12 @@ jobs:
       - name: Tests
         run: python scripts/run_all_tests.py
 
+      # F2 — catches the class of drift where a comment references a repo path
+      # that was never written (or was later renamed/removed). No landed data
+      # or install needed; pure text scan.
+      - name: Doc-reference drift check
+        run: python scripts/check_doc_references.py
+
   rust:
     name: Rust — clippy + test (stress-engine, ingestion)
     runs-on: ubuntu-latest

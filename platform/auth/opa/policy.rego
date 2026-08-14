@@ -43,6 +43,7 @@ viewer_routes := {
     "/api/banks/ma-pro-forma",
     "/api/ma-weight-validation",
     "/api/xray-forward-return-validation",
+    "/api/filing-diff-population-summary",
     "/api/banks/filing-diff",
     "/api/banks/risk-score",
     "/api/banks/candles",
@@ -51,6 +52,7 @@ viewer_routes := {
     "/api/market/overview",
     "/api/macro",
     "/api/data-freshness",
+    "/api/metric-lineage",
     "/api/banks/holding-company",
     "/api/risk-leaderboard",
     "/api/compare",
@@ -83,6 +85,7 @@ viewer_routes := {
     "/api/watchlist/note",
     "/api/watchlist/rules",
     "/api/screens",
+    "/api/peer-sets",
     "/api/alerts",
     "/api/alerts/seen",
     # G4 — export/delete the caller's own stored data (watchlist, agent-run
@@ -158,7 +161,7 @@ mcp_viewer_tools := {
     "compare_banks", "get_population_metrics", "get_percentile_heatmap", "get_asset_treemap",
     "get_metric_distribution", "get_price_candles", "get_market_snapshot", "get_market_coverage",
     "get_market_overview",
-    "get_data_freshness", "get_macro_data", "get_cluster_diagnostics", "get_model_card",
+    "get_data_freshness", "get_metric_lineage", "get_macro_data", "get_cluster_diagnostics", "get_model_card",
     "get_county_concentration", "get_branch_map", "get_ma_network", "search_filings_text",
     "get_filings_coverage",
 }

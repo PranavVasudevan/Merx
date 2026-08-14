@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { BranchMapCanvas } from '../components/BranchMapCanvas';
-import { CONTIGUOUS_STATES } from '../usStates';
+import { US_STATES } from '../usStates';
 import type { BranchMapResult } from '../types';
 import './GeographyPage.css';
 
@@ -34,16 +34,19 @@ export function GeographyPage() {
         <h2>Branch geography</h2>
         <p className="muted geography-subtitle">
           Every branch across the full FDIC-insured universe (~4,431 banks) —
-          real coordinates, projected with a
-          hand-rolled Albers Equal-Area Conic (no map tiles, no network calls).
-          Overlapping dots compound into real density, darkest where branches
-          cluster. US-only: no public branch-level dataset exists for EU banks the
+          real coordinates and real state/county boundaries (Census TopoJSON via
+          us-atlas), rendered on a canvas Albers-USA projection — Alaska and Hawaii
+          included via their standard insets. No map tiles, no network calls.
+          Scroll to zoom, drag to pan; at national zoom, branches are collapsed
+          into county-level bubbles (sized by branch count, colored by total
+          deposits) rather than 76k overlapping dots — zoom in for individual
+          branches. US-only: no public branch-level dataset exists for EU banks the
           way FDIC's Summary of Deposits does — for the EU angle, see the{' '}
           <Link to="/treemap">population treemap</Link>'s "group by country" view.
         </p>
         <select className="geography-select" value={state} onChange={(e) => setState(e.target.value)}>
-          <option value="">All contiguous states</option>
-          {CONTIGUOUS_STATES.map((s) => <option key={s.code} value={s.code}>{s.name}</option>)}
+          <option value="">All states</option>
+          {US_STATES.map((s) => <option key={s.code} value={s.code}>{s.name}</option>)}
         </select>
         {error && <p className="app-banner-error">{error}</p>}
       </div>
@@ -53,7 +56,7 @@ export function GeographyPage() {
           <div className="geography-stats">
             <div className="geography-stat"><span className="muted">Branches shown</span><span className="tabular">{result.branch_count.toLocaleString()}</span></div>
             <div className="geography-stat"><span className="muted">Banks represented</span><span className="tabular">{Object.keys(result.bank_names).length.toLocaleString()}</span></div>
-            <div className="geography-stat"><span className="muted">Not shown (AK/HI/territories)</span><span className="tabular">{result.excluded_non_contiguous.toLocaleString()}</span></div>
+            <div className="geography-stat"><span className="muted">Not shown (territories + bad coords)</span><span className="tabular">{result.excluded_non_contiguous.toLocaleString()}</span></div>
             <div className="geography-stat"><span className="muted">Branch data as of</span><span className="tabular">{fmtSodVintage(result.sod_vintage)}</span></div>
           </div>
           {loading ? (

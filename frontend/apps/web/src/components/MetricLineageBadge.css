@@ -1,0 +1,35 @@
+.lineage-badge-wrap {
+  position: relative;
+  display: inline-block;
+  margin-left: var(--space-1);
+}
+.lineage-badge {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  line-height: 1;
+  padding: 0;
+}
+.lineage-badge:hover { color: var(--text-primary); }
+
+.lineage-popover {
+  position: absolute;
+  z-index: 20;
+  top: 1.4em;
+  left: 0;
+  width: 300px;
+  padding: var(--space-3);
+  font-size: var(--text-xs);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+.lineage-formula { font-size: var(--text-sm); font-weight: 600; margin-bottom: var(--space-1); }
+.lineage-row { margin-bottom: var(--space-2); }
+.lineage-fields { width: 100%; margin-bottom: var(--space-2); border-collapse: collapse; }
+.lineage-fields td { padding: 2px 0; }
+.lineage-fields td:last-child { text-align: right; }
+.lineage-source { display: flex; flex-direction: column; gap: 2px; }
+.lineage-mono { font-family: var(--font-mono, monospace); font-size: 10px; word-break: break-all; }
+.lineage-link { margin-top: var(--space-1); color: var(--accent, #4a9eff); }
+.lineage-error { color: var(--danger, #d33); }

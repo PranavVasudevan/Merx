@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import * as echarts from 'echarts/core';
 import {
-  BoxplotChart, GraphChart, HeatmapChart, ScatterChart, TreemapChart,
+  BoxplotChart, GraphChart, HeatmapChart, RadarChart, ScatterChart, TreemapChart,
 } from 'echarts/charts';
 import {
-  GridComponent, LegendComponent, TitleComponent, TooltipComponent, VisualMapComponent,
+  GridComponent, LegendComponent, RadarComponent, TitleComponent, TooltipComponent, VisualMapComponent,
 } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import type { EChartsOption } from 'echarts';
@@ -14,10 +14,11 @@ import { onThemeChange } from '../colors';
 // minified; registering only what's used keeps the vendor chunk to the charts this
 // app actually renders. Anything new must be added here or it silently won't draw.
 // BoxplotChart + ScatterChart: GroupComparisonChart.tsx's per-cluster/size-band/
-// state/peer-set boxplot with a jittered beeswarm overlay.
+// state/peer-set boxplot with a jittered beeswarm overlay. RadarChart: D6's
+// normalised multi-bank comparison view on /compare.
 echarts.use([
-  TreemapChart, HeatmapChart, GraphChart, BoxplotChart, ScatterChart,
-  GridComponent, TooltipComponent, VisualMapComponent, LegendComponent, TitleComponent,
+  TreemapChart, HeatmapChart, GraphChart, BoxplotChart, ScatterChart, RadarChart,
+  GridComponent, TooltipComponent, VisualMapComponent, LegendComponent, TitleComponent, RadarComponent,
   CanvasRenderer,
 ]);
 

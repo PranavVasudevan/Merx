@@ -61,15 +61,33 @@ def test_three_quarters_still_has_no_z_one_historical_sample_cant_form_a_std():
     assert li["z"] is None
 
 
-def test_four_quarters_is_enough_history_to_compute_a_real_z():
+def test_five_quarters_is_still_not_enough_min_observations_is_four():
+    """5 quarters -> 3 historical samples once the evaluated transition is
+    excluded (MIN_OBSERVATIONS=4, see filing_diff.py's C12 comment) -- still
+    below the gate, so z stays None with a stated reason."""
     quarters = [
-        q("2026Q4", 100.0), q("2026Q3", 100.0), q("2026Q2", 101.0), q("2026Q1", 100.0),
+        q("2026Q5", 106.0), q("2026Q4", 103.0), q("2026Q3", 106.0),
+        q("2026Q2", 103.0), q("2026Q1", 106.0),
     ]
-    result = diff(quarters)  # Q3->Q4: 0% change vs a real (if degenerate) baseline
+    result = diff(quarters)
     li = line_for(result, "total_assets")
-    # Two historical samples now exist (Q2->Q3 flat except one), so a std --
-    # and therefore a real z, not None -- becomes computable.
+    assert li["n"] == 3
+    assert li["z"] is None
+    assert li["z_reason"] and "3" in li["z_reason"]
+
+
+def test_six_quarters_is_enough_history_to_compute_a_real_z():
+    """6 quarters -> 4 historical samples once the evaluated transition is
+    excluded, meeting MIN_OBSERVATIONS -- a real z becomes computable."""
+    quarters = [
+        q("2026Q6", 106.0), q("2026Q5", 103.0), q("2026Q4", 106.0),
+        q("2026Q3", 103.0), q("2026Q2", 106.0), q("2026Q1", 103.0),
+    ]
+    result = diff(quarters)
+    li = line_for(result, "total_assets")
+    assert li["n"] == 4
     assert li["z"] is not None
+    assert li["z_reason"] is None
 
 
 # ---- materiality floor + z-threshold gating -------------------------------
@@ -89,13 +107,17 @@ def test_high_z_alone_does_not_flag_a_sub_floor_move():
 
 def test_material_move_below_z_threshold_does_not_flag():
     """A move that clears the materiality floor but isn't a statistical outlier
-    for THIS bank (it moves by a similar amount every quarter) shouldn't flag."""
+    for THIS bank (it oscillates by a similar +/-3% every quarter) shouldn't
+    flag. Six quarters so MIN_OBSERVATIONS (4) is met and z is a real number,
+    not None -- otherwise this would test the _BIG fallback path instead of
+    the z-threshold gate it's named for."""
     quarters = [
-        q("2026Q5", 106.0), q("2026Q4", 103.0), q("2026Q3", 106.0),
-        q("2026Q2", 103.0), q("2026Q1", 100.0),
+        q("2026Q6", 106.0), q("2026Q5", 103.0), q("2026Q4", 106.0),
+        q("2026Q3", 103.0), q("2026Q2", 106.0), q("2026Q1", 103.0),
     ]
     result = diff(quarters, z_threshold=2.0)
     li = line_for(result, "total_assets")
+    assert li["n"] == 4
     assert abs(li["change"]) >= 2.0          # clears the materiality floor
     assert li["z"] is not None
     assert abs(li["z"]) < 2.0                # but isn't a real outlier for this bank
@@ -103,12 +125,17 @@ def test_material_move_below_z_threshold_does_not_flag():
 
 
 def test_material_and_statistically_outlying_move_flags():
+    """Same steady +/-3% history as the test above (so the baseline/floor are
+    unchanged and n=4 meets MIN_OBSERVATIONS), but the evaluated transition is
+    wildly outside it."""
     quarters = [
-        q("2026Q5", 150.0),  # +50% -- wildly outside this bank's normal +/-1% wobble
-        q("2026Q4", 100.0), q("2026Q3", 101.0), q("2026Q2", 100.0), q("2026Q1", 101.0),
+        q("2026Q6", 150.0),  # Q5->Q6 = +45.6% -- wildly outside the +/-3% wobble below
+        q("2026Q5", 103.0), q("2026Q4", 106.0),
+        q("2026Q3", 103.0), q("2026Q2", 106.0), q("2026Q1", 103.0),
     ]
     result = diff(quarters)
     li = line_for(result, "total_assets")
+    assert li["n"] == 4
     assert li["flagged"] is True
     assert flag_for(result, "total_assets")["z"] is not None
     assert abs(flag_for(result, "total_assets")["z"]) >= 2.0

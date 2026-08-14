@@ -15,9 +15,13 @@ interface Panel { title: string; lines: { key: string; label: string; color: key
 const PANELS: Panel[] = [
   { title: 'Total assets ($B)', suffix: 'B',
     lines: [{ key: 'total_assets', label: 'Assets', color: 'blue' }] },
-  { title: 'Profitability', suffix: '%',
-    lines: [{ key: 'roa_pct', label: 'ROA', color: 'green' },
-            { key: 'net_interest_margin_pct', label: 'NIM', color: 'aqua' }] },
+  // C15: FDIC's roa_pct/net_interest_margin_pct are YTD-annualized (a Q1 value
+  // and a Q4 value for the same bank blend different amounts of the year, not
+  // comparable on one line) — plotting the quarter-isolated counterparts
+  // instead, computed from the YTD dollar deltas (gold.quarterly_isolated_ratios).
+  { title: 'Profitability (quarter-isolated)', suffix: '%',
+    lines: [{ key: 'roa_pct_quarterly', label: 'ROA', color: 'green' },
+            { key: 'net_interest_margin_pct_quarterly', label: 'NIM', color: 'aqua' }] },
   { title: 'Credit quality', suffix: '%',
     lines: [{ key: 'npl_ratio_pct', label: 'NPL ratio', color: 'orange' },
             { key: 'texas_ratio_pct', label: 'Texas Ratio', color: 'red' }] },
@@ -160,6 +164,13 @@ export function TrendsPage() {
             {PANELS.map((p) => (
               <div key={p.title} className="trends-chart-box">
                 <h3 className="trends-chart-title">{p.title}</h3>
+                {p.title.includes('quarter-isolated') && (
+                  <p className="muted chart-caption trends-ytd-caveat">
+                    FDIC reports ROA/NIM year-to-date annualized (a Q4 value blends the
+                    whole year, a Q1 value is one quarter) — these are de-cumulated to
+                    each quarter's own figure instead.
+                  </p>
+                )}
                 <ResponsiveContainer width="100%" height={180}>
                   <LineChart data={chartData} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
                     <CartesianGrid stroke={colors.gridline} vertical={false} />

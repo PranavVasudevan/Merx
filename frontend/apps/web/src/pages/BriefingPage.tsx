@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { api } from '../api';
-import type { QuarterlyBriefingResult } from '../types';
+import type { FilingDiffPopulationSummary, QuarterlyBriefingResult } from '../types';
 import './BriefingPage.css';
 
 function fmtChange(m: { change: number; metric: string }): string {
@@ -13,11 +13,14 @@ function fmtChange(m: { change: number; metric: string }): string {
 export function BriefingPage() {
   const [b, setB] = useState<QuarterlyBriefingResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // C13 — population-level filing-diff multiple-testing context.
+  const [popSummary, setPopSummary] = useState<FilingDiffPopulationSummary | null>(null);
 
   useEffect(() => {
     api.quarterlyBriefing(8)
       .then((r) => { setB(r); setError(null); })
       .catch((e: Error) => setError(e.message));
+    api.filingDiffPopulationSummary().then(setPopSummary).catch(() => setPopSummary(null));
   }, []);
 
   const topTransitions = b
@@ -36,6 +39,18 @@ export function BriefingPage() {
         </p>
         {error && <p className="app-banner-error">{error}</p>}
       </div>
+
+      {popSummary && (
+        <div className="panel">
+          <h2>Filing-diff flags: raw vs FDR-controlled (C13)</h2>
+          <p className="muted briefing-subtitle">
+            {popSummary.raw_flag_count} raw filing-diff flags across the population at
+            z≥{popSummary.z_threshold} — an estimated {popSummary.expected_false_positives_at_threshold} of
+            those are expected by chance alone. Benjamini-Hochberg FDR control narrows this to{' '}
+            {popSummary.fdr_flag_count} flags. <Link to="/filing-diff">See the FDR-controlled view →</Link>
+          </p>
+        </div>
+      )}
 
       {b && (
         <>

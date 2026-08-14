@@ -144,3 +144,33 @@ export function divergingRamp(): string[] {
   const c = chartColors();
   return [c.divNeg, c.surface2, c.divPos];
 }
+
+function hexToRgb(hex: string): [number, number, number] {
+  const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex.trim());
+  if (!m) return [0, 0, 0];
+  return [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)];
+}
+
+/**
+ * Continuous interpolation across an ordered ramp (e.g. `sequentialRamp()`) for a
+ * choropleth or other mark where a value maps to a position on a scale, not a bucket
+ * — `t` in [0,1], clamped. Linear RGB lerp between the two nearest stops; reuses
+ * whichever ramp is passed in rather than defining new colors (see
+ * MarketSharePage's CountyChoropleth, the first consumer that needs a genuinely
+ * continuous fill instead of ECharts' own `visualMap` interpolation).
+ */
+export function interpolateRamp(ramp: string[], t: number): string {
+  if (ramp.length === 0) return '#888888';
+  const clamped = Math.max(0, Math.min(1, Number.isFinite(t) ? t : 0));
+  if (ramp.length === 1) return ramp[0];
+  const scaled = clamped * (ramp.length - 1);
+  const i0 = Math.floor(scaled);
+  const i1 = Math.min(ramp.length - 1, i0 + 1);
+  const frac = scaled - i0;
+  const [r0, g0, b0] = hexToRgb(ramp[i0]);
+  const [r1, g1, b1] = hexToRgb(ramp[i1]);
+  const r = Math.round(r0 + (r1 - r0) * frac);
+  const g = Math.round(g0 + (g1 - g0) * frac);
+  const b = Math.round(b0 + (b1 - b0) * frac);
+  return `rgb(${r}, ${g}, ${b})`;
+}

@@ -52,7 +52,9 @@ export function XrayPanel({ xray }: { xray: XrayResult }) {
                   animate={{ width: `${f.peer_percentile}%` }}
                   transition={{ duration: 0.7, ease: [0.85, 0, 0.15, 1] }}
                 />
-                <span className="xray-pctile-label muted tabular">{f.peer_percentile}th percentile vs peers</span>
+                <span className="xray-pctile-label muted tabular">
+                  {f.peer_percentile}th percentile vs {f.peer_percentile_basis === 'global' ? 'the whole population' : 'peer cluster'}
+                </span>
               </div>
             )}
             <p className="xray-note secondary">{f.note}</p>

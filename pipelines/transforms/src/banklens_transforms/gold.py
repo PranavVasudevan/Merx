@@ -359,6 +359,85 @@ def credit_trajectory(history_desc: list[dict], *, window: int = 4) -> dict:
     }
 
 
+# ---- C15: quarter-isolated profitability ratios ---------------------------
+
+def quarter_number(quarter: str | None) -> int | None:
+    """"2026Q1" -> 1. None if `quarter` isn't that shape — same convention as
+    stress.estimate_ppnr_quarterly (C4) and market.quarter_end_date (C10)."""
+    if not quarter or len(quarter) != 6 or quarter[4] != "Q":
+        return None
+    try:
+        q = int(quarter[5])
+    except ValueError:
+        return None
+    return q if 1 <= q <= 4 else None
+
+
+def _quarterly_isolated_flow(row: dict, prev: dict | None, field: str) -> float | None:
+    """This quarter's own dollar flow, un-cumulated from FDIC's YTD-cumulative
+    field. Q1: YTD IS the quarter, no adjustment needed. Q2-Q4: YTD(this) -
+    YTD(prev) — needs `prev` to be the immediately preceding quarter of the
+    SAME calendar year (the normal case for `gold_features`' `prev` argument).
+    `None` if the quarter can't be parsed, the field is undisclosed, or (for
+    Q2-Q4) `prev` is missing or from a different year (a landing gap, never
+    guessed across)."""
+    ytd = row.get(field)
+    if ytd is None:
+        return None
+    qnum = quarter_number(row.get("quarter"))
+    if qnum is None:
+        return None
+    if qnum == 1:
+        return ytd
+    if prev is None:
+        return None
+    if (prev.get("quarter") or "")[:4] != (row.get("quarter") or "")[:4]:
+        return None
+    prev_ytd = prev.get(field)
+    return None if prev_ytd is None else ytd - prev_ytd
+
+
+def quarterly_isolated_ratios(row: dict, prev: dict | None = None) -> dict:
+    """C15 — FDIC's NIM/ROA/ROE/efficiency ratios are year-to-date annualized,
+    so a Q1 figure and a Q4 figure for the SAME bank are not directly
+    comparable on a trend chart (Q4 blends the whole year; Q1 is one
+    quarter). Computes QUARTER-ISOLATED versions (this quarter alone,
+    annualized x4 for the flow-over-stock ratios) from the YTD dollar
+    deltas, where the inputs allow — `None`, never a guess, whenever `prev`
+    is missing/mismatched or a required YTD field is undisclosed.
+
+    Denominators use `average_assets`/`total_equity` (point-in-time equity —
+    no average-equity field is landed), the same proxy-vs-precise tradeoff
+    this module already documents for `cre_to_equity_pct`. NIM's true
+    denominator is average EARNING assets specifically, not average total
+    assets; no earning-assets field is landed either, so this uses
+    average_assets as a proxy — real, but directionally understated versus
+    FDIC's own earning-assets-based NIM.
+    """
+    ni = _quarterly_isolated_flow(row, prev, "net_income")
+    ii = _quarterly_isolated_flow(row, prev, "interest_income")
+    ie = _quarterly_isolated_flow(row, prev, "interest_expense")
+    nonii = _quarterly_isolated_flow(row, prev, "noninterest_income")
+    nonix = _quarterly_isolated_flow(row, prev, "noninterest_expense")
+    nii_flow = None if (ii is None or ie is None) else ii - ie
+
+    avg_assets, equity = row.get("average_assets"), row.get("total_equity")
+
+    def _annualized_pct(numerator, denominator):
+        return None if (numerator is None or not denominator) else round(numerator * 4 / denominator * 100, 3)
+
+    efficiency = None
+    if nonix is not None and nii_flow is not None and nonii is not None and (nii_flow + nonii):
+        efficiency = round(nonix / (nii_flow + nonii) * 100, 3)  # ratio of two same-quarter flows, not annualized
+
+    return {
+        "roa_pct_quarterly": _annualized_pct(ni, avg_assets),
+        "roe_pct_quarterly": _annualized_pct(ni, equity),
+        "net_interest_margin_pct_quarterly": _annualized_pct(nii_flow, avg_assets),
+        "efficiency_ratio_pct_quarterly": efficiency,
+    }
+
+
 def gold_features(row: dict, prev: dict | None = None, history: list[dict] | None = None) -> dict:
     """Derive one Gold feature row from a Silver row (+ optional prior quarter).
 
@@ -404,6 +483,10 @@ def gold_features(row: dict, prev: dict | None = None, history: list[dict] | Non
         "roa_pct": row.get("roa_reported"),
         "roe_pct": row.get("roe_reported"),
         "efficiency_ratio_pct": row.get("efficiency_ratio_reported"),
+        # C15 — quarter-isolated counterparts of the four YTD-annualized
+        # ratios above (None when prev is None/mismatched — same "no prior
+        # quarter, no QoQ" contract as qoq_delta below).
+        **quarterly_isolated_ratios(row, prev),
         "net_interest_income": net_interest_income(row),
         "noninterest_income_share_pct": noninterest_income_share_pct(row),
         # asset quality

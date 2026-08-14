@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { api } from '../api';
+import { usePeerSet } from '../PeerSetContext';
 import { resemblanceZone } from '../colors';
 import type {
   AlertItem, PopulationBank, RiskScoreResult, WatchlistRule, WatchlistRuleType, XrayResult,
@@ -54,8 +55,24 @@ export function WatchlistPage() {
   const [ruleThreshold, setRuleThreshold] = useState('3');
   const [ruleTopN, setRuleTopN] = useState('25');
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
+  const { peerSets, createPeerSet, deletePeerSet } = usePeerSet(); // D5
+  const [peerSetBusy, setPeerSetBusy] = useState(false);
 
   useEffect(() => { load(); loadRulesAndAlerts(); }, []);
+
+  async function saveWatchlistAsPeerSet() {
+    if (!rows || rows.length < 2) return;
+    const name = window.prompt('Name this peer set:', `Watchlist (${rows.length} banks)`);
+    if (!name) return;
+    setPeerSetBusy(true);
+    try {
+      await createPeerSet(name, rows.map((r) => r.cert));
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setPeerSetBusy(false);
+    }
+  }
 
   function load() {
     setRows(null);
@@ -165,6 +182,30 @@ export function WatchlistPage() {
           </div>
         </div>
       )}
+
+      <div className="panel">
+        <h2>Peer sets</h2>
+        <p className="muted watchlist-note">
+          Named lists you can filter earnings/credit/funding, the heatmap and distributions
+          to (see the picker in the header) — percentiles recompute within the set.
+        </p>
+        <div className="watchlist-peer-sets">
+          {peerSets.map((p) => (
+            <span key={p.id} className="watchlist-rule-chip">
+              {p.name} ({p.certs.length})
+              <button onClick={() => deletePeerSet(p.id)} aria-label={`Delete ${p.name}`}>×</button>
+            </span>
+          ))}
+          <button
+            className="watchlist-rule-add"
+            onClick={saveWatchlistAsPeerSet}
+            disabled={peerSetBusy || !rows || rows.length < 2}
+            title={rows && rows.length < 2 ? 'Add at least 2 banks to your watchlist first' : 'Save your current watchlist as a peer set'}
+          >
+            + save watchlist as peer set
+          </button>
+        </div>
+      </div>
 
       <div className="panel">
         <h2>Watchlist</h2>
