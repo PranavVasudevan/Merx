@@ -34,7 +34,7 @@ jobs:
       POSTGRES_PASSWORD: change_me_locally
       POSTGRES_DB: banklens
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
@@ -143,7 +143,7 @@ jobs:
     name: Rust — clippy + test (stress-engine, ingestion)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
@@ -198,7 +198,7 @@ jobs:
       run:
         working-directory: frontend/apps/web
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
@@ -233,7 +233,7 @@ jobs:
     name: Infra — Docker builds + Kustomize
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Catches the class of bug found live while containerizing: a Dockerfile
       # that's syntactically fine but omits something the app needs at runtime
