@@ -17,17 +17,4 @@
 }
 .branch-map-reset:hover { background: var(--surface-2); }
 
-.branch-map-tooltip {
-  position: absolute;
-  pointer-events: none;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 6px 10px;
-  font-size: var(--text-xs);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
-  z-index: 5;
-  max-width: 220px;
-}
-.branch-map-tooltip-name { font-weight: 650; margin-bottom: 2px; }
-.branch-map-tooltip-detail { line-height: 1.4; }
+/* E15 — the tooltip box now reuses .chart-tooltip/.chart-tooltip-floating (charts.css). */

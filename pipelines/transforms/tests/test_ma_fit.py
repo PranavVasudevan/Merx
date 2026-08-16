@@ -13,14 +13,16 @@ Run: ``python pipelines/transforms/tests/test_ma_fit.py``  (no pytest needed)
 
 from __future__ import annotations
 
+import random
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from banklens_transforms.ma_fit import (  # noqa: E402
-    DEFAULT_WEIGHTS, business_similarity, fit_score, funding_complementarity,
-    geo_overlap, size_fit,
+    DEFAULT_WEIGHTS, build_loan_mix_index, business_similarity, fit_score,
+    funding_complementarity, geo_overlap, rank_partners, rank_partners_approx, size_fit,
 )
 
 # A deposit-rich, loan-heavy pair with an identical loan mix (so business
@@ -135,6 +137,102 @@ def test_no_geo_footprint_rationale_has_no_shared_market_mention():
 
 def test_default_weights_sum_to_1():
     assert approx(sum(DEFAULT_WEIGHTS.values()), 1.0)
+
+
+# ---- F8: blocked/approximate nearest-neighbour search for network_edges() -
+
+def _synthetic_population(n: int, rng: random.Random) -> list[dict]:
+    out = []
+    for i in range(n):
+        raw = [rng.random() for _ in range(5)]
+        total = sum(raw)
+        shares = [round(r / total * 100, 2) for r in raw]
+        out.append({
+            "cert_number": i,
+            "name": f"Bank {i}",
+            "total_assets": round(rng.uniform(500, 50_000), 1),
+            "loan_to_deposit_pct": round(rng.uniform(50, 150), 1),
+            "concentration_ratio_cre": shares[0],
+            "concentration_ratio_c_and_i": shares[1],
+            "concentration_ratio_residential_mortgage": shares[2],
+            "concentration_ratio_consumer": shares[3],
+            "concentration_ratio_agricultural": shares[4],
+        })
+    return out
+
+
+def test_loan_mix_index_partitions_the_whole_population_with_none_dropped():
+    rng = random.Random(20260814)
+    population = _synthetic_population(200, rng)
+    index = build_loan_mix_index(population)
+    indexed_certs = {bank["cert_number"] for entries in index.values() for _, bank in entries}
+    assert indexed_certs == {b["cert_number"] for b in population}
+
+
+def test_approx_search_agrees_closely_with_the_exact_sweep_when_the_window_covers_the_population():
+    """A window comfortably larger than any one category's membership should
+    make the approximate search recover essentially the same top-N as the
+    real O(n) exact sweep -- this is the accuracy floor the whole approach
+    has to clear to be a legitimate substitute, not just a faster wrong
+    answer."""
+    rng = random.Random(20260814)
+    population = _synthetic_population(250, rng)
+    index = build_loan_mix_index(population)
+
+    overlaps = []
+    for target in population[:25]:
+        exact = {r["cert_number"] for r in rank_partners(target, population, top_n=5)}
+        found = {r["cert_number"] for r in rank_partners_approx(target, index, top_n=5, window=200)}
+        overlaps.append(len(exact & found) / len(exact))
+    avg_overlap = sum(overlaps) / len(overlaps)
+    print(f"      avg top-5 overlap at window=200/n=250: {avg_overlap:.2%}")
+    # Measured at 72% with this seed/population -- the two-category window
+    # catches most but not all of the true top-5 even when it covers most of
+    # the population, because fit_score's other three components (funding,
+    # size, geo) can still reorder within/around the loan-mix-blocked set.
+    # 0.65 is a real floor below that measurement, not an aspirational one.
+    assert avg_overlap >= 0.65, f"approx search diverged too far from exact: {avg_overlap:.2%}"
+
+
+def test_approx_search_still_finds_most_of_the_true_top5_with_a_realistic_narrow_window():
+    """The window size network_edges() actually uses (150) against a
+    population well beyond it -- the realistic accuracy/speed tradeoff, not
+    the best-case one above."""
+    rng = random.Random(3)
+    population = _synthetic_population(2000, rng)
+    index = build_loan_mix_index(population)
+
+    overlaps = []
+    for target in population[:20]:
+        exact = {r["cert_number"] for r in rank_partners(target, population, top_n=5)}
+        found = {r["cert_number"] for r in rank_partners_approx(target, index, top_n=5, window=150)}
+        overlaps.append(len(exact & found) / len(exact))
+    avg_overlap = sum(overlaps) / len(overlaps)
+    print(f"      avg top-5 overlap at window=150/n=2000: {avg_overlap:.2%}")
+    assert avg_overlap >= 0.5, f"approx search recovered too little of the true top-5: {avg_overlap:.2%}"
+
+
+def test_approx_search_is_measurably_faster_than_the_full_sweep_at_scale():
+    """F8's audit entry: the naive full sweep took ~17s at 1,049 banks and
+    was projected at minutes for B3's ~4,500-bank universe. Report (not just
+    assert) the before/after cost of scoring one target's partners."""
+    rng = random.Random(20260814)
+    n = 3000
+    population = _synthetic_population(n, rng)
+    index = build_loan_mix_index(population)
+    target = population[0]
+
+    t0 = time.perf_counter()
+    rank_partners(target, population, top_n=5)
+    exact_s = time.perf_counter() - t0
+
+    t0 = time.perf_counter()
+    rank_partners_approx(target, index, top_n=5, window=150)
+    approx_s = time.perf_counter() - t0
+
+    print(f"      n={n}: exact={exact_s * 1000:.1f}ms  approx={approx_s * 1000:.1f}ms "
+          f"({exact_s / approx_s if approx_s > 0 else float('inf'):.1f}x faster)")
+    assert approx_s * 2 < exact_s, f"approx wasn't meaningfully faster at n={n}"
 
 
 if __name__ == "__main__":

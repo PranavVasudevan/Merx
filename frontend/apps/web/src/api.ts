@@ -1,12 +1,13 @@
 import type {
-  AgentRunEntry, AlertItem, AssistantResult, AuditLogEntry, BankProfile, BankTrendsResult, BranchMapResult,
-  BulkStressResult, CandlesResult, ClusterDiagnosticsResult, CompareResult,
-  CountyConcentrationResult, DataFreshnessResult, FilingDiffPopulationSummary, FilingDiffResult, FilingSearchResponse,
+  AgentRunEntry, AlertItem, AnnotationItem, AssistantHistoryTurn, AssistantStreamEvent, AuditLogEntry, BacktestResults, BankProfile, BankTrendsResult, BranchMapResult,
+  BulkBankTrendsResult, BulkStressResult, CandlesResult, ClusterDiagnosticsResult, CompareResult,
+  CountyConcentrationResult, CustomScenarioItem, DataFreshnessResult, FilingDiffPopulationSummary, FilingDiffResult, FilingSearchResponse,
   FilingsCoverageResult, HeatmapResult, HoldingCompanyResult, MaFitResult, MaProFormaResult, MaWeightValidationResult,
   MarketCoverageResult, MarketOverviewResult, MarketSnapshot,
   MetricDistributionResult, MetricGroup, MetricLineageResult, ModelCardResult, NetworkGraphResult, PeerClusterResult, PeerSetItem,
-  PopulationBank, PopulationMetricsResult, QuarterlyBriefingResult, RiskLeaderboardResult,
-  CorrelatedStressResult, IrrbbResult, LiquiditySurvivalResult, RiskScoreResult, SavedScreen,
+  PopulationBank, PopulationMetricsResult, PopulationTrendSparklinesResult, PortfolioPosition, PortfolioSummaryResult,
+  QuarterlyBriefingResult, RiskLeaderboardResult,
+  CorrelatedStressResult, IrrbbResult, LiquiditySurvivalResult, RiskScoreResult, SavedScreen, ScenarioLibraryResult,
   StressComparisonResult, StressProjectionResult, StressResult, StressSurfaceResult, TreemapResult,
   WatchlistItem, WatchlistRule, WatchlistRuleType, XrayResult, XrayValidationResult,
 } from './types';
@@ -24,10 +25,19 @@ async function authHeaders(): Promise<HeadersInit> {
   return user?.access_token ? { Authorization: `Bearer ${user.access_token}` } : {};
 }
 
+// F17 — every bridge error body now carries a `request_id` that locates the
+// exact structured server-side log line (bridge_server.py's _log_request) —
+// append it to the thrown message so it's visible wherever the error ends up
+// getting rendered, not just in the response body a user never sees directly.
+function errorMessage(body: { error?: string; request_id?: string }, fallback: string): string {
+  const base = body.error || fallback;
+  return body.request_id ? `${base} (request: ${body.request_id})` : base;
+}
+
 async function unwrap<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || `${res.status} ${res.statusText}`);
+    throw new Error(errorMessage(body, `${res.status} ${res.statusText}`));
   }
   return res.json();
 }
@@ -40,9 +50,33 @@ function toQuery(params: Record<string, string | number | undefined>): string {
   return qs ? `?${qs}` : '';
 }
 
+// F10 — the bridge now sends an ETag + long Cache-Control on cacheable GET
+// routes (see bridge_server.py's _prepare_json_body); this is the client
+// side of that contract: remember the last ETag per full URL, send it back
+// as If-None-Match, and on a 304 hand back the already-parsed body instead
+// of re-fetching it. In-memory only (a page reload starts cold, same as any
+// browser HTTP cache would after a hard refresh) — this exists to cut
+// repeat-navigation cost within one session, not to replace real HTTP
+// caching, which the response headers already enable at the network layer
+// for any client that wants it (a browser's own cache, a CDN in front of a
+// real deployment).
+const _etagCache = new Map<string, { etag: string; body: unknown }>();
+
 async function get<T>(path: string, params: Record<string, string | number | undefined> = {}): Promise<T> {
-  const res = await fetch(`${BASE}${path}${toQuery(params)}`, { headers: await authHeaders() });
-  return unwrap<T>(res);
+  const url = `${BASE}${path}${toQuery(params)}`;
+  const cached = _etagCache.get(url);
+  const headers: Record<string, string> = { ...(await authHeaders() as Record<string, string>) };
+  if (cached) headers['If-None-Match'] = cached.etag;
+
+  const res = await fetch(url, { headers });
+  if (res.status === 304 && cached) {
+    return cached.body as T;
+  }
+  const data = await unwrap<T>(res);
+  const etag = res.headers.get('ETag');
+  if (etag) _etagCache.set(url, { etag, body: data });
+  else _etagCache.delete(url);
+  return data;
 }
 
 async function post<T>(path: string, body: unknown): Promise<T> {
@@ -52,6 +86,52 @@ async function post<T>(path: string, body: unknown): Promise<T> {
     body: JSON.stringify(body),
   });
   return unwrap<T>(res);
+}
+
+// F16 — POST /api/assistant/ask now streams Server-Sent Events (live tool-call
+// progress) instead of returning one JSON blob after minutes of silence. Plain
+// `fetch()` + a manual reader, not the browser's `EventSource`: EventSource is
+// GET-only and can't send a POST body or an Authorization header, both of
+// which this route needs (see bridge_server.py's Handler._send_sse /
+// wsgi_app's matching special-case).
+async function* streamAssistantAsk(
+  persona: string, question: string, history?: AssistantHistoryTurn[],
+): AsyncGenerator<AssistantStreamEvent> {
+  const res = await fetch(`${BASE}/assistant/ask`, {
+    method: 'POST',
+    headers: { ...(await authHeaders() as Record<string, string>), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ persona, question, history }),
+  });
+  if (!res.ok || !res.body) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(errorMessage(body, `${res.status} ${res.statusText}`));
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = '';
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    let boundary: number;
+    // SSE frames are separated by a blank line ("\n\n") — a chunk from the
+    // network stream can contain zero, one, or several complete frames, plus
+    // a trailing partial one that has to wait for the next read().
+    while ((boundary = buf.indexOf('\n\n')) !== -1) {
+      const frame = buf.slice(0, boundary);
+      buf = buf.slice(boundary + 2);
+      let event = '';
+      let data = '';
+      for (const line of frame.split('\n')) {
+        if (line.startsWith('event: ')) event = line.slice('event: '.length);
+        else if (line.startsWith('data: ')) data = line.slice('data: '.length);
+      }
+      if (event && data) {
+        yield { event, data: JSON.parse(data) } as AssistantStreamEvent;
+      }
+    }
+  }
 }
 
 async function del<T>(path: string, params: Record<string, string | number | undefined> = {}): Promise<T> {
@@ -70,7 +150,7 @@ async function downloadBinary(path: string, params: Record<string, string | numb
   const res = await fetch(`${BASE}${path}${toQuery(params)}`, { headers: await authHeaders() });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || `${res.status} ${res.statusText}`);
+    throw new Error(errorMessage(body, `${res.status} ${res.statusText}`));
   }
   const disposition = res.headers.get('Content-Disposition') ?? '';
   const match = /filename="([^"]+)"/.exec(disposition);
@@ -151,7 +231,20 @@ export const api = {
   // at the raw threshold + a Benjamini-Hochberg FDR-controlled flag set).
   filingDiffPopulationSummary: () =>
     get<FilingDiffPopulationSummary>('/filing-diff-population-summary'),
+  // C14 — backtest harness governance.
+  backtestResults: () => get<BacktestResults>('/backtest'),
   bankTrends: (cert: number) => get<BankTrendsResult>('/banks/trends', { cert }),
+  // E10 — same trajectory, batched across a whole peer set in one request
+  // (certs travels comma-separated, same reason compareBanks()/marketOverview() do).
+  bulkBankTrends: (certs: number[]) =>
+    get<BulkBankTrendsResult>('/banks/trends-bulk', { certs: certs.join(',') }),
+  // E12 — batched trend series for a table's sparkline column: certs + metrics
+  // travel comma-separated (same convention as compareBanks/bulkBankTrends),
+  // one request for the whole table instead of one per row.
+  populationTrendSparklines: (certs: number[], metrics: string[]) =>
+    get<PopulationTrendSparklinesResult>('/population-trends', {
+      certs: certs.join(','), metrics: metrics.join(','),
+    }),
   riskScore: (cert: number, quarter?: string | null) =>
     get<RiskScoreResult>('/banks/risk-score', { cert, quarter: quarter ?? undefined }),
   candles: (cert: number, limit_days = 180) => get<CandlesResult>('/banks/candles', { cert, limit_days }),
@@ -196,15 +289,36 @@ export const api = {
   savePeerSet: (name: string, certs: number[]) =>
     post<{ items: PeerSetItem[] }>('/peer-sets', { name, certs }),
   deletePeerSet: (peer_set_id: number) => del<{ items: PeerSetItem[] }>('/peer-sets', { peer_set_id }),
+  // D7 — analyst annotations for one bank (shared across users).
+  getAnnotations: (cert: number) => get<{ items: AnnotationItem[] }>('/annotations', { cert }),
+  addAnnotation: (cert: number, note_md: string, quarter?: string | null) =>
+    post<{ items: AnnotationItem[] }>('/annotations', { cert, note_md, quarter: quarter ?? undefined }),
+  deleteAnnotation: (cert: number, annotation_id: number) =>
+    del<{ items: AnnotationItem[] }>('/annotations', { cert, annotation_id }),
+  // D10 — named scenario registry + user-saved custom scenarios.
+  scenarioLibrary: () => get<ScenarioLibraryResult>('/scenarios'),
+  getCustomScenarios: () => get<{ items: CustomScenarioItem[] }>('/custom-scenarios'),
+  saveCustomScenario: (name: string, loan_loss_pct: number, deposit_outflow_pct: number, rate_shock_bps: number) =>
+    post<{ items: CustomScenarioItem[] }>('/custom-scenarios', { name, loan_loss_pct, deposit_outflow_pct, rate_shock_bps }),
+  deleteCustomScenario: (scenario_id: number) =>
+    del<{ items: CustomScenarioItem[] }>('/custom-scenarios', { scenario_id }),
+  // D11 — exposure/portfolio positions + aggregate view.
+  getPortfolio: () => get<{ items: PortfolioPosition[] }>('/portfolio'),
+  addPortfolioPosition: (cert: number, exposure_amount: number, exposure_type: string) =>
+    post<{ items: PortfolioPosition[] }>('/portfolio', { cert, exposure_amount, exposure_type }),
+  deletePortfolioPosition: (position_id: number) =>
+    del<{ items: PortfolioPosition[] }>('/portfolio', { position_id }),
+  portfolioSummary: () => get<PortfolioSummaryResult>('/portfolio/summary'),
   getAlerts: (opts: { limit?: number; unseenOnly?: boolean } = {}) =>
     get<{ items: AlertItem[] }>('/alerts', {
       limit: opts.limit ?? 50, unseen_only: opts.unseenOnly ? 'true' : undefined,
     }),
   markAlertSeen: (alert_id: number) => post<{ items: AlertItem[] }>('/alerts/seen', { alert_id }),
-  // No client-side timeout — a real answer from the $0 default (Ollama) can
-  // legitimately take several minutes (see AssistantPage's own wait copy).
-  askAssistant: (persona: string, question: string) =>
-    post<AssistantResult>('/assistant/ask', { persona, question }),
+  // F16 — streams live tool-call progress; the server enforces its own
+  // deadline (default 120s, BANKLENS_ASSISTANT_DEADLINE_S) and always ends
+  // the stream with either a "result" or "error" event, so this generator
+  // always terminates rather than hanging indefinitely on a stuck provider.
+  streamAssistantAsk,
   agentRuns: (limit = 50) => get<{ items: AgentRunEntry[] }>('/activity/agent-runs', { limit }),
   auditLog: (limit = 50) => get<{ items: AuditLogEntry[] }>('/activity/audit-log', { limit }),
   // `certs` (D5): restrict to a named peer set — server recomputes

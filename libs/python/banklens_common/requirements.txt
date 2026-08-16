@@ -1,0 +1,21 @@
+# Pinned + hashed for reproducible builds (F14). Mirrors pyproject.toml's
+# `dependencies` at exact versions, with hashes so `pip install --require-hashes
+# -r requirements.txt` rejects anything but the byte-identical wheel. CI uses
+# this file directly, then installs banklens_common itself with `--no-deps`
+# (its dependencies are already satisfied by this install).
+#
+# Regenerate after bumping a pin in pyproject.toml:
+#   pip download --no-deps -d /tmp/whl "psycopg[binary]==<v>" "duckdb==<v>" \
+#     --platform manylinux_2_28_x86_64 --python-version 3.13 \
+#     --implementation cp --abi cp313 --only-binary=:all:
+#   pip hash /tmp/whl/*.whl
+# psycopg-binary is psycopg[binary]'s only real dependency on Linux/py3.13
+# (tzdata is win32-only, typing-extensions is python_version<3.13-only — see
+# psycopg's own METADATA `Requires-Dist` markers).
+
+psycopg==3.2.3 \
+    --hash=sha256:644d3973fe26908c73d4be746074f6e5224b03c1101d302d9a53bf565ad64907
+psycopg-binary==3.2.3 \
+    --hash=sha256:fd65774ed7d65101b314808b6893e1a75b7664f680c3ef18d2e5c84d570fa393
+duckdb==1.5.3 \
+    --hash=sha256:787df63824f07bf18022dbc3b8ca4b2bfab0ebe616464f55c6e8cd0f59ea762e

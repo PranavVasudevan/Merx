@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { EChartsOption } from 'echarts';
 import { EChart } from '../components/EChart';
-import { baseEChartTheme, tooltipStyle } from '../echartsTheme';
+import { baseEChartTheme, tooltipHtml, tooltipStyle } from '../echartsTheme';
 import { api } from '../api';
 import { categoricalPalette } from '../colors';
+import { pct } from '../metricFormat';
 import type { NetworkGraphResult } from '../types';
 import './NetworkPage.css';
 
@@ -40,9 +41,13 @@ export function NetworkPage() {
         formatter: (p: unknown) => {
           const node = p as { dataType?: string; data?: { name?: string; value?: number; cluster?: string; fitScore?: number; source?: string; target?: string } };
           if (node.dataType === 'edge') {
-            return `${node.data?.source} → ${node.data?.target}<br/>fit ${((node.data?.fitScore ?? 0) * 100).toFixed(0)}%`;
+            return tooltipHtml(`${node.data?.source} → ${node.data?.target}`, [
+              { text: `fit ${pct((node.data?.fitScore ?? 0) * 100, 0)}` },
+            ]);
           }
-          return `<strong>${node.data?.name}</strong><br/>$${node.data?.value}B · ${node.data?.cluster ?? '—'}`;
+          return tooltipHtml(node.data?.name ?? '', [
+            { text: `$${node.data?.value}B · ${node.data?.cluster ?? '—'}` },
+          ]);
         },
       },
       legend: { data: clusters, textStyle: { color: baseEChartTheme().textStyle.color, fontSize: 10 }, top: 0 },

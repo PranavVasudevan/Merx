@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "note": "D10 (docs/audit/04-remediation-prompts.md): named stress scenarios for /stress-lab. Each scenario expresses shock inputs the existing engine (pipelines/transforms/src/banklens_transforms/stress.py) already accepts — loan_loss_pct, deposit_outflow_pct, rate_shock_bps — with the assumptions and provenance stated explicitly rather than left as bare numbers. None of these are FDIC-published scenario definitions; they are hand-set, documented approximations of well-known real episodes and regulatory scenario SHAPES, same honesty standard as stress.py's own module docstring. A scenario referencing a real historical FRED rate path (rather than one abstract bps number) is blocked on B5 landing FRED data, which has not happened in this environment.",
+  "scenarios": [
+    {
+      "id": "2023-regional-bank-crisis",
+      "name": "2023 regional bank crisis",
+      "description": "Approximates the SVB/Signature/First Republic episode: a sharp, uninsured-deposit-driven run met with a rapid Fed Funds rate path that had already impaired AFS/HTM securities values.",
+      "loan_loss_pct": 1.0,
+      "deposit_outflow_pct": 25.0,
+      "rate_shock_bps": 500,
+      "assumptions": "Rate shock of +500bps approximates the cumulative 2022-2023 Fed hiking cycle's effect on securities marks, not a single-day move. Deposit outflow of 25% approximates a severe but not total uninsured-deposit run over days, not SVB's own ~85% single-day outflow (which this population-wide default doesn't assume every bank shares SVB's ~86% uninsured-deposit concentration). Loan losses held low (1%) because credit quality, not credit losses, was not the proximate driver of the 2023 failures.",
+      "provenance": "Shape informed by public FDIC/Fed post-mortem reporting on the March 2023 failures (SVB, Signature, First Republic); not a regulator-published scenario."
+    },
+    {
+      "id": "ccar-severely-adverse",
+      "name": "CCAR-style severely adverse",
+      "description": "A shape approximating the Federal Reserve's annual CCAR/DFAST 'severely adverse' macroeconomic scenario: a deep recession with elevated unemployment and credit losses, milder deposit flight than an idiosyncratic run.",
+      "loan_loss_pct": 6.0,
+      "deposit_outflow_pct": 10.0,
+      "rate_shock_bps": -200,
+      "assumptions": "Negative rate shock (-200bps) reflects CCAR's severely-adverse scenario typically pairing recession with FALLING short rates (flight to quality / policy easing), the opposite direction from the 2023 scenario above. Loan losses set high (6%) to approximate CCAR's severely-adverse credit-loss assumptions across a diversified book; this is a stylised single number, not the Fed's actual category-level loss-rate table (see C6 for real per-category charge-off rates, which this scenario does not use).",
+      "provenance": "Shape approximates publicly described characteristics of recent Federal Reserve CCAR severely-adverse scenarios; this is NOT the Fed's actual published scenario (which specifies quarterly paths for dozens of variables) — a stylised single-shock approximation only."
+    },
+    {
+      "id": "2008-credit-crisis-replay",
+      "name": "2008 credit crisis replay",
+      "description": "Approximates the 2008-2009 period: severe, sustained credit losses (mortgage and consumer) with moderate deposit outflow and a falling-rate environment as the Fed cut aggressively.",
+      "loan_loss_pct": 8.0,
+      "deposit_outflow_pct": 8.0,
+      "rate_shock_bps": -300,
+      "assumptions": "Loan losses (8%) approximate cumulative charge-off severity seen at weaker banks during 2008-2011, applied here as a single-period shock rather than the multi-year realised path. Deposit outflow held moderate (8%) since 2008 was predominantly a CREDIT crisis, not a deposit-run crisis (FDIC insurance held; the run dynamics of 2023 were not the 2008 pattern). Rate shock (-300bps) reflects the Fed's rapid cut to the zero lower bound.",
+      "provenance": "Shape informed by aggregate FDIC-reported charge-off and failure statistics for the 2008-2011 period; not a single named regulatory scenario."
+    },
+    {
+      "id": "mild-recession-base-case",
+      "name": "Mild recession (base case)",
+      "description": "A modest, non-crisis downside case: a garden-variety recession with elevated but not severe credit losses, light deposit pressure, and a modest rate cut.",
+      "loan_loss_pct": 2.5,
+      "deposit_outflow_pct": 5.0,
+      "rate_shock_bps": -100,
+      "assumptions": "Intended as a 'what does an ordinary bad year look like', not a tail scenario — useful as a floor for comparison against the three more severe scenarios above.",
+      "provenance": "Hand-set base case, not derived from any specific historical episode or regulatory publication."
+    }
+  ]
+}

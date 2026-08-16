@@ -3,11 +3,15 @@ import { stagger } from 'motion';
 import { motion } from 'motion/react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../api';
+import { useQuarter } from '../QuarterContext';
+import { AnnotationsPanel } from '../components/AnnotationsPanel';
 import { CandlestickChart } from '../components/CandlestickChart';
 import { CapitalChart } from '../components/CapitalChart';
+import { CompositionSankeyPanel } from '../components/CompositionSankeyPanel';
 import { ConcentrationChart } from '../components/ConcentrationChart';
 import { CreditTrajectoryPanel } from '../components/CreditTrajectoryPanel';
 import { FilingDiffPanel } from '../components/FilingDiffPanel';
+import { HoldingCompanyPanel } from '../components/HoldingCompanyPanel';
 import { IrrbbPanel } from '../components/IrrbbPanel';
 import { KpiTiles } from '../components/KpiTiles';
 import { MaFitPanel } from '../components/MaFitPanel';
@@ -18,7 +22,7 @@ import { StressPanel } from '../components/StressPanel';
 import { WatchlistButton } from '../components/WatchlistButton';
 import { XrayPanel } from '../components/XrayPanel';
 import type {
-  BankProfile, FilingDiffResult, MaFitResult, PeerClusterResult, RiskScoreResult, XrayResult,
+  BankProfile, FilingDiffResult, HoldingCompanyResult, MaFitResult, PeerClusterResult, RiskScoreResult, XrayResult,
 } from '../types';
 import './BankPage.css';
 
@@ -45,11 +49,13 @@ export function BankPage() {
   const [maFit, setMaFit] = useState<MaFitResult | null>(null);
   const [riskScore, setRiskScore] = useState<RiskScoreResult | null>(null);
   const [filingDiff, setFilingDiff] = useState<FilingDiffResult | null>(null);
+  const [holdco, setHoldco] = useState<HoldingCompanyResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tearsheetBusy, setTearsheetBusy] = useState(false);
   const [tearsheetError, setTearsheetError] = useState<string | null>(null);
   // C11 — which population every profile percentile is computed against.
   const [peerBasis, setPeerBasis] = useState<'global' | 'size' | 'cluster'>('global');
+  const { quarter } = useQuarter(); // D3 — null means "latest", unchanged behavior
 
   async function downloadTearsheet() {
     setTearsheetBusy(true);
@@ -68,15 +74,18 @@ export function BankPage() {
     setError(null);
     setFilingDiff(null);
     Promise.all([
-      api.profile(cert, undefined, peerBasis), api.xray(cert), api.peerCluster(cert),
-      api.maFit(cert, 8), api.riskScore(cert),
+      api.profile(cert, quarter, peerBasis), api.xray(cert, quarter), api.peerCluster(cert, quarter),
+      api.maFit(cert, 8, quarter), api.riskScore(cert, quarter),
     ])
       .then(([p, x, c, m, r]) => {
         setProfile(p); setXray(x); setCluster(c); setMaFit(m); setRiskScore(r);
       })
       .catch((e) => setError(String(e.message || e)));
     api.filingDiff(cert).then(setFilingDiff).catch(() => setFilingDiff(null));
-  }, [cert, peerBasis]);
+    // D4 — separate call: a missing/unlanded holding company must not fail
+    // the whole Promise.all above and blank the rest of the page.
+    api.holdingCompany(cert).then(setHoldco).catch(() => setHoldco(null));
+  }, [cert, peerBasis, quarter]);
 
   return (
     <div className="bank-page">
@@ -141,9 +150,13 @@ export function BankPage() {
               {cluster && <motion.div variants={itemVariants}><PeerClusterCard cluster={cluster} /></motion.div>}
               {riskScore && <motion.div variants={itemVariants}><RiskScorePanel result={riskScore} /></motion.div>}
               {maFit && <motion.div variants={itemVariants}><MaFitPanel result={maFit} cert={cert} /></motion.div>}
+              {holdco && <motion.div variants={itemVariants}><HoldingCompanyPanel result={holdco} /></motion.div>}
             </div>
           </div>
 
+          <motion.div variants={itemVariants}>
+            <CompositionSankeyPanel cert={cert} key={`sankey-${cert}`} />
+          </motion.div>
           <motion.div variants={itemVariants}>
             <StressPanel cert={cert} key={cert} />
           </motion.div>
@@ -152,6 +165,9 @@ export function BankPage() {
           </motion.div>
           <motion.div variants={itemVariants}>
             <PeerScatter cert={cert} key={`scatter-${cert}`} />
+          </motion.div>
+          <motion.div variants={itemVariants}>
+            <AnnotationsPanel cert={cert} quarter={profile.quarter} key={`notes-${cert}`} />
           </motion.div>
 
           <p className="muted bank-page-footnote">

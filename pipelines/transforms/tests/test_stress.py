@@ -32,6 +32,12 @@ FULL = {
 }
 # Same bank with deposits undisclosed — the EU/EBA shape.
 NO_DEPOSITS = {**FULL, "total_deposits": None}
+# F6 — same bank with no disclosed RWA (the CBLR-framework shape: real capital
+# dollars, no risk-based ratios/RWA at all — see data_quality.capital_basis).
+NO_RWA = {**FULL, "risk_weighted_assets": None, "cet1_ratio": None}
+# Same bank with no way to derive a leverage denominator (no leverage_ratio
+# AND no average_assets fallback).
+NO_LEVERAGE_DENOM = {**FULL, "leverage_ratio": None}
 
 
 def approx(a, b, tol=0.02):
@@ -130,6 +136,59 @@ def test_a_leg_that_was_not_requested_is_not_reported_as_missing():
 
 def test_minimums_are_the_real_regulatory_floors():
     assert MINIMUMS == {"cet1": 7.0, "tier1": 8.5, "total": 10.5, "leverage": 4.0}
+
+
+# ---- F6: a missing denominator is None, never a fabricated 0.00% ----------
+
+def test_no_disclosed_rwa_reports_cet1_tier1_total_as_none_not_zero():
+    """THE F6 regression. Before the fix, a bank with no RWA disclosed reported
+    a fabricated '0.00%' for cet1/tier1/total that then FAILED the regulatory
+    minimum on a number that was never actually computed."""
+    res = run_stress_test(starting_position(NO_RWA), Shock(loan_loss_pct=3.0))
+    for k in ("cet1", "tier1", "total"):
+        assert res["before"][k] is None
+        assert res["after"][k] is None
+        assert k not in res["passes"]
+    assert set(res["ratios_not_computed"]) == {"cet1", "tier1", "total"}
+    # Leverage HAS a real denominator (tier1/leverage_ratio) -- unaffected by
+    # the RWA gap, still a real computed number, not swept into "not computed".
+    assert res["after"]["leverage"] is not None
+    assert "leverage" in res["passes"]
+    assert "leverage" not in res["ratios_not_computed"]
+
+
+def test_no_leverage_denominator_reports_leverage_as_none_not_zero():
+    res = run_stress_test(starting_position(NO_LEVERAGE_DENOM), Shock(loan_loss_pct=3.0))
+    assert res["before"]["leverage"] is None
+    assert res["after"]["leverage"] is None
+    assert "leverage" not in res["passes"]
+    assert res["ratios_not_computed"] == ["leverage"]
+    # cet1/tier1/total DO have a real RWA denominator -- unaffected, still real numbers.
+    for k in ("cet1", "tier1", "total"):
+        assert res["after"][k] is not None
+        assert k in res["passes"]
+
+
+def test_a_bank_missing_every_denominator_gets_passes_all_none_not_a_fabricated_verdict():
+    """The exact false-reassurance shape from the audit: 0.00% in both before
+    and after AND failing the 4.0% minimum on a number that was never real.
+    With the fix, passes_all is None (nothing to assess), not a fabricated
+    pass or fail."""
+    both_missing = {**NO_RWA, "leverage_ratio": None}
+    res = run_stress_test(starting_position(both_missing), Shock(loan_loss_pct=3.0))
+    assert res["passes"] == {}
+    assert res["passes_all"] is None
+    assert set(res["ratios_not_computed"]) == {"cet1", "tier1", "total", "leverage"}
+
+
+def test_missing_denominator_does_not_prevent_the_shock_from_being_applied():
+    """A missing RATIO denominator is orthogonal to whether the shock itself
+    ran -- capital_waterfall (real dollar amounts) must still reflect the real
+    loan loss even though the resulting percentage can't be expressed."""
+    res = run_stress_test(starting_position(NO_RWA), Shock(loan_loss_pct=10.0))
+    assert approx(res["capital_waterfall"]["loan_loss"], 5_000.0, tol=1.0)
+    assert res["legs_not_applied"] == []   # every input WAS disclosed; only the ratio math can't run
+    assert res["fully_covered"] is True
 
 
 if __name__ == "__main__":

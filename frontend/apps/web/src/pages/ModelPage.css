@@ -19,6 +19,21 @@
 .model-td-right { text-align: right; padding: 7px var(--space-2); border-bottom: 1px solid var(--gridline); font-weight: 650; }
 .model-positives { margin: 0; font-size: var(--text-xs); }
 
+.model-td-whisker { padding: 7px var(--space-2); border-bottom: 1px solid var(--gridline); min-width: 140px; }
+.model-coef-whisker { position: relative; width: 100%; height: 14px; }
+.model-coef-whisker-zero {
+  position: absolute; top: 0; bottom: 0; width: 1px;
+  background: var(--baseline); border-left: 1px dashed var(--text-muted); opacity: .6;
+}
+.model-coef-whisker-range {
+  position: absolute; top: 5px; height: 4px; border-radius: 2px; opacity: .35; min-width: 2px;
+}
+.model-coef-whisker-point {
+  position: absolute; top: 2px; width: 2px; height: 10px; border-radius: 1px;
+  transform: translateX(-1px);
+}
+.model-coef-whisker-caption { margin: 0; }
+
 .model-loo-caption { margin: 0 0 var(--space-3); max-width: 760px; }
 .model-loo-table { display: flex; flex-direction: column; gap: 2px; }
 .model-loo-row {

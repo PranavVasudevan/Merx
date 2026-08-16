@@ -240,9 +240,19 @@ class EbaSource(Source):
         reader = csv.DictReader(io.StringIO(text))
 
         by_key: dict[tuple[str, str], dict] = defaultdict(dict)
-        countries: dict[tuple[str, str], str] = {}
+        # str | None, not str: an EBA row missing NSA (country) is a real,
+        # disclosed gap -- this codebase's convention is to carry that as None
+        # through to the caller, never fabricate a country to satisfy a
+        # narrower type.
+        countries: dict[tuple[str, str], str | None] = {}
         for row in reader:
             item = row.get("Item")
+            if item is None:
+                # Every FINANCIAL_ITEMS/_STAGE_SUMMED_ITEMS/_STAGE3_ITEMS
+                # lookup below would just miss anyway (None matches nothing),
+                # so this row was always silently skipped -- making that
+                # explicit here instead of three separate no-op dict lookups.
+                continue
             key = (row["LEI_Code"], row["Period"])
             try:
                 value = float(row["Amount"])
@@ -321,9 +331,13 @@ class EbaSource(Source):
             perf = row.get("Perf_Status")
 
             if item == _CREDIT_RISK_NPL_ITEM:
+                # perf (row.get("Perf_Status")) is Any | None -- a missing/
+                # unrecognized value simply misses this dict (safe at
+                # runtime, field stays None, the row below is skipped), same
+                # as every other "not disclosed" gap this connector handles.
                 field = {_PERF_TOTAL: "npl_gross_carrying_eur_m",
                         _PERF_PERFORMING: "npl_performing_eur_m",
-                        _PERF_NONPERFORMING: "npl_nonperforming_eur_m"}.get(perf)
+                        _PERF_NONPERFORMING: "npl_nonperforming_eur_m"}.get(perf)  # type: ignore[arg-type]
                 if field is not None:
                     by_key[key][field] = value
             elif item == _CREDIT_RISK_NACE_ITEM and perf == _PERF_TOTAL:

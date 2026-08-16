@@ -69,7 +69,7 @@ def run(repdte: str, data_dir: Path, highlight_cert: int, k_override: int | None
         g["peer_cluster_id"] = lab
 
     # characterize clusters
-    clusters = {}
+    clusters: dict[int, dict] = {}
     for c in range(k):
         members = [g for g in kept if g["peer_cluster_id"] == c]
         means = {m: _mean(members, m) for m in _REPORT_METRICS}

@@ -105,6 +105,16 @@ fn fmt_usd(v: f64) -> String {
     format!("${:.2}B", v / 1e9)
 }
 
+// F6 — an undisclosed denominator/ratio is None, not a fabricated number;
+// render it honestly instead of formatting a 0.0 that was never computed.
+fn fmt_usd_opt(v: Option<f64>) -> String {
+    v.map_or_else(|| "n/a".to_string(), fmt_usd)
+}
+
+fn fmt_pct_opt(v: Option<f64>) -> String {
+    v.map_or_else(|| "n/a".to_string(), |x| format!("{x:.2}%"))
+}
+
 fn main() -> ExitCode {
     let args = match parse_args() {
         Ok(a) => a,
@@ -128,7 +138,7 @@ fn main() -> ExitCode {
 
     let silver = silver_from_raw(latest);
     let pos = starting_position(&silver);
-    if pos.tier1_capital == 0.0 || pos.rwa == 0.0 {
+    if pos.tier1_capital == 0.0 {
         println!("  Missing capital-dollar fields for CERT {}. Re-land Bronze with the extended field set (RBCT1J, RBC, RWAJT).", args.cert);
         return ExitCode::SUCCESS;
     }
@@ -149,7 +159,7 @@ fn main() -> ExitCode {
     println!("  FEATURE 16 — CAPITAL BUFFER SIMULATOR (Rust engine)");
     println!("  {}  —  {}", res.name.as_deref().unwrap_or("?"), res.quarter.as_deref().unwrap_or("?"));
     println!("{}", "=".repeat(w));
-    println!("  Starting balance sheet:  Tier1 {}   RWA {}", fmt_usd(pos.tier1_capital), fmt_usd(pos.rwa));
+    println!("  Starting balance sheet:  Tier1 {}   RWA {}", fmt_usd(pos.tier1_capital), fmt_usd_opt(pos.rwa));
     println!("    loans {}   deposits {}   cash {}", fmt_usd(pos.total_loans), fmt_usd(pos.total_deposits), fmt_usd(pos.cash));
     println!("    securities AFS {} / HTM {}", fmt_usd(pos.securities_afs), fmt_usd(pos.securities_htm));
     println!("\n  SCENARIO");
@@ -172,17 +182,31 @@ fn main() -> ExitCode {
     }
     println!("\n  CAPITAL RATIOS         before   ->   after     min    verdict");
     for (label, key) in [("CET1", "cet1"), ("Tier 1 RBC", "tier1"), ("Total RBC", "total"), ("Tier 1 leverage", "leverage")] {
-        let (before, after, min, pass) = match key {
-            "cet1" => (res.before.cet1, res.after.cet1, res.minimums["cet1"], res.passes["cet1"]),
-            "tier1" => (res.before.tier1, res.after.tier1, res.minimums["tier1"], res.passes["tier1"]),
-            "total" => (res.before.total, res.after.total, res.minimums["total"], res.passes["total"]),
-            _ => (res.before.leverage, res.after.leverage, res.minimums["leverage"], res.passes["leverage"]),
+        let (before, after, min) = match key {
+            "cet1" => (res.before.cet1, res.after.cet1, res.minimums["cet1"]),
+            "tier1" => (res.before.tier1, res.after.tier1, res.minimums["tier1"]),
+            "total" => (res.before.total, res.after.total, res.minimums["total"]),
+            _ => (res.before.leverage, res.after.leverage, res.minimums["leverage"]),
         };
-        let mark = if pass { "PASS" } else { "** FAIL **" };
-        println!("    {label:<18} {before:>6.2}%  -> {after:>6.2}%   {min:>5.1}%   {mark}");
+        // F6 — no entry in `passes` at all means this ratio was never
+        // computed (no disclosed denominator), not a fabricated FAIL.
+        let mark = match res.passes.get(key) {
+            Some(true) => "PASS",
+            Some(false) => "** FAIL **",
+            None => "n/a — not disclosed",
+        };
+        println!("    {label:<18} {:>6}  -> {:>6}   {min:>5.1}%   {mark}",
+                 fmt_pct_opt(before), fmt_pct_opt(after));
     }
-    println!("\n  OVERALL: {}", if res.passes_all { "PASS — stays above all regulatory minimums" }
-                                else { "FAIL — breaches a regulatory minimum" });
+    println!("\n  OVERALL: {}", match res.passes_all {
+        Some(true) => "PASS — stays above every regulatory minimum that could be computed",
+        Some(false) => "FAIL — breaches a regulatory minimum",
+        None => "n/a — no ratio had a disclosed denominator to assess",
+    });
+    if !res.ratios_not_computed.is_empty() {
+        println!("  ({} ratio(s) not computed: {})", res.ratios_not_computed.len(),
+                 res.ratios_not_computed.join(", "));
+    }
     println!("{}", "=".repeat(w));
     ExitCode::SUCCESS
 }

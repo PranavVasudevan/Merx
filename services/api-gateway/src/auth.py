@@ -66,7 +66,10 @@ OIDC_ROLES_CLAIM = os.environ.get("OIDC_ROLES_CLAIM", "realm_access.roles")
 # Routes that never require a token — a health/liveness check has to work
 # before anyone has logged in, and this bridge's own /metrics is handled
 # separately in bridge_server.py (never even reaches this module).
-OPEN_ROUTES = {"/api/health"}
+# F19 — /api/openapi.json is a public API-discovery document (no more
+# sensitive than the route list bridge_server.py's own source already is),
+# same reasoning as /api/health being open.
+OPEN_ROUTES = {"/api/health", "/api/openapi.json"}
 
 _jwk_client: PyJWKClient | None = None
 

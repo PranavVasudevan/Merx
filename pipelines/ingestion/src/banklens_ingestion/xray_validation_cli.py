@@ -53,6 +53,8 @@ def run(data_dir: Path, horizon_days: int = 63) -> None:
         tickers_seen.add(ticker)
         for hist_silver in data.bank_history(cert):
             q = hist_silver.get("quarter")
+            if q is None:
+                continue
             end_date = quarter_end_date(q)
             if not end_date:
                 continue

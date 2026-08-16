@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { EChartsOption } from 'echarts';
 import { EChart } from '../components/EChart';
-import { baseEChartTheme, tooltipStyle } from '../echartsTheme';
+import { baseEChartTheme, tooltipHtml, tooltipStyle } from '../echartsTheme';
 import { api } from '../api';
 import { chartColors, divergingRamp, sequentialRamp } from '../colors';
 import { agglomerativeCluster } from '../hierarchicalClustering';
@@ -142,7 +142,9 @@ export function HeatmapPage() {
           const [x, y, v] = cell.data;
           const bank = orderedBanks[y];
           const metric = METRIC_LABELS[orderedMetricKeys[x]] ?? orderedMetricKeys[x];
-          return `<strong>${bank.name}</strong><br/>${metric}: ${v === null ? 'n/a' : `${v.toFixed(1)}th percentile`}`;
+          return tooltipHtml(bank.name, [
+            { text: `${metric}: ${v === null ? 'n/a' : `${v.toFixed(1)}th percentile`}` },
+          ]);
         },
       },
       xAxis: {

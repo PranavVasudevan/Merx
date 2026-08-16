@@ -103,3 +103,11 @@
 .screener-td-right { text-align: right; }
 
 .screener-empty { text-align: center; padding: var(--space-5) 0; }
+
+/* E12 — value + trend sparkline stacked in one cell. */
+.screener-td-value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}

@@ -2,19 +2,16 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { EChartsOption } from 'echarts';
 import { EChart } from '../components/EChart';
-import { baseEChartTheme, tooltipStyle } from '../echartsTheme';
+import { baseEChartTheme, tooltipHtml, tooltipStyle } from '../echartsTheme';
 import { api } from '../api';
 import { chartColors } from '../colors';
+import { fmtAssets } from '../metricFormat';
 import type { TreemapResult } from '../types';
 import { BankSearch } from '../components/BankSearch';
 import './TreemapPage.css';
 
 function riskColor(risk: string, colors: ReturnType<typeof chartColors>): string {
   return risk === 'high' ? colors.critical : risk === 'elevated' ? colors.warning : colors.good;
-}
-
-function fmtAssets(v: number): string {
-  return v >= 1e9 ? `$${(v / 1e9).toFixed(1)}B` : `$${(v / 1e6).toFixed(0)}M`;
 }
 
 export function TreemapPage() {
@@ -53,7 +50,7 @@ export function TreemapPage() {
           // verified live: without this guard it shows a tooltip reading literally
           // "undefined $9204.0B". Every real group/bank has a name; only the root doesn't.
           if (!d || d.value === undefined || !d.name) return '';
-          return `<strong>${d.name}</strong><br/>${fmtAssets(d.value)}`;
+          return tooltipHtml(d.name, [{ text: fmtAssets(d.value) }]);
         },
       },
       series: [{

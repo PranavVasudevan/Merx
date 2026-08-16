@@ -25,14 +25,23 @@
   /* Single restrained accent */
   --accent: #b8863f;
 
-  /* Categorical Palette — desaturated, no purple/neon */
+  /* Categorical Palette — desaturated, no purple/neon.
+     --cat-aqua, --cat-orange, --cat-violet were adjusted from their original
+     values (#4f8f8a, #b1653c, #8a7f74) after a Machado/Oliveira/Fluet (2009)
+     protanopia+deuteranopia simulation found three pairs collapsing to
+     near-indistinguishable under simulated color-vision deficiency:
+     aqua/violet (protanopia, dE 8.6), magenta/aqua + magenta/violet
+     (deuteranopia, dE 8.7/6.5), and orange/red (deuteranopia, dE 7.1) — see
+     E14's colorblind-check note in colors.ts for the full method and numbers.
+     The three replacements keep every pairwise CIE76 Lab distance >= 12.7
+     under normal vision, protanopia, and deuteranopia simulation. */
   --cat-blue: #5b84a8;
   --cat-green: #6f9e6a;
   --cat-magenta: #a85f78;
   --cat-yellow: #c9a227;
-  --cat-aqua: #4f8f8a;
-  --cat-orange: #b1653c;
-  --cat-violet: #8a7f74;
+  --cat-aqua: #3d9494;
+  --cat-orange: #c8823f;
+  --cat-violet: #5f6aa8;
   --cat-red: #b1503f;
 
   /* Sequential & Diverging */
@@ -144,6 +153,20 @@ body {
 
 .muted { color: var(--text-muted); }
 .secondary { color: var(--text-secondary); }
+
+/* E15 — restored: this base rule had been dropped (it survived only inside
+   components/NavShell.css.bak, an orphaned/unloaded file) while ~30 page and
+   chart components across the app still reference `.app-banner-error` for
+   fetch-error banners — those were silently rendering as unstyled plain
+   text. LoginGate.css and BankPage.css layer page-scoped ADDITIONS on top of
+   this (border, margin, width) rather than redefining it. */
+.app-banner-error {
+  background: color-mix(in srgb, var(--status-critical) 12%, transparent);
+  color: var(--status-critical);
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+}
 
 .chip {
   display: inline-flex;

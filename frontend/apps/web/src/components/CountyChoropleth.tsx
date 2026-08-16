@@ -4,6 +4,7 @@ import { nationFeature, stateMesh, countyMesh, countyFeatures, nationBounds } fr
 import type { CountyFeature } from '../usTopology';
 import { chartColors, interpolateRamp, onThemeChange, sequentialRamp } from '../colors';
 import './CountyChoropleth.css';
+import './charts.css';
 
 type Bounds = [[number, number], [number, number]];
 type Position = number[];
@@ -246,13 +247,13 @@ export function CountyChoropleth({
         onClick={onClick}
       />
       {hover && (
-        <div className="county-choropleth-tooltip" style={{ left: hover.x + 10, top: hover.y + 10 }}>
-          <div className="county-choropleth-tooltip-name">{hover.name}</div>
-          <div className="muted county-choropleth-tooltip-detail tabular">
+        <div className="chart-tooltip chart-tooltip-floating" style={{ left: hover.x + 10, top: hover.y + 10 }}>
+          <div className="chart-tooltip-label">{hover.name}</div>
+          <div className="chart-tooltip-value tabular">
             {hoverValue != null ? `HHI ${hoverValue.toFixed(0)}` : 'no deposit data'}
           </div>
           {highlighted.has(hover.fips) && (
-            <div className="county-choropleth-tooltip-flag">at/above concentrated threshold</div>
+            <div className="chart-tooltip-sub county-choropleth-tooltip-flag">at/above concentrated threshold</div>
           )}
         </div>
       )}

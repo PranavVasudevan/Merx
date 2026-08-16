@@ -53,8 +53,8 @@ def _need_bank(cert: int, as_of: str | None = None, quarter: str | None = None) 
 
 
 # ---- handlers ------------------------------------------------------------
-def list_banks(query: str = None, state: str = None, country: str = None,
-               min_assets_b: float = None, max_assets_b: float = None,
+def list_banks(query: str | None = None, state: str | None = None, country: str | None = None,
+               min_assets_b: float | None = None, max_assets_b: float | None = None,
                limit: int = 20) -> dict:
     """Search/filter the Gold population — real SQL via data.query_banks()
     (DuckDB), not a hand-rolled Python filter/sort."""
@@ -77,7 +77,7 @@ def list_banks(query: str = None, state: str = None, country: str = None,
 _PEER_BASIS_SUFFIX = {"global": "", "size": "_within_size", "cluster": "_within_cluster"}
 
 
-def get_bank_profile(cert: int, as_of: str = None, quarter: str = None,
+def get_bank_profile(cert: int, as_of: str | None = None, quarter: str | None = None,
                      peer_basis: str = "global") -> dict:
     """`as_of` (B9, YYYYMMDD): reproduce this profile as it stood on that
     landing date, not today's — see data.population's docstring. Omit for
@@ -227,7 +227,7 @@ def get_holding_company(cert: int) -> dict:
     }
 
 
-def get_bank_xray(cert: int, quarter: str = None) -> dict:
+def get_bank_xray(cert: int, quarter: str | None = None) -> dict:
     # Gold row carries percentile ranks -> flags get peer context. Which capital rules
     # apply depends on the bank's regulatory capital regime: 195 CBLR electers and 13
     # foreign-bank branches report zeros for reasons that are not thin capital, and
@@ -237,7 +237,7 @@ def get_bank_xray(cert: int, quarter: str = None) -> dict:
     return evaluate_xray(_need_bank(cert, quarter=quarter), capital_basis=capital_basis(silver))
 
 
-def get_peer_cluster(cert: int, quarter: str = None) -> dict:
+def get_peer_cluster(cert: int, quarter: str | None = None) -> dict:
     pop = data.population(quarter)
     g = _need_bank(cert, quarter=quarter)
     cid = g.get("peer_cluster_id")
@@ -248,7 +248,7 @@ def get_peer_cluster(cert: int, quarter: str = None) -> dict:
             "sample_peers": names}
 
 
-def find_ma_matches(cert: int, top_n: int = 8, quarter: str = None) -> dict:
+def find_ma_matches(cert: int, top_n: int = 8, quarter: str | None = None) -> dict:
     pop = data.population(quarter)
     target = _need_bank(cert, quarter=quarter)
     ranked = rank_partners(target, pop["gold"], top_n=top_n, footprints=data.footprints())
@@ -432,7 +432,7 @@ def run_correlated_stress(cert: int, rate_shock_bps: float = 300.0, severity: st
     return result
 
 
-def diff_filings(cert: int, quarter_a: str = None, quarter_b: str = None) -> dict:
+def diff_filings(cert: int, quarter_a: str | None = None, quarter_b: str | None = None) -> dict:
     # Prefer the population-based history (data.bank_history — Wave 0d's 8 landed
     # quarters) over the legacy per-bank Bronze partition. This used to be the other
     # way around on the assumption the per-bank land "can run deeper than the
@@ -477,6 +477,24 @@ def get_filing_diff_population_summary() -> dict:
     return json.loads(_FILING_DIFF_POPULATION_SUMMARY_PATH.read_text(encoding="utf-8"))
 
 
+_BACKTEST_RESULTS_PATH = Path(__file__).resolve().parents[4] / "ml" / "backtest" / "results.json"
+
+
+def get_backtest_results() -> dict:
+    """C14 governance — the backtest harness: for the X-Ray, deposit-flight
+    and filing-diff signals, did flagged banks subsequently show deposit
+    outflows, capital deterioration, credit deterioration, or failure/exit
+    from the population, more often than the rest of the population? Pooled
+    across every landed quarter transition and persisted by backtest_cli.py
+    (banklens_transforms.backtest) — a null result (lift near 1, CI straddling
+    it) is a real, reportable finding here, not an error.
+    """
+    if not _BACKTEST_RESULTS_PATH.exists():
+        raise ValueError(
+            "Backtest not run yet; run backtest_cli (scripts/backtest.ps1).")
+    return json.loads(_BACKTEST_RESULTS_PATH.read_text(encoding="utf-8"))
+
+
 def _prior_year_deposits(cert: int, current_quarter: str | None) -> float | None:
     """This bank's total deposits exactly 4 quarters before ``current_quarter``, from
     its own landed population history — the input `deposit_growth_1yr` (the highest-
@@ -491,7 +509,7 @@ def _prior_year_deposits(cert: int, current_quarter: str | None) -> float | None
     return row.get("total_deposits") if row else None
 
 
-def _score_full_population(card: dict, quarter: str = None) -> tuple[list[dict], int]:
+def _score_full_population(card: dict, quarter: str | None = None) -> tuple[list[dict], int]:
     """Every landed bank's risk_score for `quarter` (D3: defaults to latest) —
     the shared population context both get_risk_score (for a single bank's
     percentile) and get_risk_leaderboard (for the ranking) need. Scoring is a
@@ -516,7 +534,7 @@ def _score_full_population(card: dict, quarter: str = None) -> tuple[list[dict],
     return scored, imputed_count
 
 
-def get_risk_score(cert: int, quarter: str = None) -> dict:
+def get_risk_score(cert: int, quarter: str | None = None) -> dict:
     card = load_card()
     if card is None:
         raise ValueError("Deposit-flight model not trained yet; run deposit_flight_cli.")
@@ -547,8 +565,8 @@ def get_risk_score(cert: int, quarter: str = None) -> dict:
     return res
 
 
-def get_risk_leaderboard(top_n: int = 25, state: str = None, cluster_label: str = None,
-                         quarter: str = None) -> dict:
+def get_risk_leaderboard(top_n: int = 25, state: str | None = None, cluster_label: str | None = None,
+                         quarter: str | None = None) -> dict:
     """Feature 13, population-wide: score every landed FDIC bank and rank by
     deposit-flight resemblance. Optional state/cluster_label narrow the
     population BEFORE ranking, so top_n picks the riskiest within that slice
@@ -637,7 +655,7 @@ def get_market_coverage() -> dict:
     return data.market_coverage()
 
 
-def get_market_overview(certs: list[int] = None, top_n: int = 20, window_days: int = 180) -> dict:
+def get_market_overview(certs: list[int] | None = None, top_n: int = 20, window_days: int = 180) -> dict:
     """E2 (docs/audit/04-remediation-prompts.md) — the minimum cross-bank market
     computation /market needs (normally C10's remit): a rebased relative-
     performance series, a returns/volatility scatter, a pairwise return-
@@ -855,7 +873,7 @@ _METRIC_LINEAGE: dict[str, dict] = {
 }
 
 
-def get_metric_lineage(cert: int, metric: str, quarter: str = None) -> dict:
+def get_metric_lineage(cert: int, metric: str, quarter: str | None = None) -> dict:
     """G9 — where one metric's number actually came from: the Gold function
     (or formula) that computed it, the exact Silver/FDIC source field(s) and
     their raw values, and the originating Bronze partition's path, checksum
@@ -914,7 +932,7 @@ def get_macro_data() -> dict:
     }
 
 
-def compare_banks(certs: list[int], metrics: list[str] = None, quarter: str = None) -> dict:
+def compare_banks(certs: list[int], metrics: list[str] | None = None, quarter: str | None = None) -> dict:
     # Was just the original 4 concentration/funding/capital fields — Wave 0c
     # added real earnings/credit metrics to Gold months after this default was
     # written, and nothing ever updated it, so /compare silently never showed
@@ -990,9 +1008,9 @@ def _apply_peer_set_percentiles(rows: list[dict], metrics: list[str]) -> None:
                 r[f"percentile_rank_{m}"] = _percentile_of(r[m], values)
 
 
-def get_population_metrics(group: str, limit: int = 2000, sort_by: str = None,
-                           descending: bool = True, quarter: str = None,
-                           certs: list[int] = None) -> dict:
+def get_population_metrics(group: str, limit: int = 2000, sort_by: str | None = None,
+                           descending: bool = True, quarter: str | None = None,
+                           certs: list[int] | None = None) -> dict:
     """One named metric group across the whole population, with peer percentiles.
 
     Powers the earnings / credit / funding / capital / concentration views. Returns
@@ -1110,6 +1128,18 @@ TREND_METRICS = [
     # instead of the raw YTD fields for the two metrics selectable there.
     "roa_pct_quarterly", "net_interest_margin_pct_quarterly",
     "roe_pct_quarterly", "efficiency_ratio_pct_quarterly",
+    # E11 — deposit-type and loan-category composition, added so /banks/trends
+    # (get_bank_trends) carries what BankPage's composition-migration Sankey
+    # needs: core_deposit_pct alongside the already-present brokered_deposit_pct,
+    # and the 8 DISJOINT loan-category concentration_ratio_* leaves (the same
+    # set concentration_ratios()/LOAN_CATEGORIES uses for Feature 11, so these
+    # sum to ~100% of gross loans each quarter — no new computation, just a
+    # wider projection of existing gold_features fields).
+    "core_deposit_pct",
+    "concentration_ratio_construction", "concentration_ratio_multifamily",
+    "concentration_ratio_nonfarm_nonres", "concentration_ratio_residential_mortgage",
+    "concentration_ratio_farmland", "concentration_ratio_agricultural",
+    "concentration_ratio_c_and_i", "concentration_ratio_consumer",
 ]
 
 
@@ -1203,6 +1233,71 @@ def get_bulk_bank_trends(certs: list[int]) -> dict:
     return {
         "metrics": TREND_METRICS, "quarters": quarters, "cluster_mode": cluster_mode,
         "requested": len(certs), "banks": banks, "skipped": skipped,
+    }
+
+
+MAX_SPARKLINE_CERTS = 2500       # matches get_population_metrics' own page-size
+# ceiling (default limit=2000) — this tool exists to batch the trend CELLS a
+# population table already renders one row per cert for, not to serve a
+# different scale of request than that table itself does.
+SPARKLINE_QUARTERS_BACK = 8      # ~2 years — a sparkline a few dozen pixels wide
+# doesn't need this bank's entire landed history (22 quarters and growing and
+# counting) to show direction; capping the window keeps a multi-thousand-row
+# response reasonable regardless of how far back Bronze eventually lands.
+
+
+def get_population_trend_sparklines(certs: list[int], metrics: list[str]) -> dict:
+    """E12 — batched trailing-quarter series for a sparkline column next to an
+    already-rendered population table (screener/earnings/credit/funding), so a
+    2,000-row table costs ONE extra request instead of one per row.
+
+    Same quarter-loop-outside-bank-loop shape as get_bulk_bank_trends (E10):
+    data.population(q) is loaded once per quarter, not once per (quarter, cert)
+    pair. Deliberately a SEPARATE tool rather than reusing get_bulk_bank_trends —
+    that one is capped at MAX_BULK_TRENDS_CERTS=40 for /trends' small-multiples
+    view (a chart per metric, a line per bank, meant to stay readable), while a
+    metric-group table can have thousands of rows and only needs the handful of
+    metrics that table already shows as columns, not the fixed TREND_METRICS set.
+
+    Every bank's `values[metric]` array is aligned 1:1 to the shared `quarters`
+    list (null where that bank has no landed row that quarter) rather than only
+    the quarters it happens to have, so a caller (both the Sparkline component
+    and ExportCsvButton's trailing per-quarter columns) can index every bank's
+    series against the same date grid with no per-bank offset bookkeeping.
+    """
+    if not certs:
+        raise ValueError("certs must be a non-empty list")
+    if len(certs) > MAX_SPARKLINE_CERTS:
+        raise ValueError(f"at most {MAX_SPARKLINE_CERTS} banks per sparkline request, got {len(certs)}")
+    if not metrics:
+        raise ValueError("metrics must be a non-empty list")
+    # G3 — caller-picked field names for potentially thousands of banks at
+    # once, same registry check compare_banks/get_percentile_heatmap apply.
+    licensing.assert_fields_bulk_allowed(metrics, entity_count=len(certs), tool="get_population_trend_sparklines")
+
+    quarters = list(reversed(data.available_quarters()[:SPARKLINE_QUARTERS_BACK]))  # oldest first
+    cert_list = list(dict.fromkeys(certs))  # de-dupe, preserve caller order
+    values_by_cert: dict[int, dict[str, list]] = {c: {m: [] for m in metrics} for c in cert_list}
+    seen_by_cert: dict[int, bool] = {c: False for c in cert_list}
+    for q in quarters:
+        pop = data.population(q)
+        by_cert = pop["by_cert"]
+        for c in cert_list:
+            g = by_cert.get(c)
+            for m in metrics:
+                values_by_cert[c][m].append(g.get(m) if g is not None else None)
+            if g is not None:
+                seen_by_cert[c] = True
+    banks, skipped = [], []
+    for c in cert_list:
+        if not seen_by_cert[c]:
+            skipped.append({"cert": c, "reason":
+                             f"no landed history in the last {len(quarters)} quarters"})
+            continue
+        banks.append({"cert": c, "values": values_by_cert[c]})
+    return {
+        "metrics": metrics, "quarters": quarters,
+        "requested": len(cert_list), "banks": banks, "skipped": skipped,
     }
 
 
@@ -1348,7 +1443,7 @@ def get_quarterly_briefing(top_n: int = 8) -> dict:
     }
 
 
-def get_asset_treemap(group_by: str = "peer_cluster_label", quarter: str = None) -> dict:
+def get_asset_treemap(group_by: str = "peer_cluster_label", quarter: str | None = None) -> dict:
     """Every bank in the population, sized by assets and grouped for a treemap —
     `group_by` in {"peer_cluster_label", "state", "country"}. Colored client-side by
     whichever risk metric the user picks (X-Ray severity, risk score, a percentile
@@ -1383,8 +1478,8 @@ def get_asset_treemap(group_by: str = "peer_cluster_label", quarter: str = None)
     }
 
 
-def get_metric_distribution(metric: str, bins: int = 30, quarter: str = None,
-                            certs: list[int] = None) -> dict:
+def get_metric_distribution(metric: str, bins: int = 30, quarter: str | None = None,
+                            certs: list[int] | None = None) -> dict:
     """Histogram + order statistics for one Gold metric across the population.
 
     Real analysis rather than data shipping, so it belongs server-side: the binning,
@@ -1589,6 +1684,7 @@ def get_model_card() -> dict:
         "imputation_rates": card.get("imputation_rates", {}),
         "bootstrap": card.get("bootstrap"),
         "pr_curve": card.get("pr_curve", []),
+        "roc_curve": card.get("roc_curve", []),
         "calibration_curve": card.get("calibration_curve", []),
     }
 
@@ -1610,7 +1706,7 @@ def _full_universe_names() -> dict[int, str]:
     return names
 
 
-def get_county_concentration(state: str = None, top_n: int = 100) -> dict:
+def get_county_concentration(state: str | None = None, top_n: int = 100) -> dict:
     """Feature 15 — real county-level deposit HHI computed over the FULL landed SOD
     universe (~4,431 certs, $18.1T in branch deposits), not just the $1B-$250B
     analytical slice — a share computed against the slice alone would overstate every
@@ -1667,15 +1763,29 @@ _US_LAT_RANGE = (17.0, 72.5)
 _US_LON_RANGE = (-172.0, -65.0)
 
 
-def get_branch_map(state: str = None) -> dict:
-    """Feature 15 map data — every landed branch's real coordinates, deposits and
-    county, for a d3-geo Albers-USA canvas projection (us-atlas topology, no
-    tiles, no map-provider network calls — see usTopology.ts). Covers the 50
-    states + DC, including Alaska/Hawaii (rendered via us-atlas's pre-built
-    Albers-USA insets). Excluded: US territories with no landed boundary data
-    (PR/GU/VI/AS/MP, see data.NON_CONTIGUOUS_STATES) and a small number of
-    genuinely corrupt-coordinate SOD rows (see _US_LAT_RANGE/_US_LON_RANGE) —
-    both counted and disclosed (excluded_non_contiguous), not silently dropped.
+def get_branch_map(state: str | None = None) -> dict:
+    """Feature 15 map data — for a d3-geo Albers-USA canvas projection
+    (us-atlas topology, no tiles, no map-provider network calls — see
+    usTopology.ts). Covers the 50 states + DC, including Alaska/Hawaii
+    (rendered via us-atlas's pre-built Albers-USA insets). Excluded: US
+    territories with no landed boundary data (PR/GU/VI/AS/MP, see
+    data.NON_CONTIGUOUS_STATES) and a small number of genuinely
+    corrupt-coordinate SOD rows (see _US_LAT_RANGE/_US_LON_RANGE) — both
+    counted and disclosed (excluded_non_contiguous), not silently dropped.
+
+    F9 — with no `state` filter this used to return every one of the ~75,000
+    in-CONUS branch rows individually, which `GeographyPage` requested by
+    default on every /geography load. Server-side aggregation now applies at
+    that same national scope: instead of raw branches, returns one entry per
+    county (FIPS; a coarse lat/lon grid cell as fallback for the small number
+    of rows with no county code) — count, total deposits and a centroid,
+    mirroring `BranchMapCanvas.tsx`'s own client-side `aggregateBranches()`
+    bucketing exactly (same fips-or-grid key, same centroid-of-members
+    definition) so the two produce visually identical bubbles; the client
+    just no longer has to download ~75k points to compute it. A `state`
+    filter still returns individual branches — already a small, per-state
+    payload, and the only shape that can drive the client's zoom-to-detail
+    dot rendering.
     """
     raw = data.sod_raw()
     names = _full_universe_names()
@@ -1689,24 +1799,57 @@ def get_branch_map(state: str = None) -> dict:
         return _US_LAT_RANGE[0] <= lat <= _US_LAT_RANGE[1] and _US_LON_RANGE[0] <= lon <= _US_LON_RANGE[1]
 
     excluded = sum(1 for r in raw if not in_scope(r))
-    branches = []
+    scoped = []
     for r in raw:
         if not in_scope(r):
             continue
         st = r.get("STALPBR")
         if state and (st or "").upper() != state.upper():
             continue
-        branches.append({
+        scoped.append(r)
+
+    if state:
+        branches = [{
             "cert": r.get("CERT"), "lat": round(float(r["SIMS_LATITUDE"]), 3),
             "lon": round(float(r["SIMS_LONGITUDE"]), 3),
             "deposits": round((r.get("DEPSUMBR") or 0) * 1000), "fips": county_key(r),
-        })
-    certs_present = {b["cert"] for b in branches if b["cert"] is not None}
+        } for r in scoped]
+        # int(...): `branches` is a plain dict (mixed-type values per key -- cert,
+        # lat/lon floats, deposits int, fips str), so mypy can only infer each
+        # value's type as the union of all of them; the cast makes this loop's
+        # real int-cert assumption explicit instead of silencing the checker.
+        certs_present = {int(b["cert"]) for b in branches if b["cert"] is not None}
+        return {
+            "aggregated": False,
+            "branch_count": len(branches), "excluded_non_contiguous": excluded,
+            "bank_names": {c: names.get(c, f"CERT {c}") for c in certs_present},
+            "branches": branches, "cells": [],
+            "sod_vintage": data.sod_vintage(),   # B7 — see get_bank_profile's footprint block
+        }
+
+    cells: dict[str, dict] = {}
+    for r in scoped:
+        lat, lon = float(r["SIMS_LATITUDE"]), float(r["SIMS_LONGITUDE"])
+        fips = county_key(r)
+        key = fips or f"grid:{round(lat * 2)}:{round(lon * 2)}"
+        c = cells.get(key)
+        if c is None:
+            c = {"fips": fips, "lat_sum": 0.0, "lon_sum": 0.0, "branch_count": 0, "deposits": 0.0}
+            cells[key] = c
+        c["lat_sum"] += lat; c["lon_sum"] += lon
+        c["branch_count"] += 1
+        c["deposits"] += (r.get("DEPSUMBR") or 0) * 1000
+    cell_list = [{
+        "fips": c["fips"],
+        "lat": round(c["lat_sum"] / c["branch_count"], 3),
+        "lon": round(c["lon_sum"] / c["branch_count"], 3),
+        "branch_count": c["branch_count"], "deposits": round(c["deposits"]),
+    } for c in cells.values()]
     return {
-        "branch_count": len(branches), "excluded_non_contiguous": excluded,
-        "bank_names": {c: names.get(c, f"CERT {c}") for c in certs_present},
-        "branches": branches,
-        "sod_vintage": data.sod_vintage(),   # B7 — see get_bank_profile's footprint block
+        "aggregated": True,
+        "branch_count": len(scoped), "excluded_non_contiguous": excluded,
+        "bank_names": {}, "branches": [], "cells": cell_list,
+        "sod_vintage": data.sod_vintage(),
     }
 
 
@@ -1773,11 +1916,120 @@ def run_bulk_stress_test(certs: list[int], loan_loss_pct: float = 3.0,
             skipped.append({"cert": cert, "name": silver.get("name"), "reason": "missing capital-dollar fields"})
             continue
         results.append({"cert": cert, **run_stress_test(pos, shock)})
-    results.sort(key=lambda r: r["after"]["cet1"])
+    # F6 — after["cet1"] can be None (no RWA disclosed to compute it against);
+    # sort those to the end (stable, so their relative order is unaffected)
+    # rather than crashing on a None/float comparison.
+    results.sort(key=lambda r: (r["after"]["cet1"] is None, r["after"]["cet1"] or 0.0))
     return {
         "shock": asdict(shock), "requested": len(certs), "tested": len(results),
-        "skipped": skipped, "fail_count": sum(1 for r in results if not r["passes_all"]),
+        "skipped": skipped,
+        # Only a CONFIRMED fail counts — passes_all is None for a bank whose
+        # ratios couldn't be computed at all, which is "not assessed", not "failed".
+        "fail_count": sum(1 for r in results if r["passes_all"] is False),
         "results": results,
+    }
+
+
+_XRAY_SEVERITY_RANK = {"low": 0, "elevated": 1, "high": 2}
+_XRAY_SEVERITY_LABEL = {0: "low", 1: "elevated", 2: "high"}
+
+
+def summarize_portfolio(exposure_by_cert: dict[int, float]) -> dict:
+    """D11 — aggregate a user's counterparty-exposure portfolio (persisted at
+    the bridge layer in banklens_common.db.portfolio_positions, passed in here
+    as {cert: total_exposure_amount}): exposure-weighted X-Ray severity,
+    exposure-weighted deposit-flight resemblance percentile, concentration by
+    behavioral cluster and state, and exposure passing/failing a standard
+    stress scenario via the existing bulk stress tool.
+
+    This is honestly scoped: the stress result below is "does THIS BANK pass
+    its regulatory minimums under the shock", weighted by how much of the
+    user's exposure sits with that bank — NOT a loss-given-default calculation
+    applied directly to the exposure dollar amount, which would need recovery-
+    rate assumptions this repo has no data to support.
+    """
+    if not exposure_by_cert:
+        return {"positions": 0, "total_exposure": 0.0, "banks": []}
+
+    certs = list(exposure_by_cert.keys())
+    total_exposure = sum(exposure_by_cert.values())
+    pop = data.population()
+    by_cert = pop["by_cert"]
+
+    banks = []
+    weighted_severity = 0.0
+    weighted_risk_pctile = 0.0
+    risk_weight_total = 0.0
+    by_cluster: dict[str, float] = {}
+    by_state: dict[str, float] = {}
+
+    card = load_card()
+    all_scores = None
+    if card is not None:
+        all_scores = [s["risk_score"] for s in _score_full_population(card)[0]]
+
+    for cert in certs:
+        exposure = exposure_by_cert[cert]
+        g = by_cert.get(cert)
+        name = g["name"] if g else f"CERT {cert}"
+        severity = None
+        risk_pctile = None
+        if g is not None:
+            silver = pop["silver_by_cert"].get(cert) or {}
+            xr = evaluate_xray(g, capital_basis=capital_basis(silver))
+            severity = xr["overall_risk"]
+            weighted_severity += _XRAY_SEVERITY_RANK[severity] * exposure
+            cluster = g.get("peer_cluster_label")
+            if cluster:
+                by_cluster[cluster] = by_cluster.get(cluster, 0.0) + exposure
+            state = g.get("state")
+            if state:
+                by_state[state] = by_state.get(state, 0.0) + exposure
+            if card is not None and all_scores is not None:
+                try:
+                    prior_dep = _prior_year_deposits(cert, silver.get("quarter"))
+                    res = score_vector(card, features_from(silver, g, prior_dep))
+                    risk_pctile = population_percentile(res["risk_score"], all_scores)["resemblance_percentile"]
+                    if risk_pctile is not None:
+                        weighted_risk_pctile += risk_pctile * exposure
+                        risk_weight_total += exposure
+                except Exception:
+                    pass
+        banks.append({
+            "cert": cert, "name": name, "exposure": exposure,
+            "xray_severity": severity, "risk_resemblance_percentile": risk_pctile,
+        })
+
+    stress_summary = None
+    try:
+        bulk = run_bulk_stress_test(certs)
+        pass_exposure = fail_exposure = untested_exposure = 0.0
+        for r in bulk["results"]:
+            exp = exposure_by_cert.get(r["cert"], 0.0)
+            if r["passes_all"] is True:
+                pass_exposure += exp
+            elif r["passes_all"] is False:
+                fail_exposure += exp
+            else:
+                untested_exposure += exp
+        for s in bulk["skipped"]:
+            untested_exposure += exposure_by_cert.get(s["cert"], 0.0)
+        stress_summary = {
+            "scenario": bulk["shock"], "exposure_passing": pass_exposure,
+            "exposure_failing": fail_exposure, "exposure_untested": untested_exposure,
+        }
+    except ValueError:
+        pass  # e.g. every cert missing capital-dollar fields — leave stress_summary None
+
+    return {
+        "positions": len(certs), "total_exposure": total_exposure, "banks": banks,
+        "exposure_weighted_xray_severity":
+            _XRAY_SEVERITY_LABEL.get(round(weighted_severity / total_exposure)) if total_exposure else None,
+        "exposure_weighted_risk_resemblance_percentile":
+            round(weighted_risk_pctile / risk_weight_total, 1) if risk_weight_total else None,
+        "concentration_by_cluster": by_cluster,
+        "concentration_by_state": by_state,
+        "stress_summary": stress_summary,
     }
 
 
@@ -1817,7 +2069,9 @@ def run_stress_surface(cert: int, loan_loss_pct: float = 3.0,
             res = run_stress_test(pos, shock)
             cells.append({
                 "deposit_outflow_pct": outflow, "rate_shock_bps": rate,
-                "cet1_after": res["after"]["cet1"], "passes_cet1": res["passes"]["cet1"],
+                # F6 — "cet1" may be absent from `passes` entirely (no RWA
+                # disclosed to compute it against), not just present-and-false.
+                "cet1_after": res["after"]["cet1"], "passes_cet1": res["passes"].get("cet1"),
             })
             ds = res["duration_sources"]
             if ds["afs"] == "fallback_default" or ds["htm"] == "fallback_default":
@@ -1978,6 +2232,12 @@ TOOLS = [
                     "FDR-controlled alternative flag set.",
      "inputSchema": {"type": "object", "properties": {}},
      "handler": get_filing_diff_population_summary},
+    {"name": "get_backtest_results",
+     "description": "Feature 17 (C14) governance — backtest of the X-Ray, deposit-flight and "
+                    "filing-diff signals against subsequent deposit/capital/credit "
+                    "deterioration and failure/exit, pooled across every landed quarter transition.",
+     "inputSchema": {"type": "object", "properties": {}},
+     "handler": get_backtest_results},
     {"name": "run_stress_test",
      "description": "Feature 16 — stress capital ratios under loan-loss / deposit-outflow / rate shocks.",
      "inputSchema": {"type": "object", "properties": {
@@ -2051,6 +2311,24 @@ TOOLS = [
                     "funding and capital.",
      "inputSchema": {"type": "object", "properties": {"cert": _CERT}, "required": ["cert"]},
      "handler": get_bank_trends},
+    {"name": "get_bulk_bank_trends",
+     "description": "E10 — the SAME per-quarter trajectory get_bank_trends returns, for a "
+                    f"whole peer set at once (up to {MAX_BULK_TRENDS_CERTS} certs), so "
+                    "/trends' small-multiples view can render every bank's line without "
+                    "N sequential requests.",
+     "inputSchema": {"type": "object", "properties": {
+         "certs": {"type": "array", "items": {"type": "integer"}}}, "required": ["certs"]},
+     "handler": get_bulk_bank_trends},
+    {"name": "get_population_trend_sparklines",
+     "description": "E12 — batched trailing-quarter series (last "
+                    f"{SPARKLINE_QUARTERS_BACK} quarters, up to {MAX_SPARKLINE_CERTS} certs) "
+                    "for a sparkline column next to an already-rendered population table "
+                    "(screener/earnings/credit/funding), one request for the whole table.",
+     "inputSchema": {"type": "object", "properties": {
+         "certs": {"type": "array", "items": {"type": "integer"}},
+         "metrics": {"type": "array", "items": {"type": "string"}}},
+         "required": ["certs", "metrics"]},
+     "handler": get_population_trend_sparklines},
     {"name": "get_quarterly_briefing",
      "description": "Population-wide 'what changed this quarter': population churn, "
                     "biggest movers, behavioral-cluster migrations, and risk-"

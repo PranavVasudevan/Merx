@@ -23,11 +23,12 @@ import datetime
 import json
 import sys
 import time
+from typing import Callable, cast
 
 from banklens_common import db as common_db
 
 from . import data
-from .authz import AuthorizationError, authorize_tool
+from .authz import authorize_tool
 from .tools import TOOLS, TOOL_BY_NAME
 
 PROTOCOL_VERSION = "2025-06-18"
@@ -152,6 +153,14 @@ def handle(msg: dict):
         tool = TOOL_BY_NAME.get(name)
         if tool is None:
             return _error(mid, -32602, f"unknown tool: {name}")
+        # TOOL_BY_NAME.get(name) only returns non-None for a real key it was
+        # actually built from, which means `name` was a real string (TOOLS'
+        # own "name" fields) -- true by construction, but TOOL_BY_NAME's
+        # values are dicts with deliberately heterogeneous value types
+        # (str/dict/callable per entry, see tools.py's TOOLS registry), so
+        # mypy can only infer `name`/`tool["handler"]`/`tool["inputSchema"]`
+        # as broad unions from that mix, not their real per-key types.
+        assert isinstance(name, str)
         start = time.time()
         try:
             # Authorization runs before coercion/execution — an unauthorized call
@@ -167,8 +176,9 @@ def handle(msg: dict):
             # per the protocol, but a client shouldn't be able to crash the whole
             # server subprocess over it) must become an in-band tool error, not an
             # uncaught exception that kills the process for every other in-flight call.
-            coerced = _coerce_arguments(args, tool["inputSchema"])
-            out = tool["handler"](**coerced)
+            coerced = _coerce_arguments(args, cast(dict, tool["inputSchema"]))
+            handler = cast(Callable[..., dict], tool["handler"])
+            out = handler(**coerced)
             _audit(name, coerced, True, (time.time() - start) * 1000)
             return _result(mid, {"content": [
                 {"type": "text", "text": json.dumps(out, indent=2, default=str)}]})

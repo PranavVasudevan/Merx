@@ -111,7 +111,10 @@ def estimate_ppnr_quarterly(silver: dict) -> float | None:
     """
     ii, ie = silver.get("interest_income"), silver.get("interest_expense")
     noi, nox = silver.get("noninterest_income"), silver.get("noninterest_expense")
-    if None in (ii, ie, noi, nox):
+    # Individual `is None` checks, not `None in (...)`: behaviorally identical,
+    # but the type checker can narrow ii/ie/noi/nox to non-None for the rest of
+    # this function from this form -- it can't from a tuple-membership test.
+    if ii is None or ie is None or noi is None or nox is None:
         return None
     q = silver.get("quarter") or ""
     qnum = int(q[-1]) if q and q[-1].isdigit() and 1 <= int(q[-1]) <= 4 else None
@@ -162,7 +165,14 @@ def starting_position(silver: dict) -> dict:
 
 
 def _ratios(cet1, tier1, total, rwa, lev_denom) -> dict:
-    r = lambda num, den: round(num / den * 100, 2) if den and den > 0 else 0.0
+    # F6 — a missing/non-positive denominator means the ratio was never
+    # computed, not that it is 0.00%. Returning 0.0 here used to make a bank
+    # with no disclosed leverage denominator report a fabricated "0.00%"
+    # ratio and FAIL the regulatory minimum on a number it never actually
+    # produced — a made-up verdict dressed up as a real one. `None` instead,
+    # so the caller can tell "computed and failing" apart from "not computed
+    # at all" (see _apply_shocks' passes/ratios_not_computed handling below).
+    r = lambda num, den: round(num / den * 100, 2) if den and den > 0 else None
     return {"cet1": r(cet1, rwa), "tier1": r(tier1, rwa),
             "total": r(total, rwa), "leverage": r(tier1, lev_denom)}
 
@@ -238,20 +248,36 @@ def _apply_shocks(pos: dict, shock: Shock, afs_loss: float, htm_unrealized: floa
     new_cet1 = max(0.0, pos["cet1_capital"] - capital_hit)
     new_tier1 = max(0.0, pos["tier1_capital"] - capital_hit)
     new_total = max(0.0, pos["total_capital"] - capital_hit)
-    # written-off loans leave the balance sheet -> RWA and total assets shrink
-    new_rwa = max(1.0, pos["rwa"] - loan_loss)
-    new_lev_denom = max(1.0, pos["lev_denom"] - loan_loss - outflow)
+    # written-off loans leave the balance sheet -> RWA and total assets shrink.
+    # F6 — a denominator that was never disclosed (None) must stay None here
+    # too, not silently become "0 minus a real number": `pos["rwa"]`/
+    # `pos["lev_denom"]` are already allowed to be None (a CBLR bank has no
+    # RWA at all; a bank with neither a leverage ratio nor average_assets has
+    # no leverage denominator — see starting_position()), and `_ratios()`
+    # below already returns None for a None/non-positive denominator. The
+    # bug this fixes: doing the arithmetic unconditionally raised a
+    # TypeError on `None - loan_loss` instead of ever reaching that None
+    # handling at all.
+    new_rwa = max(1.0, pos["rwa"] - loan_loss) if pos["rwa"] is not None else None
+    new_lev_denom = (max(1.0, pos["lev_denom"] - loan_loss - outflow)
+                     if pos["lev_denom"] is not None else None)
 
     before = _ratios(pos["cet1_capital"], pos["tier1_capital"], pos["total_capital"],
                      pos["rwa"], pos["lev_denom"])
     after = _ratios(new_cet1, new_tier1, new_total, new_rwa, new_lev_denom)
-    verdict = {k: after[k] >= MINIMUMS[k] for k in MINIMUMS}
+    # F6 — a ratio _ratios() couldn't compute (no denominator disclosed) is
+    # excluded from the pass/fail verdict entirely, not defaulted to a
+    # failing 0.00%. Named here (mirroring legs_not_applied's shape) so the
+    # gap is disclosed rather than silently dropped from `passes`.
+    ratios_not_computed = [k for k in MINIMUMS if after[k] is None]
+    verdict = {k: after[k] >= MINIMUMS[k] for k in MINIMUMS if after[k] is not None}
 
     return {
         "name": pos["name"], "quarter": pos["quarter"],
         "shock": asdict(shock),
         "before": before, "after": after, "minimums": MINIMUMS,
-        "passes": verdict, "passes_all": all(verdict.values()),
+        "passes": verdict, "passes_all": all(verdict.values()) if verdict else None,
+        "ratios_not_computed": ratios_not_computed,
         # Empty for a fully-covered bank; non-empty means the headline verdict above
         # reflects FEWER shocks than were requested — read it as partial, not passing.
         "legs_not_applied": legs_not_applied,
@@ -394,19 +420,29 @@ def project_multi_period(pos: dict, shock: Shock, horizon_quarters: int | None =
         new_cet1 = max(0.0, pos["cet1_capital"] - net_hit)
         new_tier1 = max(0.0, pos["tier1_capital"] - net_hit)
         new_total = max(0.0, pos["total_capital"] - net_hit)
-        new_rwa = max(1.0, pos["rwa"] - base["capital_waterfall"]["loan_loss"])
-        new_lev_denom = max(1.0, pos["lev_denom"] - base["capital_waterfall"]["loan_loss"]
-                            - base["liquidity"]["deposit_outflow"])
+        # F6 — same None-denominator guard as _apply_shocks: a bank with no
+        # disclosed RWA/leverage-denominator must stay None here across every
+        # projected period, not crash on `None - a_real_number`.
+        new_rwa = (max(1.0, pos["rwa"] - base["capital_waterfall"]["loan_loss"])
+                   if pos["rwa"] is not None else None)
+        new_lev_denom = (max(1.0, pos["lev_denom"] - base["capital_waterfall"]["loan_loss"]
+                             - base["liquidity"]["deposit_outflow"])
+                         if pos["lev_denom"] is not None else None)
         after = _ratios(new_cet1, new_tier1, new_total, new_rwa, new_lev_denom)
-        passes = {k: after[k] >= MINIMUMS[k] for k in MINIMUMS}
-        if breach_quarter is None and not all(passes.values()):
+        # F6 — same fix as run_stress_test/_ratios: a None ratio (no disclosed
+        # denominator) is excluded from the verdict, not treated as a failing 0.00%.
+        ratios_not_computed = [k for k in MINIMUMS if after[k] is None]
+        passes = {k: after[k] >= MINIMUMS[k] for k in MINIMUMS if after[k] is not None}
+        passes_all = all(passes.values()) if passes else None
+        if breach_quarter is None and passes and not passes_all:
             breach_quarter = period
         path.append({
             "quarter_offset": period, "shock_fraction_applied": round(frac, 3),
             "gross_capital_hit": round(gross_hit, 0),
             "ppnr_offset_applied": round(ppnr_used, 0),
             "net_capital_hit": round(net_hit, 0),
-            "after": after, "passes": passes, "passes_all": all(passes.values()),
+            "after": after, "passes": passes, "passes_all": passes_all,
+            "ratios_not_computed": ratios_not_computed,
         })
     return {
         "name": pos.get("name"), "quarter": pos.get("quarter"),
@@ -483,4 +519,10 @@ def correlated_scenario(rate_shock_bps: float, severity: str = "moderate", **ove
         "loan_loss_pct": round(hundreds_of_bps * coef["loan_loss_per_100bps"], 3),
     }
     fields.update(overrides)
-    return Shock(**fields)
+    # fields is genuinely dict[str, float] up to this point (the three derived
+    # legs above); **overrides can legally carry any of Shock's other fields
+    # (tax_rate: float, realize_htm_on_shortfall: bool, horizon_quarters: int,
+    # ...), which is real and correct at runtime but wider than a single
+    # dict[str, float] can express statically without per-field kwargs typing
+    # disproportionate to this one call site.
+    return Shock(**fields)  # type: ignore[arg-type]

@@ -143,7 +143,11 @@ def derive_positive_certs(failures: list[dict], population_certs: set[int],
         cert = f.get("CERT")
         if (f.get("RESTYPE") == "FAILURE" and cert in population_certs
                 and f.get("FAILYR") in fail_years):
-            out[cert] = f.get("NAME")
+            # `or` fallback: a landed failures row missing NAME shouldn't turn
+            # into a fabricated None entry in a dict this function promises is
+            # str-valued -- same disclosed-fallback pattern tools.py already
+            # uses for a missing bank name elsewhere.
+            out[cert] = f.get("NAME") or f"CERT {cert}"
     return out
 
 
@@ -165,8 +169,11 @@ def build_rows(records: list[dict], prior_dep_usd: dict[int, float]
             continue
         g = gold_features(s)
         cert = s.get("cert_number")
+        # s.get("cert_number") is Any | None (an untyped Silver dict row);
+        # dict.get on the wrong-type/None key is safe at runtime (returns the
+        # None default), same as a genuinely-missing prior-quarter deposit.
         rows.append({"cert": cert, "name": s.get("name"),
-                     "features": features_from(s, g, prior_dep_usd.get(cert))})
+                     "features": features_from(s, g, prior_dep_usd.get(cert))})  # type: ignore[arg-type]
     return rows, exclusions
 
 
@@ -256,7 +263,10 @@ def cv_select_l2(rows: list[dict], positive_certs: dict[int, str], *,
         results.append({"l2": l2, "mean_cv_auc": round(mean_auc, 4) if mean_auc is not None else None,
                          "folds_used": len(fold_aucs)})
     usable = [r for r in results if r["mean_cv_auc"] is not None]
-    best = max(usable, key=lambda r: r["mean_cv_auc"]) if usable else None
+    # `usable` is already filtered to real (non-None) mean_cv_auc values, but
+    # `results`/`r` are untyped dicts, so mypy can't narrow a dict VALUE from
+    # a filter predicate the way it narrows a plain variable.
+    best = max(usable, key=lambda r: r["mean_cv_auc"]) if usable else None  # type: ignore[arg-type,return-value]
     return {"candidates": results, "selected_l2": best["l2"] if best else 1.0, "k": k, "epochs": epochs}
 
 
@@ -407,7 +417,7 @@ def bootstrap_stats(rows: list[dict], positive_certs: dict[int, str], *,
     full_means = _impute_means(rows)
     X_full, y_full, _, _ = _matrix(rows, full_means, positive_certs)
 
-    boot_coefs = {k: [] for k in FEATURES}
+    boot_coefs: dict[str, list[float]] = {k: [] for k in FEATURES}
     boot_bias: list[float] = []
     boot_aucs: list[float] = []
     for _ in range(n_boot):
@@ -468,6 +478,36 @@ def pr_curve(y: list[int], scores: list[float], n_points: int = 50) -> list[dict
     return out
 
 
+def roc_curve(y: list[int], scores: list[float], n_points: int = 50) -> list[dict]:
+    """ROC points (false-positive rate vs. true-positive rate) swept over the
+    same score thresholds `pr_curve` uses, plus the endpoints (0,0) and (1,1)
+    so the plotted curve always reaches both corners. `auc` (logreg.py) already
+    reports the scalar rank-based area under this curve; this persists the
+    actual curve so a statistician can see WHERE the tradeoff sits (e.g. a
+    curve that only clears the diagonal at very high FPR is a very different
+    finding from one that clears it early), not just the summary number."""
+    n_pos = sum(1 for yy in y if yy == 1)
+    n_neg = sum(1 for yy in y if yy == 0)
+    if n_pos == 0 or n_neg == 0:
+        return []
+    thresholds = sorted({round(s, 4) for s in scores}, reverse=True)
+    if len(thresholds) > n_points:
+        step = len(thresholds) / n_points
+        thresholds = [thresholds[int(i * step)] for i in range(n_points)]
+    out = [{"threshold": None, "fpr": 0.0, "tpr": 0.0, "tp": 0, "fp": 0}]
+    for t in thresholds:
+        tp = sum(1 for s, yy in zip(scores, y, strict=True) if s >= t and yy == 1)
+        fp = sum(1 for s, yy in zip(scores, y, strict=True) if s >= t and yy == 0)
+        out.append({
+            "threshold": t,
+            "fpr": round(fp / n_neg, 4),
+            "tpr": round(tp / n_pos, 4),
+            "tp": tp, "fp": fp,
+        })
+    out.append({"threshold": None, "fpr": 1.0, "tpr": 1.0, "tp": n_pos, "fp": n_neg})
+    return out
+
+
 def calibration_curve(y: list[int], scores: list[float], n_bins: int = 10) -> list[dict]:
     """Bin predicted probabilities and compare to the observed positive rate in
     each bin — a well-calibrated model's points sit near the diagonal. With
@@ -516,6 +556,10 @@ def score_vector(card: dict, feats: dict, era: str | None = None) -> dict:
     a KNOWN-era training row (leave_one_out), and omit it when scoring a live,
     era-unknown current-quarter bank, which falls back to `card["scoring_era"]`
     (set at train time to the most contemporary pooled era)."""
+    # The else-branch always supplies a real impute mean when feats.get(k) is
+    # None, so x[j] is never actually None -- but `feats`/`card` are untyped
+    # dicts, and mypy doesn't narrow a repeated feats.get(k) call across the
+    # condition and the true-branch the way it would a bound variable.
     x = [feats.get(k) if feats.get(k) is not None else card["impute_means"][k]
          for k in card["features"]]
     if isinstance(card["std_mu"], dict):
@@ -527,7 +571,7 @@ def score_vector(card: dict, feats: dict, era: str | None = None) -> dict:
     contrib = [card["weights"][j] * xs[j] for j in range(len(xs))]
     p = sigmoid(card["bias"] + sum(contrib))
     drivers = sorted(
-        ({"feature": card["features"][j], "value": round(x[j], 2),
+        ({"feature": card["features"][j], "value": round(x[j], 2),  # type: ignore[arg-type]
           "contribution": round(contrib[j], 3)} for j in range(len(x))),
         key=lambda t: abs(t["contribution"]), reverse=True)
     return {"risk_score": round(p, 4), "drivers": drivers}

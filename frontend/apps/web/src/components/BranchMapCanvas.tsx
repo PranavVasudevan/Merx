@@ -2,8 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { geoPath } from 'd3-geo';
 import { nationFeature, stateMesh, countyMesh, nationBounds, usAlbersProjection } from '../usTopology';
 import { chartColors, onThemeChange, sequentialRamp } from '../colors';
-import type { BranchPoint } from '../types';
+import { usd } from '../metricFormat';
+import type { BranchCell, BranchPoint } from '../types';
 import './BranchMapCanvas.css';
+import './charts.css';
 
 interface HoverInfo {
   x: number;
@@ -18,6 +20,11 @@ interface HoverInfo {
 
 export interface BranchMapCanvasProps {
   branches: BranchPoint[];
+  // F9 — server-pre-aggregated county/grid cells for the default (no-state)
+  // national view; when present (and `branches` empty), skip client-side
+  // aggregateBranches() entirely and project these directly. `branches` and
+  // `cells` are never both non-empty (see GeographyPage.tsx).
+  cells?: BranchCell[];
   bankNames: Record<number, string>;
   height?: number;
 }
@@ -54,10 +61,10 @@ function fitTransform(width: number, height: number, padding: number): ViewTrans
   return { k, x: (width - spanX * k) / 2 - minX * k, y: (height - spanY * k) / 2 - minY * k };
 }
 
-/** Groups branches by county (fips) when known, else by a ~0.5deg lat/lon grid cell
- * — client-side, since GeographyPage already loads the full branch list up front.
- * F9 (backlog): aggregating server-side would cut the payload itself, not just the
- * paint cost; not blocking this map rewrite on a backend change. */
+/** Groups branches by county (fips) when known, else by a ~0.5deg lat/lon grid cell.
+ * Used only as a client-side fallback for a state-scoped `branches` list (small —
+ * at most one state's worth of rows); the default national view instead gets
+ * pre-aggregated `cells` straight from the server (F9) via `projectCells` below. */
 function aggregateBranches(branches: BranchPoint[], projected: ProjectedBranch[]): AggregateBucket[] {
   const groups = new Map<string, AggregateBucket>();
   for (let i = 0; i < branches.length; i++) {
@@ -72,6 +79,18 @@ function aggregateBranches(branches: BranchPoint[], projected: ProjectedBranch[]
   return [...groups.values()];
 }
 
+/** Projects server-side `BranchCell`s (F9) straight into AggregateBuckets — no
+ * client aggregation needed, the server already grouped by fips/grid cell. */
+function projectCells(cells: BranchCell[]): AggregateBucket[] {
+  const out: AggregateBucket[] = [];
+  for (const c of cells) {
+    const p = usAlbersProjection([c.lon, c.lat]);
+    if (!p) continue;
+    out.push({ key: c.fips ?? `grid:${c.lat}:${c.lon}`, x: p[0], y: p[1], count: c.branch_count, deposits: c.deposits });
+  }
+  return out;
+}
+
 /**
  * US branch map on a raw <canvas>: real state/county boundaries (us-atlas TopoJSON,
  * see usTopology.ts) drawn via d3-geo's Canvas2D path renderer, branch points
@@ -83,7 +102,7 @@ function aggregateBranches(branches: BranchPoint[], projected: ProjectedBranch[]
  * by branch count and colored by total deposits, so national zoom stays cheap to
  * paint; past that threshold it switches to individual dots plus county borders.
  */
-export function BranchMapCanvas({ branches, bankNames, height = 460 }: BranchMapCanvasProps) {
+export function BranchMapCanvas({ branches, cells = [], bankNames, height = 460 }: BranchMapCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pointsRef = useRef<ProjectedBranch[]>([]);
@@ -110,11 +129,21 @@ export function BranchMapCanvas({ branches, bankNames, height = 460 }: BranchMap
     return out;
   }, [branches]);
 
-  const buckets = useMemo(() => aggregateBranches(branches, projected), [branches, projected]);
+  // F9 — server-pre-aggregated cells win when present (the default national
+  // load); client-side aggregation is now only exercised for a state-scoped
+  // `branches` list, which is small enough that it was never the cost problem.
+  const buckets = useMemo(
+    () => (cells.length > 0 ? projectCells(cells) : aggregateBranches(branches, projected)),
+    [cells, branches, projected],
+  );
   const maxBucketDeposits = useMemo(
     () => buckets.reduce((m, g) => Math.max(m, g.deposits), 0) || 1,
     [buckets],
   );
+  // No individual branch points to switch to at all in aggregated-only mode
+  // (national view) -- zoom still pans/zooms the map, it just never reveals
+  // per-branch dots until a state filter brings back real branch rows.
+  const hasBranchDetail = branches.length > 0;
 
   useEffect(() => { pointsRef.current = projected; }, [projected]);
   useEffect(() => { bucketsRef.current = buckets; }, [buckets]);
@@ -136,7 +165,7 @@ export function BranchMapCanvas({ branches, bankNames, height = 460 }: BranchMap
 
     const colors = chartColors();
     const { k, x, y } = transformRef.current;
-    const detailed = k >= fitKRef.current * DETAIL_ZOOM_MULT;
+    const detailed = hasBranchDetail && k >= fitKRef.current * DETAIL_ZOOM_MULT;
 
     ctx.save();
     ctx.translate(x, y);
@@ -189,7 +218,7 @@ export function BranchMapCanvas({ branches, bankNames, height = 460 }: BranchMap
     }
 
     ctx.restore();
-  }, [height, maxBucketDeposits]);
+  }, [height, maxBucketDeposits, hasBranchDetail]);
 
   // (Re)fit the view whenever data/size first become available. Once the user has
   // zoomed or panned, resizes no longer snap the view back to the fit — that would
@@ -268,7 +297,7 @@ export function BranchMapCanvas({ branches, bankNames, height = 460 }: BranchMap
     const { k, x, y } = transformRef.current;
     const worldX = (mx - x) / k, worldY = (my - y) / k;
     const hitRadiusWorld = HIT_RADIUS_PX / k;
-    const detailed = k >= fitKRef.current * DETAIL_ZOOM_MULT;
+    const detailed = hasBranchDetail && k >= fitKRef.current * DETAIL_ZOOM_MULT;
 
     if (detailed) {
       let best: ProjectedBranch | null = null;
@@ -328,26 +357,22 @@ export function BranchMapCanvas({ branches, bankNames, height = 460 }: BranchMap
       />
       <button type="button" className="branch-map-reset" onClick={resetZoom}>Reset view</button>
       {hover && hover.kind === 'branch' && (
-        <div className="branch-map-tooltip" style={{ left: hover.x + 10, top: hover.y + 10 }}>
-          <div className="branch-map-tooltip-name">{hover.name}</div>
-          <div className="muted branch-map-tooltip-detail tabular">
-            ${(hover.deposits / 1e6).toFixed(1)}M branch deposits
-          </div>
-          {hover.fips && <div className="muted branch-map-tooltip-detail">FIPS {hover.fips}</div>}
+        <div className="chart-tooltip chart-tooltip-floating" style={{ left: hover.x + 10, top: hover.y + 10 }}>
+          <div className="chart-tooltip-label">{hover.name}</div>
+          <div className="chart-tooltip-value tabular">{usd(hover.deposits)} branch deposits</div>
+          {hover.fips && <div className="chart-tooltip-sub muted">FIPS {hover.fips}</div>}
         </div>
       )}
       {hover && hover.kind === 'aggregate' && (
-        <div className="branch-map-tooltip" style={{ left: hover.x + 10, top: hover.y + 10 }}>
-          <div className="branch-map-tooltip-name">
+        <div className="chart-tooltip chart-tooltip-floating" style={{ left: hover.x + 10, top: hover.y + 10 }}>
+          <div className="chart-tooltip-label">
             {hover.count} branch{hover.count === 1 ? '' : 'es'}
           </div>
-          <div className="muted branch-map-tooltip-detail tabular">
-            ${(hover.deposits / 1e6).toFixed(1)}M total deposits
-          </div>
+          <div className="chart-tooltip-value tabular">{usd(hover.deposits)} total deposits</div>
           {hover.fips ? (
-            <div className="muted branch-map-tooltip-detail">FIPS {hover.fips}</div>
+            <div className="chart-tooltip-sub muted">FIPS {hover.fips}</div>
           ) : (
-            <div className="muted branch-map-tooltip-detail">county unknown — grid cell</div>
+            <div className="chart-tooltip-sub muted">county unknown — grid cell</div>
           )}
         </div>
       )}

@@ -24,6 +24,10 @@ vi.mock('../api', () => ({
     liquiditySurvival: vi.fn(),
     stressTest: vi.fn(),
     stressSurface: vi.fn(),
+    // D10 — named scenario registry + user-saved custom scenarios, fetched
+    // unconditionally on mount.
+    scenarioLibrary: vi.fn(),
+    getCustomScenarios: vi.fn(),
   },
 }));
 
@@ -50,6 +54,8 @@ function stubHappyPath() {
   vi.mocked(api.liquiditySurvival).mockResolvedValue(null as never);
   vi.mocked(api.stressTest).mockResolvedValue(STRESS_RESULT);
   vi.mocked(api.stressSurface).mockResolvedValue(null as never);
+  vi.mocked(api.scenarioLibrary).mockResolvedValue({ scenarios: [], version: 1 });
+  vi.mocked(api.getCustomScenarios).mockResolvedValue({ items: [] });
 }
 
 function renderPage() {
@@ -78,6 +84,8 @@ describe('StressLabPage', () => {
     vi.mocked(api.stressComparison).mockResolvedValue(STRESS_COMPARISON);
     vi.mocked(api.stressProjection).mockResolvedValue(null as never);
     vi.mocked(api.liquiditySurvival).mockResolvedValue(null as never);
+    vi.mocked(api.scenarioLibrary).mockResolvedValue({ scenarios: [], version: 1 });
+    vi.mocked(api.getCustomScenarios).mockResolvedValue({ items: [] });
     vi.mocked(api.stressTest).mockResolvedValue(STRESS_RESULT);
     vi.mocked(api.stressSurface).mockResolvedValue(null as never);
     renderPage();

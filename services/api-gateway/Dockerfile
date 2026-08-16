@@ -12,16 +12,28 @@ FROM python:3.13-slim
 
 WORKDIR /app
 
-# banklens_mcp.data imports duckdb unconditionally (the Gold-layer SQL query
-# engine backing list_banks). Found live: a container built without this
-# crashes at import time on the first request. prometheus-client backs
-# bridge_server.py's /metrics endpoint (observability). gunicorn backs the
-# BANKLENS_SERVER=prod transport (bridge_server.py's wsgi_app) — installed
-# unconditionally so the SAME image serves both dev and prod, switched purely
-# by that env var at `docker run` time, not by building a different image.
-# reportlab (BSD-licensed, $0 cost) backs banklens_mcp.tearsheet's per-bank
-# PDF export (D1) — GET /api/banks/tearsheet.
-RUN pip install --no-cache-dir duckdb prometheus-client gunicorn reportlab
+# Pinned + hashed installs (F14) — `--require-hashes` refuses anything that
+# doesn't match, so two builds of the same commit produce byte-identical
+# dependency sets, and a substituted/poisoned package on the index can't
+# silently ship in the image. See each requirements.txt for what's in it and
+# why (in short: duckdb/prometheus-client/gunicorn/reportlab/PyJWT for the
+# bridge itself, psycopg/duckdb for banklens_common).
+#
+# Found live while writing this: banklens_common was never copied into this
+# image at all, and PyJWT (bridge_server.py's unconditional `import auth` ->
+# `import jwt`, needed for RS256 verification via the `cryptography` backend)
+# was missing too — the previously-built image crashed on container start
+# with ModuleNotFoundError before ever serving a request.
+COPY libs/python/banklens_common/requirements.txt /app/libs/python/banklens_common/requirements.txt
+COPY services/api-gateway/requirements.txt /app/services/api-gateway/requirements.txt
+RUN pip install --no-cache-dir --require-hashes \
+      -r /app/libs/python/banklens_common/requirements.txt \
+      -r /app/services/api-gateway/requirements.txt
+
+# banklens_common's own dependencies (psycopg, duckdb) are already installed
+# above with hashes — `--no-deps` here installs just the local package code.
+COPY libs/python/banklens_common /app/libs/python/banklens_common
+RUN pip install --no-cache-dir --no-deps /app/libs/python/banklens_common
 
 # Preserve the exact relative directory depth the two REPO=Path(__file__)...
 # computations expect (bridge_server.py: parents[3]; data.py: parents[4]) —

@@ -44,8 +44,16 @@
 }
 
 .metric-group-table-wrap { overflow-x: auto; }
+/* D13 — virtualized tables (>100 rows) scroll vertically inside a capped
+   viewport instead of the whole page growing to fit every row; height here
+   must match MetricGroupPage.tsx's VIEWPORT_HEIGHT_PX constant. */
+.metric-group-table-wrap--virtual { max-height: 520px; overflow-y: auto; }
+.metric-group-virtual-note { margin: 0 0 var(--space-2); font-size: var(--text-xs); }
 .metric-group-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
 .metric-group-th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
   text-align: left;
   padding: var(--space-2) var(--space-3);
   font-size: var(--text-xs);
@@ -66,4 +74,24 @@
 .metric-group-td-name a:hover { text-decoration: underline; }
 .metric-group-td-right { text-align: right; }
 
+/* E12 — value + trend sparkline stacked in one cell, so a metric column adds
+   direction without doubling the table's column count. */
+.metric-group-td-value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
 .metric-group-empty { text-align: center; padding: var(--space-5) 0; }
+
+/* D13 — narrow viewports: the table itself already scrolls horizontally
+   (.metric-group-table-wrap's overflow-x above) rather than squeezing
+   columns unreadably thin, so the main fix needed here is the surrounding
+   chrome (filters row, rank rail) not overflowing a 390px-wide screen. */
+@media (max-width: 640px) {
+  .metric-group-filters { flex-direction: column; align-items: stretch; }
+  .metric-group-input { max-width: none; }
+  .metric-rank-name { flex: 1 1 auto; }
+  .metric-rank-track { display: none; }
+}

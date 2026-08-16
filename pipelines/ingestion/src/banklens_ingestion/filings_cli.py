@@ -177,7 +177,8 @@ def run(limit: int, refresh_days: int, repdte: str, data_dir: Path) -> None:
           f"(skipping any already landed within {refresh_days} days).")
 
     src = SecSource()
-    results, skipped_fresh = [], 0
+    results: list[dict] = []
+    skipped_fresh = 0
     idx = cursor
     for _ in range(total_eligible):   # at most one full lap of the eligible universe per run
         if len(results) >= limit:

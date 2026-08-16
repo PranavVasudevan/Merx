@@ -1,24 +1,55 @@
 /* Tailwind is wired to the SAME tokens theme.css already defines (and, for the
    terminal skin, that skin-terminal.css overrides) — not a second color system.
-   Utility classes like `bg-surface`, `text-primary`, `border-border` resolve to
+   Utility classes like `bg-surface`, `text-body`, `border-border` resolve to
    whatever theme.css/skin-terminal.css currently say `--surface`/`--text-primary`/
    `--border` are, so anything built with Tailwind re-skins for free alongside the
-   hand-rolled CSS components. Used only for new chrome (command palette, skin
-   toggle) — existing pages keep their own CSS files untouched. */
+   hand-rolled CSS components. Used for new chrome (command palette, skin toggle)
+   AND for shadcn/Bklit/21st-registry components pulled in via `shadcn add`.
+
+   Two color families share this block and must not be confused:
+   - App-native text/surface tokens (--color-body/-dim/-faint/-surface/-surface-2)
+     — used by this app's own hand-written Tailwind chrome.
+   - shadcn's standard semantic slots (--color-primary/-secondary/-muted/-accent/
+     -card/-popover/-destructive/...) — every third-party registry component
+     expects these EXACT names to mean brand/surface/hover/etc. per shadcn
+     convention, which is NOT always the same concept an app-native name of the
+     same word would suggest (e.g. shadcn's `bg-secondary`/`bg-muted` are
+     SURFACE colors, not text tones) — that collision is why the app-native
+     text tones are named --color-body/-dim/-faint rather than -primary/
+     -secondary/-muted. Do not "simplify" the two families back together. */
 @import "tailwindcss";
 
 @theme inline {
   --color-page: var(--page);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
-  --color-primary: var(--text-primary);
-  --color-secondary: var(--text-secondary);
-  --color-muted: var(--text-muted);
+  --color-body: var(--text-primary);
+  --color-dim: var(--text-secondary);
+  --color-faint: var(--text-muted);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
   --color-gridline: var(--gridline);
 
-  --color-accent: var(--accent);
+  /* shadcn semantic slots */
+  --color-background: var(--page);
+  --color-foreground: var(--text-primary);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--text-primary);
+  --color-popover: var(--surface-elevated);
+  --color-popover-foreground: var(--text-primary);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--page);
+  --color-secondary: var(--surface-2);
+  --color-secondary-foreground: var(--text-primary);
+  --color-muted: var(--surface-2);
+  --color-muted-foreground: var(--text-muted);
+  --color-accent: var(--surface-elevated);
+  --color-accent-foreground: var(--text-primary);
+  --color-destructive: var(--status-critical);
+  --color-destructive-foreground: var(--page);
+  --color-input: var(--border);
+  --color-ring: var(--accent);
+
   --color-cat-blue: var(--cat-blue);
   --color-cat-green: var(--cat-green);
   --color-cat-magenta: var(--cat-magenta);

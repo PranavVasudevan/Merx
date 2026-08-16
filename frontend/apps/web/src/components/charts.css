@@ -10,6 +10,21 @@
 .chart-tooltip-value { font-size: var(--text-base); font-weight: 650; }
 .chart-tooltip-sub { font-size: var(--text-xs); margin-top: 2px; }
 
+/* E15 — positioning modifier for the two hand-rolled canvas+d3 hover
+   tooltips (CountyChoropleth, BranchMapCanvas) that aren't recharts/ECharts
+   and so can't use <ChartTooltipShell>/Tooltip's own positioning, but still
+   render the same `.chart-tooltip*` markup for a consistent look. */
+.chart-tooltip-floating { position: absolute; pointer-events: none; z-index: 5; max-width: 220px; }
+
+/* E15 — shared empty/error states (see ChartTooltip.tsx's <ChartEmpty>/
+   <ChartError>), replacing each chart's own ad hoc "no data" markup. */
+.chart-empty {
+  padding: var(--space-4) 0;
+  font-size: var(--text-sm);
+  text-align: center;
+}
+.chart-error { margin: 0; }
+
 .recharts-cartesian-grid line { stroke: var(--gridline); }
 .recharts-reference-line line { stroke: var(--status-critical); }
 

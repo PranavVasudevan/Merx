@@ -37,11 +37,20 @@ export function DisclaimerModal() {
             exit={{ opacity: 0, y: -8, scale: 0.98 }}
             transition={{ duration: 0.16, ease: [0.85, 0, 0.15, 1] }}
           >
-            <h2 className="mb-3 text-lg font-semibold text-primary">Before you use BankLens</h2>
-            <p className="mb-3 text-sm text-secondary">{RISK_DISCLAIMER}</p>
-            <p className="mb-5 text-xs text-muted">
+            <h2 className="mb-3 text-lg font-semibold text-body">Before you use BankLens</h2>
+            <p className="mb-3 text-sm text-dim">{RISK_DISCLAIMER}</p>
+            <p className="mb-3 text-xs text-faint">
               This applies to every risk score, capital-adequacy verdict and merger-concentration
               screen in the product, wherever it's shown.
+            </p>
+            {/* D14 — first-run tour: what the population is + what the data vintage is,
+                so scope and staleness are visible before the first number, not discovered later. */}
+            <p className="mb-3 text-xs text-faint">
+              The population is FDIC-insured US banks plus significant EU/EEA institutions
+              reporting to the EBA — every figure traces back to a real, public FDIC BankFind,
+              SEC EDGAR or EBA filing (see the "verify this number" link on any metric). Data
+              lands on a real vintage, not "live" — check the freshness strip in the footer for
+              exactly how current each source is before relying on a number.
             </p>
             <button
               type="button"

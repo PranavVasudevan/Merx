@@ -93,7 +93,7 @@ banklens/
 │   ├── orchestration/ Dependency-graph job runner for scheduled refreshes
 │   └── dbt/           Reserved for a future SQL-based transform layer
 ├── services/
-│   ├── mcp-server/     The MCP tool surface — 27 tools over the Gold layer
+│   ├── mcp-server/     The MCP tool surface — 46 tools over the Gold layer
 │   ├── api-gateway/     REST bridge, authentication, and routing
 │   ├── agents/          The AI agent fleet (supervisor and specialist personas)
 │   ├── stress-engine/   Verified Rust port of the capital-buffer simulator
@@ -120,6 +120,10 @@ powershell -File scripts/run_vertical_slice.ps1
 powershell -File scripts/land_population.ps1
 powershell -File scripts/land_eba.ps1
 
+# Re-run the same landing + Silver/Gold refresh the Kubernetes CronJob runs
+# on a schedule (see below) — on demand, locally
+powershell -File scripts/run_orchestrator.ps1
+
 # Run an individual feature against a landed bank
 powershell -File scripts/filing_diff.ps1 -Cert 3511
 powershell -File scripts/stress_test.ps1 -Cert 6976 -Outflow 60 -RateBps 400
@@ -142,12 +146,17 @@ powershell -File scripts/k8s_dev_up.ps1
 ```
 
 Landing market price data requires a free Tiingo API key; every other source
-is keyless. Data refreshes are not currently scheduled automatically — the job
-runner in `pipelines/orchestration/` supports being registered with cron or
-Windows Task Scheduler, but that registration has not been made in this
-environment. Recommended cadence: quarterly for US data, roughly 30–45 days
-after each quarter-end when Call Reports become available, and semiannually
-for EU data.
+is keyless. Data refreshes are scheduled automatically in the Kubernetes
+deployment: `platform/k8s/base/refresh-cronjob.yaml` runs the orchestration
+job runner (`pipelines/orchestration/`) at 06:00 UTC on the 5th of February,
+May, August and November — roughly 30–45 days after each quarter-end, which
+is when US Call Reports become available (EU/EBA data refreshes only
+semiannually; the DAG re-lands it every quarterly run regardless, which is
+harmless and keeps one schedule instead of two). A bare local run (no
+Kubernetes) has no scheduler of its own — `scripts/run_orchestrator.ps1`
+above runs the same job runner on demand; register that with cron or
+Windows Task Scheduler yourself to match the CronJob's cadence outside
+Kubernetes.
 
 ## Data and licensing
 

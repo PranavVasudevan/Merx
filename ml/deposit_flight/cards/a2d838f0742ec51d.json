@@ -1,0 +1,3388 @@
+{
+  "features": [
+    "uninsured_deposit_pct",
+    "htm_to_equity",
+    "securities_to_assets",
+    "loan_to_deposit_pct",
+    "deposit_growth_1yr"
+  ],
+  "impute_means": {
+    "uninsured_deposit_pct": 25.27213667173252,
+    "htm_to_equity": 35.21950454886238,
+    "securities_to_assets": 21.317898700880587,
+    "loan_to_deposit_pct": 79.59896715045592,
+    "deposit_growth_1yr": 8.777269913660431
+  },
+  "std_mu": {
+    "2023": [
+      27.316045849297574,
+      46.9260657736074,
+      24.448383817903867,
+      72.09859063431247,
+      8.28091417659165
+    ],
+    "2008": [
+      24.137383030016547,
+      28.720163419832353,
+      19.57989124640465,
+      83.7630854289766,
+      9.052840612401761
+    ]
+  },
+  "std_sd": {
+    "2023": [
+      14.51183054926115,
+      165.4823133807314,
+      16.06345982511176,
+      23.448700914996994,
+      13.53363298176033
+    ],
+    "2008": [
+      15.011154960960267,
+      78.34117771624346,
+      14.962063552732042,
+      41.524983169546296,
+      14.872805312171906
+    ]
+  },
+  "weights": [
+    0.5423319966327166,
+    -0.1261129219380879,
+    -0.8943443788256418,
+    -0.8631161232882354,
+    0.39162513572712593
+  ],
+  "bias": -0.3939600184775224,
+  "trained_on": "2022Q4 + 2008Q1",
+  "positives": [
+    6782,
+    8758,
+    11568,
+    12736,
+    13789,
+    16490,
+    22728,
+    23595,
+    24735,
+    25851,
+    26870,
+    27011,
+    28344,
+    29730,
+    30968,
+    33901,
+    34194,
+    34301,
+    35379,
+    35469,
+    57053,
+    57523,
+    57654,
+    57930,
+    57961,
+    58241,
+    59017
+  ],
+  "auc": 0.7534,
+  "l2": 10.0,
+  "scoring_era": "2023",
+  "l2_sweep": {
+    "candidates": [
+      {
+        "l2": 0.1,
+        "mean_cv_auc": 0.6591,
+        "folds_used": 4
+      },
+      {
+        "l2": 0.3,
+        "mean_cv_auc": 0.6591,
+        "folds_used": 4
+      },
+      {
+        "l2": 1.0,
+        "mean_cv_auc": 0.6591,
+        "folds_used": 4
+      },
+      {
+        "l2": 3.0,
+        "mean_cv_auc": 0.6593,
+        "folds_used": 4
+      },
+      {
+        "l2": 10.0,
+        "mean_cv_auc": 0.6594,
+        "folds_used": 4
+      }
+    ],
+    "selected_l2": 10.0,
+    "k": 4,
+    "epochs": 500
+  },
+  "era_handling": {
+    "comparable": true,
+    "k": 4,
+    "epochs": 500,
+    "margin": 0.01,
+    "pooled_cv_auc": 0.6705,
+    "per_era_cv_auc": 0.7033,
+    "decision": "per_era",
+    "note": "per-era standardization improved CV AUC by more than 0.01 \u2014 adopted for training."
+  },
+  "exclusions": {
+    "threshold_pct": 5.0,
+    "rule": "not_deposit_funded",
+    "excluded_count": 201,
+    "total_considered": 13361,
+    "excluded_pct": 1.5,
+    "excluded": [
+      {
+        "cert": 32961,
+        "name": "BLACKROCK INSTITUTIONAL TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 4417042000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 90544,
+        "name": "THE DEPOSITORY TRUST COMPANY",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 3640409000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 34588,
+        "name": "U.S. BANK TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 1493108000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 13718,
+        "name": "WELLS FARGO TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 1302709000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 33684,
+        "name": "ALLIED IRISH BANKS",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 1243430000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 34629,
+        "name": "COMPUTERSHARE TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 1176504000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57047,
+        "name": "U.S. BANK TRUST NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 719653000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 26732,
+        "name": "DEUTSCHE BANK NATIONAL TRUST COMPANY",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 419295000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 34465,
+        "name": "WELLS FARGO DELAWARE TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 233670000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 34056,
+        "name": "DEUTSCHE BANK TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 151525000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 33962,
+        "name": "SYNOVUS TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 137385000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 34813,
+        "name": "U.S. BANK TRUST NATIONAL ASSOCIATION SD",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 134668000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 35317,
+        "name": "GLENMEDE TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 131567000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 35063,
+        "name": "THE CHICAGO TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 120225000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57304,
+        "name": "VANGUARD NATIONAL TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 110769000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57337,
+        "name": "GOLDMAN SACHS TRUST COMPANY, NATIONAL ASSOCIATION, THE",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 103987000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 23741,
+        "name": "WELLINGTON TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 99934000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 27102,
+        "name": "ASSOCIATED TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 74965000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 33879,
+        "name": "RAYMOND JAMES TRUST, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 61369000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57757,
+        "name": "FIRST FINANCIAL TRUST & ASSET MANAGEMENT COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 48576000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 24938,
+        "name": "STATE STREET BANK AND TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 44515000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 35267,
+        "name": "AIG FEDERAL SAVINGS BANK",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 41858000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57793,
+        "name": "FIRST NATIONAL TRUST COMPANY",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 38364000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 32957,
+        "name": "PRUDENTIAL BANK & TRUST, FSB",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 33594000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57380,
+        "name": "LEGACY TRUST COMPANY, N.A.",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 33558000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 59194,
+        "name": "ADP TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 29719000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 58011,
+        "name": "BESSEMER TRUST COMPANY OF DELAWARE, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 29626000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 59046,
+        "name": "NEUBERGER BERMAN TRUST COMPANY NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 25541000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 59276,
+        "name": "ANCHORAGE DIGITAL BANK NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 24537000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 59255,
+        "name": "CHILTON TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 24466000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 25677,
+        "name": "CITICORP TRUST DELAWARE, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 23537000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 34057,
+        "name": "THE PRIVATE TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 23285000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 59321,
+        "name": "HIGHTOWER TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 18464000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 25824,
+        "name": "BROWN BROTHERS HARRIMAN TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 16995000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 26622,
+        "name": "ROCKEFELLER TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 15286000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57418,
+        "name": "PLANTE MORAN TRUST, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 15193000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57405,
+        "name": "SECURIAN TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 14990000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 59025,
+        "name": "BROWN BROTHERS HARRIMAN TRUST COMPANY OF DELAWARE, N.A.",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 14777000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 35413,
+        "name": "BESSEMER TRUST COMPANY OF CALIFORNIA, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 14656000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57179,
+        "name": "FIRST COMMUNITY TRUST, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 13835000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 27479,
+        "name": "FIRST FINANCIAL TRUST, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 13753000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 58927,
+        "name": "EVERCORE TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 13301000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 26474,
+        "name": "STATE STREET BANK AND TRUST COMPANY OF CALIFORNIA, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 8785000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 59047,
+        "name": "NEUBERGER BERMAN TRUST COMPANY OF DELAWARE NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 8094000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 59322,
+        "name": "PEAK TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 7738000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 34732,
+        "name": "NEW COVENANT TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 7278000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 35248,
+        "name": "OLD POINT TRUST & FINANCIAL SERVICES, N.A.",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 7048000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 59069,
+        "name": "KEY NATIONAL TRUST COMPANY OF DELAWARE",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 6481000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57081,
+        "name": "SECURITY NATIONAL TRUST CO.",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 5913000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 33239,
+        "name": "THE TRUST COMPANY OF TOLEDO, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 4616000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 58999,
+        "name": "CANANDAIGUA NATIONAL TRUST COMPANY OF FLORIDA",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 4123000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57150,
+        "name": "WHEATON COLLEGE TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 3721000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 34065,
+        "name": "UMB BANK AND TRUST, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 3043000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 90544,
+        "name": "THE DEPOSITORY TRUST COMPANY",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 3195557000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 32961,
+        "name": "BARCLAYS GLOBAL INVESTORS, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 1574146000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57047,
+        "name": "U.S. BANK TRUST NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 607413000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 27591,
+        "name": "NORTHERN TRUST INVESTMENTS, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 414527000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 34465,
+        "name": "DELAWARE TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 414035000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 26732,
+        "name": "DEUTSCHE BANK NATIONAL TRUST COMPANY",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 181795000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 34056,
+        "name": "DEUTSCHE BANK TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 147090000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 58026,
+        "name": "RECONTRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 142835000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 34833,
+        "name": "M&I NATIONAL TRUST COMPANY",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 129807000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57692,
+        "name": "GENERAL MOTORS TRUST BANK, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 117856000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57388,
+        "name": "UBS TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 116667000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 23741,
+        "name": "WELLINGTON TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 92276000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 33884,
+        "name": "SOUTHWEST TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 54960000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 35317,
+        "name": "GLENMEDE TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 50338000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57204,
+        "name": "LEHMAN BROTHERS TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 49739000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 25677,
+        "name": "CITICORP TRUST, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 47217000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 34813,
+        "name": "U.S. BANK TRUST NATIONAL ASSOCIATION SD",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 44197000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 58335,
+        "name": "CITIGROUP TRUST - DELAWARE, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 40425000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57019,
+        "name": "FULTON FINANCIAL ADVISORS, N. A.",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 38037000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 58752,
+        "name": "WESTERN CAPITAL BANK",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 35746000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 33962,
+        "name": "SYNOVUS TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 32742000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 58783,
+        "name": "OAKWORTH CAPITAL BANK",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 32338000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57337,
+        "name": "THE GOLDMAN SACHS TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 29803000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57573,
+        "name": "FIRST MERCHANTS TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 26055000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 24938,
+        "name": "STATE STREET BANK AND TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 25476000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 34629,
+        "name": "COMPUTERSHARE TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 22710000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 27102,
+        "name": "ASSOCIATED TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 22212000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57304,
+        "name": "VANGUARD NATIONAL TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 20955000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 58564,
+        "name": "FLUSHING COMMERCIAL BANK",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 20218000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 91385,
+        "name": "KEYTRUST COMPANY NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 14978000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 26474,
+        "name": "STATE STREET BANK AND TRUST COMPANY OF CALIFORNIA, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 14829000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 34057,
+        "name": "THE PRIVATE TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 14366000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57638,
+        "name": "WESTERN NATIONAL TRUST COMPANY",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 14203000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57422,
+        "name": "CITIZENS BANK WEALTH MANAGEMENT, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 13364000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 33597,
+        "name": "ACADIA TRUST, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 13125000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 25824,
+        "name": "BROWN BROTHERS HARRIMAN TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 12665000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 33001,
+        "name": "OLD NATIONAL TRUST COMPANY",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 12545000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57380,
+        "name": "LEGACY TRUST COMPANY, N.A.",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 12101000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 34588,
+        "name": "U.S. BANK TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 12087000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 58267,
+        "name": "MARLIN BUSINESS BANK",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 12012000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 33453,
+        "name": "AMCORE INVESTMENT GROUP NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 11974000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57628,
+        "name": "MORGAN STANLEY TRUST NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 10802000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57405,
+        "name": "SECURIAN TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 10694000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 33915,
+        "name": "NATIONAL PENN INVESTORS TRUST COMPANY",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 9245000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 27479,
+        "name": "FIRST FINANCIAL TRUST, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 9197000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 33573,
+        "name": "NORTHERN TRUST COMPANY OF NEW YORK",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 7976000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57793,
+        "name": "FIRST NATIONAL TRUST COMPANY",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 7566000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 35579,
+        "name": "ING NATIONAL TRUST",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 7056000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 27120,
+        "name": "BREMER TRUST, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 6841000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 33879,
+        "name": "RAYMOND JAMES TRUST, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 6758000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 35063,
+        "name": "WAYNE HUMMER TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 6521000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 58011,
+        "name": "BESSEMER TRUST COMPANY OF DELAWARE, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 6308000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 35534,
+        "name": "UNIFIED TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 6078000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57852,
+        "name": "MERCANTIL COMMERCEBANK TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 6062000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 34732,
+        "name": "NEW COVENANT TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 6003000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 35424,
+        "name": "BANK OF AMERICA TRUST COMPANY OF DELAWARE, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 5850000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 33196,
+        "name": "NATIONAL INDEPENDENT TRUST COMPANY",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 5782000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 35248,
+        "name": "OLD POINT TRUST & FINANCIAL SERVICES, N.A.",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 5688000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57407,
+        "name": "FAMILY CAPITAL TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 4754000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57402,
+        "name": "COUNTRY CLUB TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 4544000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 34212,
+        "name": "FIRST CITIZENS TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 4430000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57757,
+        "name": "FIRST FINANCIAL TRUST & ASSET MANAGEMENT COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 4127000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57755,
+        "name": "WELLS FARGO ALASKA TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 4093000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 35413,
+        "name": "BESSEMER TRUST COMPANY OF CALIFORNIA, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 3922000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 33239,
+        "name": "THE TRUST COMPANY OF TOLEDO, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 3586000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57179,
+        "name": "FIRST COMMUNITY TRUST, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 3576000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 32911,
+        "name": "WOODTRUST ASSET MANAGEMENT, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 3517000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57081,
+        "name": "SECURITY NATIONAL TRUST CO.",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 3337000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57150,
+        "name": "WHEATON COLLEGE TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 3158000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 34376,
+        "name": "HORIZON TRUST & INVESTMENT MANAGEMENT, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 3073000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 34065,
+        "name": "UMB BANK AND TRUST, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 3000000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 34988,
+        "name": "INVESTRUST, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 2994000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 34754,
+        "name": "CONGRESS TRUST, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 2976000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 33148,
+        "name": "ARVEST TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 2891000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 35199,
+        "name": "CAMBRIDGE APPLETON TRUST, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 2882000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 35137,
+        "name": "KING TRUST COMPANY, NA",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 2364000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 58527,
+        "name": "LASALLE NATIONAL TRUST DELAWARE",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 2287000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 35526,
+        "name": "SIMMONS FIRST TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 1905000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 58748,
+        "name": "VNBTRUST, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 1876000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 26378,
+        "name": "MELLON SECURITIES TRUST COMPANY",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 1584000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 90641,
+        "name": "NEW ENGLAND TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0,
+        "total_assets": 1474000.0,
+        "total_deposits": 0.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 58032,
+        "name": "BANK OF AMERICA, RHODE ISLAND, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0014,
+        "total_assets": 35790853000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 25178,
+        "name": "BANK OF AMERICA CALIFORNIA, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0026,
+        "total_assets": 18878893000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 35453,
+        "name": "BANK OF AMERICA OREGON, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0047,
+        "total_assets": 10697284000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 58496,
+        "name": "WACHOVIA CARD SERVICES, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0303,
+        "total_assets": 2224485000.0,
+        "total_deposits": 675000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 33863,
+        "name": "HSBC BANK NEVADA, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.032,
+        "total_assets": 1733846000.0,
+        "total_deposits": 554000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 23472,
+        "name": "THE BANK OF NEW YORK TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0696,
+        "total_assets": 1705546000.0,
+        "total_deposits": 1187000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 27389,
+        "name": "WELLS FARGO FINANCIAL NATIONAL BANK",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.0888,
+        "total_assets": 2595793000.0,
+        "total_deposits": 2304000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 24206,
+        "name": "PUTNAM FIDUCIARY TRUST COMPANY",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.1123,
+        "total_assets": 445175000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 23472,
+        "name": "THE BANK OF NEW YORK MELLON TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.1393,
+        "total_assets": 1502758000.0,
+        "total_deposits": 2093000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57969,
+        "name": "TOWN NORTH BANK NEVADA, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.1517,
+        "total_assets": 329666000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 34696,
+        "name": "J. P. MORGAN TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.1662,
+        "total_assets": 301508000.0,
+        "total_deposits": 501000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 91325,
+        "name": "CIBC NATIONAL TRUST COMPANY",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.1793,
+        "total_assets": 342946000.0,
+        "total_deposits": 615000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 58722,
+        "name": "MEADOWS BANK",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.1847,
+        "total_assets": 40073000.0,
+        "total_deposits": 74000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 32534,
+        "name": "UNIVERSAL SAVINGS BANK FA",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.1956,
+        "total_assets": 5113000.0,
+        "total_deposits": 10000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 35388,
+        "name": "SEI PRIVATE TRUST COMPANY",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.24,
+        "total_assets": 208316000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57203,
+        "name": "BARCLAYS BANK DELAWARE",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.2566,
+        "total_assets": 7125125000.0,
+        "total_deposits": 18283000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 91325,
+        "name": "INVESCO NATIONAL TRUST COMPANY",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.267,
+        "total_assets": 187256000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 34710,
+        "name": "NATIONWIDE TRUST COMPANY, FSB",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.3301,
+        "total_assets": 151480000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 35164,
+        "name": "CAPITAL BANK AND TRUST COMPANY",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.3453,
+        "total_assets": 144804000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 25890,
+        "name": "WELLS FARGO BANK, LTD.",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.3574,
+        "total_assets": 301047000.0,
+        "total_deposits": 1076000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 35164,
+        "name": "CAPITAL BANK AND TRUST COMPANY",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.3924,
+        "total_assets": 127407000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 28390,
+        "name": "EDWARD JONES TRUST COMPANY",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.4235,
+        "total_assets": 118056000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 34780,
+        "name": "BB&T BANKCARD CORPORATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.4687,
+        "total_assets": 146793000.0,
+        "total_deposits": 688000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 33785,
+        "name": "LEGG MASON INVESTMENT COUNSEL & TRUST COMPANY, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.4894,
+        "total_assets": 114419000.0,
+        "total_deposits": 560000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57117,
+        "name": "BANK OF AMERICA GEORGIA, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.5386,
+        "total_assets": 92839000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 34590,
+        "name": "U.S. BANK NATIONAL ASSOCIATION ND",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.5456,
+        "total_assets": 5306028000.0,
+        "total_deposits": 28949000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 35388,
+        "name": "SEI PRIVATE TRUST COMPANY",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.6115,
+        "total_assets": 81761000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 1596,
+        "name": "COMERICA BANK & TRUST, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.6642,
+        "total_assets": 76187000.0,
+        "total_deposits": 506000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 35206,
+        "name": "FIDELITY PERSONAL TRUST COMPANY, FSB",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.7691,
+        "total_assets": 65008000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 21761,
+        "name": "JPMORGAN CHASE BANK, DEARBORN",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.7947,
+        "total_assets": 62920000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 35018,
+        "name": "A.G. EDWARDS TRUST COMPANY, FSB",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.7979,
+        "total_assets": 62668000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 21761,
+        "name": "JPMORGAN CHASE BANK, DEARBORN",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.8092,
+        "total_assets": 62778000.0,
+        "total_deposits": 508000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 18342,
+        "name": "BOSTON TRUST WALDEN COMPANY",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.8781,
+        "total_assets": 56938000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 58188,
+        "name": "HSBC TRUST COMPANY (DELAWARE), NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 0.8894,
+        "total_assets": 56215000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57470,
+        "name": "MEMBERS TRUST COMPANY",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 1.1867,
+        "total_assets": 42132000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 35228,
+        "name": "ESCROW BANK USA",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 1.2135,
+        "total_assets": 42274000.0,
+        "total_deposits": 513000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 18342,
+        "name": "BOSTON TRUST & INVESTMENT MANAGEMENT COMPANY",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 1.2293,
+        "total_assets": 40675000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 33855,
+        "name": "CREDIT FIRST NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 1.3154,
+        "total_assets": 38012000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57093,
+        "name": "NORTHWESTERN MUTUAL WEALTH MANAGEMENT",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 1.3789,
+        "total_assets": 37566000.0,
+        "total_deposits": 518000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 34069,
+        "name": "WILMINGTON TRUST, NATIONAL ASSOCIATION",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 1.3793,
+        "total_assets": 691947000.0,
+        "total_deposits": 9544000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 28390,
+        "name": "EDWARD JONES TRUST COMPANY",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 1.3916,
+        "total_assets": 35929000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57470,
+        "name": "MEMBERS TRUST COMPANY",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 1.7025,
+        "total_assets": 29369000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 35602,
+        "name": "COUNTRY TRUST BANK",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 2.1244,
+        "total_assets": 29232000.0,
+        "total_deposits": 621000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 35602,
+        "name": "COUNTRY TRUST BANK",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 2.1778,
+        "total_assets": 31224000.0,
+        "total_deposits": 680000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 59289,
+        "name": "WALDEN MUTUAL BANK",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 2.3135,
+        "total_assets": 22693000.0,
+        "total_deposits": 525000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57160,
+        "name": "NATIONAL ADVISORS TRUST COMPANY",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 2.411,
+        "total_assets": 20738000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 26392,
+        "name": "DEUTSCHE BANK TRUST COMPANY DELAWARE",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 2.4414,
+        "total_assets": 122878000.0,
+        "total_deposits": 3000000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 33649,
+        "name": "INDUSTRIAL BANK OF KOREA",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 2.5166,
+        "total_assets": 301039000.0,
+        "total_deposits": 7576000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 35206,
+        "name": "FIDELITY PERSONAL TRUST COMPANY, FSB",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 2.5404,
+        "total_assets": 19682000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 23826,
+        "name": "BANK OF JACKSON HOLE TRUST",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 2.5476,
+        "total_assets": 39252000.0,
+        "total_deposits": 1000000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 34723,
+        "name": "TIAA-CREF TRUST COMPANY, FSB",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 2.8115,
+        "total_assets": 17784000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 33778,
+        "name": "GE CAPITAL FINANCIAL INC.",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 2.9755,
+        "total_assets": 2733979000.0,
+        "total_deposits": 81350000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 27575,
+        "name": "BANK OF NEW CASTLE",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 3.0288,
+        "total_assets": 16508000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 33693,
+        "name": "MASHREQBANK, PSC",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 3.0463,
+        "total_assets": 282767000.0,
+        "total_deposits": 8614000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57833,
+        "name": "BEAL BANK NEVADA",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 3.0783,
+        "total_assets": 1755318000.0,
+        "total_deposits": 54034000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 58687,
+        "name": "TOUCHMARK NATIONAL BANK",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 3.0785,
+        "total_assets": 29560000.0,
+        "total_deposits": 910000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 35394,
+        "name": "THE MASSMUTUAL TRUST COMPANY, F.S.B.",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 3.1718,
+        "total_assets": 15764000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 33891,
+        "name": "WASHINGTON MUTUAL BANK FSB",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 3.2444,
+        "total_assets": 44305153000.0,
+        "total_deposits": 1437417000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 1596,
+        "name": "COMERICA BANK & TRUST, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 3.3028,
+        "total_assets": 16259000.0,
+        "total_deposits": 537000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57840,
+        "name": "ALABAMA BANKER'S BANK, N.A.",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 3.4689,
+        "total_assets": 263138000.0,
+        "total_deposits": 9128000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 33649,
+        "name": "INDUSTRIAL BANK OF KOREA",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 3.5821,
+        "total_assets": 386697000.0,
+        "total_deposits": 13852000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 34075,
+        "name": "WELLS FARGO HSBC TRADE BANK, NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 3.5889,
+        "total_assets": 1849928000.0,
+        "total_deposits": 66392000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 57109,
+        "name": "EVERENCE TRUST COMPANY",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 3.8136,
+        "total_assets": 13111000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 26983,
+        "name": "WELLS FARGO FINANCIAL BANK",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 3.9552,
+        "total_assets": 5806316000.0,
+        "total_deposits": 229649000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 58462,
+        "name": "CAPITAL BANK",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 3.959,
+        "total_assets": 16115000.0,
+        "total_deposits": 638000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 33855,
+        "name": "CREDIT FIRST NATIONAL ASSOCIATION",
+        "quarter": "2008Q1",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 4.5245,
+        "total_assets": 11051000.0,
+        "total_deposits": 500000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      },
+      {
+        "cert": 26028,
+        "name": "THE BANK OF EAST ASIA LTD.",
+        "quarter": "2022Q4",
+        "rule": "not_deposit_funded",
+        "deposits_to_assets_pct": 4.5808,
+        "total_assets": 421888000.0,
+        "total_deposits": 19326000.0,
+        "threshold_pct": 5.0,
+        "reason": "Deposits are under 5.00% of assets \u2014 a trust, custody, clearing or card-subsidiary charter rather than a deposit-funded bank, so deposit-run analytics do not apply."
+      }
+    ]
+  },
+  "leave_one_out": [
+    {
+      "cert": 8758,
+      "name": "CITIZENS BANK",
+      "risk": 0.2972,
+      "rank": 8271,
+      "n": 13160,
+      "percentile": 37.2
+    },
+    {
+      "cert": 25851,
+      "name": "HEARTLAND TRI-STATE BANK",
+      "risk": 0.5125,
+      "rank": 3382,
+      "n": 13160,
+      "percentile": 74.3
+    },
+    {
+      "cert": 59017,
+      "name": "FIRST REPUBLIC BANK",
+      "risk": 0.6698,
+      "rank": 1166,
+      "n": 13160,
+      "percentile": 91.1
+    },
+    {
+      "cert": 57053,
+      "name": "SIGNATURE BANK",
+      "risk": 0.5345,
+      "rank": 3007,
+      "n": 13160,
+      "percentile": 77.2
+    },
+    {
+      "cert": 24735,
+      "name": "SILICON VALLEY BANK",
+      "risk": 0.861,
+      "rank": 184,
+      "n": 13160,
+      "percentile": 98.6
+    },
+    {
+      "cert": 35379,
+      "name": "HAVEN TRUST BANK",
+      "risk": 0.5708,
+      "rank": 2250,
+      "n": 13160,
+      "percentile": 82.9
+    },
+    {
+      "cert": 11568,
+      "name": "SANDERSON STATE BANK",
+      "risk": 0.874,
+      "rank": 176,
+      "n": 13160,
+      "percentile": 98.7
+    },
+    {
+      "cert": 34301,
+      "name": "FIRST GEORGIA COMMUNITY BANK",
+      "risk": 0.5423,
+      "rank": 2721,
+      "n": 13160,
+      "percentile": 79.3
+    },
+    {
+      "cert": 30968,
+      "name": "DOWNEY SAVINGS AND LOAN ASSOCIATION, F.A.",
+      "risk": 0.1334,
+      "rank": 12434,
+      "n": 13160,
+      "percentile": 5.5
+    },
+    {
+      "cert": 28344,
+      "name": "PFF BANK & TRUST",
+      "risk": 0.4474,
+      "rank": 4813,
+      "n": 13160,
+      "percentile": 63.4
+    },
+    {
+      "cert": 16490,
+      "name": "THE COMMUNITY BANK",
+      "risk": 0.8205,
+      "rank": 302,
+      "n": 13160,
+      "percentile": 97.7
+    },
+    {
+      "cert": 26870,
+      "name": "FRANKLIN BANK, SSB",
+      "risk": 0.3462,
+      "rank": 7936,
+      "n": 13160,
+      "percentile": 39.7
+    },
+    {
+      "cert": 23595,
+      "name": "SECURITY PACIFIC BANK",
+      "risk": 0.8366,
+      "rank": 272,
+      "n": 13160,
+      "percentile": 97.9
+    },
+    {
+      "cert": 57930,
+      "name": "FREEDOM BANK",
+      "risk": 0.6212,
+      "rank": 1597,
+      "n": 13160,
+      "percentile": 87.9
+    },
+    {
+      "cert": 58241,
+      "name": "ALPHA BANK & TRUST",
+      "risk": 0.5374,
+      "rank": 2801,
+      "n": 13160,
+      "percentile": 78.7
+    },
+    {
+      "cert": 57654,
+      "name": "MAIN STREET BANK",
+      "risk": 0.8284,
+      "rank": 283,
+      "n": 13160,
+      "percentile": 97.9
+    },
+    {
+      "cert": 13789,
+      "name": "MERIDIAN BANK",
+      "risk": 0.2688,
+      "rank": 9955,
+      "n": 13160,
+      "percentile": 24.4
+    },
+    {
+      "cert": 6782,
+      "name": "AMERIBANK, INC.",
+      "risk": 0.5186,
+      "rank": 3134,
+      "n": 13160,
+      "percentile": 76.2
+    },
+    {
+      "cert": 34194,
+      "name": "SILVER STATE BANK",
+      "risk": 0.8301,
+      "rank": 286,
+      "n": 13160,
+      "percentile": 97.8
+    },
+    {
+      "cert": 35469,
+      "name": "INTEGRITY BANK",
+      "risk": 0.4135,
+      "rank": 5820,
+      "n": 13160,
+      "percentile": 55.8
+    },
+    {
+      "cert": 22728,
+      "name": "THE COLUMBIAN BANK AND TRUST COMPANY",
+      "risk": 0.556,
+      "rank": 2488,
+      "n": 13160,
+      "percentile": 81.1
+    },
+    {
+      "cert": 57523,
+      "name": "FIRST PRIORITY BANK",
+      "risk": 0.296,
+      "rank": 9250,
+      "n": 13160,
+      "percentile": 29.7
+    },
+    {
+      "cert": 57961,
+      "name": "FIRST HERITAGE BANK N.A.",
+      "risk": 0.7621,
+      "rank": 513,
+      "n": 13160,
+      "percentile": 96.1
+    },
+    {
+      "cert": 27011,
+      "name": "FIRST NATIONAL BANK OF NEVADA",
+      "risk": 0.8491,
+      "rank": 229,
+      "n": 13160,
+      "percentile": 98.3
+    },
+    {
+      "cert": 29730,
+      "name": "INDYMAC BANK F.S.B",
+      "risk": 0.3278,
+      "rank": 8663,
+      "n": 13160,
+      "percentile": 34.2
+    },
+    {
+      "cert": 12736,
+      "name": "FIRST INTEGRITY BANK, N.A.",
+      "risk": 0.4471,
+      "rank": 4930,
+      "n": 13160,
+      "percentile": 62.5
+    },
+    {
+      "cert": 33901,
+      "name": "ANB FINANCIAL NATIONAL ASSOCIATION",
+      "risk": 0.4806,
+      "rank": 4021,
+      "n": 13160,
+      "percentile": 69.5
+    }
+  ],
+  "imputation_rates": {
+    "uninsured_deposit_pct": 0.0,
+    "htm_to_equity": 0.38,
+    "securities_to_assets": 0.0,
+    "loan_to_deposit_pct": 0.0,
+    "deposit_growth_1yr": 88.43
+  },
+  "bootstrap": {
+    "n_boot": 40,
+    "n_boot_used": 40,
+    "coefficients": {
+      "uninsured_deposit_pct": {
+        "lo": 0.1323,
+        "median": 0.4539,
+        "hi": 0.854
+      },
+      "htm_to_equity": {
+        "lo": -0.8997,
+        "median": -0.0334,
+        "hi": 0.7655
+      },
+      "securities_to_assets": {
+        "lo": -1.4228,
+        "median": -0.8461,
+        "hi": -0.3329
+      },
+      "loan_to_deposit_pct": {
+        "lo": -1.0769,
+        "median": -0.5498,
+        "hi": 0.0662
+      },
+      "deposit_growth_1yr": {
+        "lo": -0.0829,
+        "median": 0.4336,
+        "hi": 1.3496
+      }
+    },
+    "bias": {
+      "lo": -0.7411,
+      "median": -0.4059,
+      "hi": -0.12
+    },
+    "auc": {
+      "lo": 0.6702,
+      "median": 0.7152,
+      "hi": 0.7318
+    }
+  },
+  "pr_curve": [
+    {
+      "threshold": 1.0,
+      "precision": null,
+      "recall": 0.0,
+      "tp": 0,
+      "fp": 0
+    },
+    {
+      "threshold": 0.9,
+      "precision": 0.0,
+      "recall": 0.0,
+      "tp": 0,
+      "fp": 128
+    },
+    {
+      "threshold": 0.844,
+      "precision": 0.0115,
+      "recall": 0.0968,
+      "tp": 3,
+      "fp": 257
+    },
+    {
+      "threshold": 0.7982,
+      "precision": 0.0177,
+      "recall": 0.2258,
+      "tp": 7,
+      "fp": 389
+    },
+    {
+      "threshold": 0.7636,
+      "precision": 0.0149,
+      "recall": 0.2581,
+      "tp": 8,
+      "fp": 528
+    },
+    {
+      "threshold": 0.7359,
+      "precision": 0.0118,
+      "recall": 0.2581,
+      "tp": 8,
+      "fp": 671
+    },
+    {
+      "threshold": 0.7112,
+      "precision": 0.0096,
+      "recall": 0.2581,
+      "tp": 8,
+      "fp": 826
+    },
+    {
+      "threshold": 0.6897,
+      "precision": 0.0091,
+      "recall": 0.2903,
+      "tp": 9,
+      "fp": 981
+    },
+    {
+      "threshold": 0.6704,
+      "precision": 0.0086,
+      "recall": 0.3226,
+      "tp": 10,
+      "fp": 1152
+    },
+    {
+      "threshold": 0.6506,
+      "precision": 0.0075,
+      "recall": 0.3226,
+      "tp": 10,
+      "fp": 1331
+    },
+    {
+      "threshold": 0.6317,
+      "precision": 0.0072,
+      "recall": 0.3548,
+      "tp": 11,
+      "fp": 1511
+    },
+    {
+      "threshold": 0.6139,
+      "precision": 0.0076,
+      "recall": 0.4194,
+      "tp": 13,
+      "fp": 1704
+    },
+    {
+      "threshold": 0.5974,
+      "precision": 0.0068,
+      "recall": 0.4194,
+      "tp": 13,
+      "fp": 1910
+    },
+    {
+      "threshold": 0.5823,
+      "precision": 0.0061,
+      "recall": 0.4194,
+      "tp": 13,
+      "fp": 2115
+    },
+    {
+      "threshold": 0.5672,
+      "precision": 0.0059,
+      "recall": 0.4516,
+      "tp": 14,
+      "fp": 2343
+    },
+    {
+      "threshold": 0.5521,
+      "precision": 0.0065,
+      "recall": 0.5484,
+      "tp": 17,
+      "fp": 2597
+    },
+    {
+      "threshold": 0.5384,
+      "precision": 0.007,
+      "recall": 0.6452,
+      "tp": 20,
+      "fp": 2824
+    },
+    {
+      "threshold": 0.5249,
+      "precision": 0.0065,
+      "recall": 0.6452,
+      "tp": 20,
+      "fp": 3071
+    },
+    {
+      "threshold": 0.512,
+      "precision": 0.0062,
+      "recall": 0.6774,
+      "tp": 21,
+      "fp": 3351
+    },
+    {
+      "threshold": 0.4994,
+      "precision": 0.006,
+      "recall": 0.7097,
+      "tp": 22,
+      "fp": 3659
+    },
+    {
+      "threshold": 0.4858,
+      "precision": 0.0055,
+      "recall": 0.7097,
+      "tp": 22,
+      "fp": 3966
+    },
+    {
+      "threshold": 0.4733,
+      "precision": 0.0054,
+      "recall": 0.7419,
+      "tp": 23,
+      "fp": 4258
+    },
+    {
+      "threshold": 0.4606,
+      "precision": 0.0054,
+      "recall": 0.8065,
+      "tp": 25,
+      "fp": 4595
+    },
+    {
+      "threshold": 0.4483,
+      "precision": 0.005,
+      "recall": 0.8065,
+      "tp": 25,
+      "fp": 4954
+    },
+    {
+      "threshold": 0.436,
+      "precision": 0.0047,
+      "recall": 0.8065,
+      "tp": 25,
+      "fp": 5298
+    },
+    {
+      "threshold": 0.4235,
+      "precision": 0.0046,
+      "recall": 0.8387,
+      "tp": 26,
+      "fp": 5675
+    },
+    {
+      "threshold": 0.4107,
+      "precision": 0.0043,
+      "recall": 0.8387,
+      "tp": 26,
+      "fp": 6024
+    },
+    {
+      "threshold": 0.3986,
+      "precision": 0.004,
+      "recall": 0.8387,
+      "tp": 26,
+      "fp": 6426
+    },
+    {
+      "threshold": 0.3862,
+      "precision": 0.0038,
+      "recall": 0.8387,
+      "tp": 26,
+      "fp": 6824
+    },
+    {
+      "threshold": 0.3737,
+      "precision": 0.0037,
+      "recall": 0.871,
+      "tp": 27,
+      "fp": 7250
+    },
+    {
+      "threshold": 0.3615,
+      "precision": 0.0035,
+      "recall": 0.871,
+      "tp": 27,
+      "fp": 7640
+    },
+    {
+      "threshold": 0.3497,
+      "precision": 0.0034,
+      "recall": 0.871,
+      "tp": 27,
+      "fp": 8016
+    },
+    {
+      "threshold": 0.3377,
+      "precision": 0.0032,
+      "recall": 0.871,
+      "tp": 27,
+      "fp": 8390
+    },
+    {
+      "threshold": 0.3256,
+      "precision": 0.0031,
+      "recall": 0.871,
+      "tp": 27,
+      "fp": 8757
+    },
+    {
+      "threshold": 0.3134,
+      "precision": 0.003,
+      "recall": 0.9032,
+      "tp": 28,
+      "fp": 9161
+    },
+    {
+      "threshold": 0.3011,
+      "precision": 0.0029,
+      "recall": 0.9032,
+      "tp": 28,
+      "fp": 9515
+    },
+    {
+      "threshold": 0.2886,
+      "precision": 0.0029,
+      "recall": 0.9355,
+      "tp": 29,
+      "fp": 9889
+    },
+    {
+      "threshold": 0.2768,
+      "precision": 0.0028,
+      "recall": 0.9355,
+      "tp": 29,
+      "fp": 10252
+    },
+    {
+      "threshold": 0.2649,
+      "precision": 0.0027,
+      "recall": 0.9355,
+      "tp": 29,
+      "fp": 10595
+    },
+    {
+      "threshold": 0.2519,
+      "precision": 0.0027,
+      "recall": 0.9355,
+      "tp": 29,
+      "fp": 10902
+    },
+    {
+      "threshold": 0.2383,
+      "precision": 0.0026,
+      "recall": 0.9355,
+      "tp": 29,
+      "fp": 11198
+    },
+    {
+      "threshold": 0.2243,
+      "precision": 0.0025,
+      "recall": 0.9355,
+      "tp": 29,
+      "fp": 11449
+    },
+    {
+      "threshold": 0.2108,
+      "precision": 0.0026,
+      "recall": 0.9677,
+      "tp": 30,
+      "fp": 11685
+    },
+    {
+      "threshold": 0.1966,
+      "precision": 0.0026,
+      "recall": 1.0,
+      "tp": 31,
+      "fp": 11935
+    },
+    {
+      "threshold": 0.1815,
+      "precision": 0.0025,
+      "recall": 1.0,
+      "tp": 31,
+      "fp": 12152
+    },
+    {
+      "threshold": 0.1663,
+      "precision": 0.0025,
+      "recall": 1.0,
+      "tp": 31,
+      "fp": 12357
+    },
+    {
+      "threshold": 0.1466,
+      "precision": 0.0025,
+      "recall": 1.0,
+      "tp": 31,
+      "fp": 12528
+    },
+    {
+      "threshold": 0.1278,
+      "precision": 0.0024,
+      "recall": 1.0,
+      "tp": 31,
+      "fp": 12693
+    },
+    {
+      "threshold": 0.1029,
+      "precision": 0.0024,
+      "recall": 1.0,
+      "tp": 31,
+      "fp": 12848
+    },
+    {
+      "threshold": 0.0661,
+      "precision": 0.0024,
+      "recall": 1.0,
+      "tp": 31,
+      "fp": 12998
+    }
+  ],
+  "roc_curve": [
+    {
+      "threshold": null,
+      "fpr": 0.0,
+      "tpr": 0.0,
+      "tp": 0,
+      "fp": 0
+    },
+    {
+      "threshold": 1.0,
+      "fpr": 0.0,
+      "tpr": 0.0,
+      "tp": 0,
+      "fp": 0
+    },
+    {
+      "threshold": 0.9,
+      "fpr": 0.0097,
+      "tpr": 0.0,
+      "tp": 0,
+      "fp": 128
+    },
+    {
+      "threshold": 0.844,
+      "fpr": 0.0196,
+      "tpr": 0.0968,
+      "tp": 3,
+      "fp": 257
+    },
+    {
+      "threshold": 0.7982,
+      "fpr": 0.0296,
+      "tpr": 0.2258,
+      "tp": 7,
+      "fp": 389
+    },
+    {
+      "threshold": 0.7636,
+      "fpr": 0.0402,
+      "tpr": 0.2581,
+      "tp": 8,
+      "fp": 528
+    },
+    {
+      "threshold": 0.7359,
+      "fpr": 0.0511,
+      "tpr": 0.2581,
+      "tp": 8,
+      "fp": 671
+    },
+    {
+      "threshold": 0.7112,
+      "fpr": 0.0629,
+      "tpr": 0.2581,
+      "tp": 8,
+      "fp": 826
+    },
+    {
+      "threshold": 0.6897,
+      "fpr": 0.0747,
+      "tpr": 0.2903,
+      "tp": 9,
+      "fp": 981
+    },
+    {
+      "threshold": 0.6704,
+      "fpr": 0.0877,
+      "tpr": 0.3226,
+      "tp": 10,
+      "fp": 1152
+    },
+    {
+      "threshold": 0.6506,
+      "fpr": 0.1014,
+      "tpr": 0.3226,
+      "tp": 10,
+      "fp": 1331
+    },
+    {
+      "threshold": 0.6317,
+      "fpr": 0.1151,
+      "tpr": 0.3548,
+      "tp": 11,
+      "fp": 1511
+    },
+    {
+      "threshold": 0.6139,
+      "fpr": 0.1298,
+      "tpr": 0.4194,
+      "tp": 13,
+      "fp": 1704
+    },
+    {
+      "threshold": 0.5974,
+      "fpr": 0.1455,
+      "tpr": 0.4194,
+      "tp": 13,
+      "fp": 1910
+    },
+    {
+      "threshold": 0.5823,
+      "fpr": 0.1611,
+      "tpr": 0.4194,
+      "tp": 13,
+      "fp": 2115
+    },
+    {
+      "threshold": 0.5672,
+      "fpr": 0.1785,
+      "tpr": 0.4516,
+      "tp": 14,
+      "fp": 2343
+    },
+    {
+      "threshold": 0.5521,
+      "fpr": 0.1978,
+      "tpr": 0.5484,
+      "tp": 17,
+      "fp": 2597
+    },
+    {
+      "threshold": 0.5384,
+      "fpr": 0.2151,
+      "tpr": 0.6452,
+      "tp": 20,
+      "fp": 2824
+    },
+    {
+      "threshold": 0.5249,
+      "fpr": 0.2339,
+      "tpr": 0.6452,
+      "tp": 20,
+      "fp": 3071
+    },
+    {
+      "threshold": 0.512,
+      "fpr": 0.2552,
+      "tpr": 0.6774,
+      "tp": 21,
+      "fp": 3351
+    },
+    {
+      "threshold": 0.4994,
+      "fpr": 0.2787,
+      "tpr": 0.7097,
+      "tp": 22,
+      "fp": 3659
+    },
+    {
+      "threshold": 0.4858,
+      "fpr": 0.3021,
+      "tpr": 0.7097,
+      "tp": 22,
+      "fp": 3966
+    },
+    {
+      "threshold": 0.4733,
+      "fpr": 0.3243,
+      "tpr": 0.7419,
+      "tp": 23,
+      "fp": 4258
+    },
+    {
+      "threshold": 0.4606,
+      "fpr": 0.35,
+      "tpr": 0.8065,
+      "tp": 25,
+      "fp": 4595
+    },
+    {
+      "threshold": 0.4483,
+      "fpr": 0.3773,
+      "tpr": 0.8065,
+      "tp": 25,
+      "fp": 4954
+    },
+    {
+      "threshold": 0.436,
+      "fpr": 0.4035,
+      "tpr": 0.8065,
+      "tp": 25,
+      "fp": 5298
+    },
+    {
+      "threshold": 0.4235,
+      "fpr": 0.4322,
+      "tpr": 0.8387,
+      "tp": 26,
+      "fp": 5675
+    },
+    {
+      "threshold": 0.4107,
+      "fpr": 0.4588,
+      "tpr": 0.8387,
+      "tp": 26,
+      "fp": 6024
+    },
+    {
+      "threshold": 0.3986,
+      "fpr": 0.4895,
+      "tpr": 0.8387,
+      "tp": 26,
+      "fp": 6426
+    },
+    {
+      "threshold": 0.3862,
+      "fpr": 0.5198,
+      "tpr": 0.8387,
+      "tp": 26,
+      "fp": 6824
+    },
+    {
+      "threshold": 0.3737,
+      "fpr": 0.5522,
+      "tpr": 0.871,
+      "tp": 27,
+      "fp": 7250
+    },
+    {
+      "threshold": 0.3615,
+      "fpr": 0.5819,
+      "tpr": 0.871,
+      "tp": 27,
+      "fp": 7640
+    },
+    {
+      "threshold": 0.3497,
+      "fpr": 0.6106,
+      "tpr": 0.871,
+      "tp": 27,
+      "fp": 8016
+    },
+    {
+      "threshold": 0.3377,
+      "fpr": 0.639,
+      "tpr": 0.871,
+      "tp": 27,
+      "fp": 8390
+    },
+    {
+      "threshold": 0.3256,
+      "fpr": 0.667,
+      "tpr": 0.871,
+      "tp": 27,
+      "fp": 8757
+    },
+    {
+      "threshold": 0.3134,
+      "fpr": 0.6978,
+      "tpr": 0.9032,
+      "tp": 28,
+      "fp": 9161
+    },
+    {
+      "threshold": 0.3011,
+      "fpr": 0.7247,
+      "tpr": 0.9032,
+      "tp": 28,
+      "fp": 9515
+    },
+    {
+      "threshold": 0.2886,
+      "fpr": 0.7532,
+      "tpr": 0.9355,
+      "tp": 29,
+      "fp": 9889
+    },
+    {
+      "threshold": 0.2768,
+      "fpr": 0.7809,
+      "tpr": 0.9355,
+      "tp": 29,
+      "fp": 10252
+    },
+    {
+      "threshold": 0.2649,
+      "fpr": 0.807,
+      "tpr": 0.9355,
+      "tp": 29,
+      "fp": 10595
+    },
+    {
+      "threshold": 0.2519,
+      "fpr": 0.8304,
+      "tpr": 0.9355,
+      "tp": 29,
+      "fp": 10902
+    },
+    {
+      "threshold": 0.2383,
+      "fpr": 0.8529,
+      "tpr": 0.9355,
+      "tp": 29,
+      "fp": 11198
+    },
+    {
+      "threshold": 0.2243,
+      "fpr": 0.872,
+      "tpr": 0.9355,
+      "tp": 29,
+      "fp": 11449
+    },
+    {
+      "threshold": 0.2108,
+      "fpr": 0.89,
+      "tpr": 0.9677,
+      "tp": 30,
+      "fp": 11685
+    },
+    {
+      "threshold": 0.1966,
+      "fpr": 0.9091,
+      "tpr": 1.0,
+      "tp": 31,
+      "fp": 11935
+    },
+    {
+      "threshold": 0.1815,
+      "fpr": 0.9256,
+      "tpr": 1.0,
+      "tp": 31,
+      "fp": 12152
+    },
+    {
+      "threshold": 0.1663,
+      "fpr": 0.9412,
+      "tpr": 1.0,
+      "tp": 31,
+      "fp": 12357
+    },
+    {
+      "threshold": 0.1466,
+      "fpr": 0.9542,
+      "tpr": 1.0,
+      "tp": 31,
+      "fp": 12528
+    },
+    {
+      "threshold": 0.1278,
+      "fpr": 0.9668,
+      "tpr": 1.0,
+      "tp": 31,
+      "fp": 12693
+    },
+    {
+      "threshold": 0.1029,
+      "fpr": 0.9786,
+      "tpr": 1.0,
+      "tp": 31,
+      "fp": 12848
+    },
+    {
+      "threshold": 0.0661,
+      "fpr": 0.99,
+      "tpr": 1.0,
+      "tp": 31,
+      "fp": 12998
+    },
+    {
+      "threshold": null,
+      "fpr": 1.0,
+      "tpr": 1.0,
+      "tp": 31,
+      "fp": 13129
+    }
+  ],
+  "calibration_curve": [
+    {
+      "mean_predicted": 0.1417,
+      "observed_rate": 0.0008,
+      "n": 1316
+    },
+    {
+      "mean_predicted": 0.2385,
+      "observed_rate": 0.0008,
+      "n": 1316
+    },
+    {
+      "mean_predicted": 0.2904,
+      "observed_rate": 0.0008,
+      "n": 1316
+    },
+    {
+      "mean_predicted": 0.3332,
+      "observed_rate": 0.0008,
+      "n": 1316
+    },
+    {
+      "mean_predicted": 0.3746,
+      "observed_rate": 0.0008,
+      "n": 1316
+    },
+    {
+      "mean_predicted": 0.4159,
+      "observed_rate": 0.0008,
+      "n": 1316
+    },
+    {
+      "mean_predicted": 0.4618,
+      "observed_rate": 0.0023,
+      "n": 1316
+    },
+    {
+      "mean_predicted": 0.517,
+      "observed_rate": 0.0038,
+      "n": 1316
+    },
+    {
+      "mean_predicted": 0.5963,
+      "observed_rate": 0.0053,
+      "n": 1316
+    },
+    {
+      "mean_predicted": 0.7638,
+      "observed_rate": 0.0076,
+      "n": 1316
+    }
+  ],
+  "card_hash": "a2d838f0742ec51d"
+}

@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom';
 import {
   Bar, BarChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts';
-import { motion } from 'motion/react';
 import { api } from '../api';
 import { chartColors } from '../colors';
+import { RECHARTS_ENTRANCE } from '../chartMotion';
+import { pct } from '../metricFormat';
+import { ChartTooltipShell } from '../components/ChartTooltip';
 import type { HistogramBin, MetricDistributionResult } from '../types';
 import { ExportCsvButton } from '../components/ExportCsvButton';
 import { BankSearch } from '../components/BankSearch';
@@ -39,7 +41,7 @@ const METRIC_OPTIONS: { group: string; options: { value: string; label: string }
 ];
 
 function fmt(v: number): string {
-  return `${v.toFixed(1)}%`;
+  return pct(v, 1);
 }
 
 function ordinal(n: number): string {
@@ -80,10 +82,10 @@ function ChartTooltipBox({ active, payload }: {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
   return (
-    <motion.div className="chart-tooltip" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.12 }}>
-      <div className="chart-tooltip-label">{fmt(d.lower)} – {fmt(d.upper)}</div>
-      <div className="chart-tooltip-value tabular">{d.count} bank{d.count === 1 ? '' : 's'}</div>
-    </motion.div>
+    <ChartTooltipShell
+      label={`${fmt(d.lower)} – ${fmt(d.upper)}`}
+      lines={[{ text: `${d.count} bank${d.count === 1 ? '' : 's'}` }]}
+    />
   );
 }
 
@@ -217,8 +219,7 @@ export function DistributionsPage() {
                     fill: colors.violet, fontSize: 10, position: 'insideTopLeft',
                   }} />
               )}
-              <Bar dataKey="count" radius={[3, 3, 0, 0]} fill={colors.blue}
-                animationDuration={600} animationEasing="ease-out" />
+              <Bar dataKey="count" radius={[3, 3, 0, 0]} fill={colors.blue} {...RECHARTS_ENTRANCE} />
             </BarChart>
           </ResponsiveContainer>
 

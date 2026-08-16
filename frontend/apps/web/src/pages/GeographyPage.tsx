@@ -54,15 +54,26 @@ export function GeographyPage() {
       {result && (
         <div className="panel">
           <div className="geography-stats">
-            <div className="geography-stat"><span className="muted">Branches shown</span><span className="tabular">{result.branch_count.toLocaleString()}</span></div>
-            <div className="geography-stat"><span className="muted">Banks represented</span><span className="tabular">{Object.keys(result.bank_names).length.toLocaleString()}</span></div>
+            <div className="geography-stat"><span className="muted">Branches represented</span><span className="tabular">{result.branch_count.toLocaleString()}</span></div>
+            <div className="geography-stat">
+              <span className="muted">Banks represented</span>
+              <span className="tabular">
+                {result.aggregated ? 'select a state' : Object.keys(result.bank_names).length.toLocaleString()}
+              </span>
+            </div>
             <div className="geography-stat"><span className="muted">Not shown (territories + bad coords)</span><span className="tabular">{result.excluded_non_contiguous.toLocaleString()}</span></div>
             <div className="geography-stat"><span className="muted">Branch data as of</span><span className="tabular">{fmtSodVintage(result.sod_vintage)}</span></div>
           </div>
+          {result.aggregated && (
+            <p className="muted geography-subtitle">
+              Showing county-level aggregates ({result.cells.length.toLocaleString()} counties/cells) —
+              select a state above for individual branch points.
+            </p>
+          )}
           {loading ? (
             <div className="geography-loading muted">Loading…</div>
           ) : (
-            <BranchMapCanvas branches={result.branches} bankNames={result.bank_names} height={520} />
+            <BranchMapCanvas branches={result.branches} cells={result.cells} bankNames={result.bank_names} height={520} />
           )}
         </div>
       )}

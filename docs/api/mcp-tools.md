@@ -1,6 +1,6 @@
 # MCP tool registry
 
-The MCP server (`services/mcp-server`) exposes 42 tools — every one is a thin
+The MCP server (`services/mcp-server`) exposes 46 tools — every one is a thin
 wrapper: read Gold/feature functions, return a JSON-serialisable result. The
 exact same functions power the ingestion/transforms CLIs and the REST bridge
 (`services/api-gateway`), so there is one implementation of every feature, not
@@ -19,6 +19,12 @@ enforced per-call inside the MCP server itself
 (`platform/auth/opa/policy.rego`) the REST bridge evaluates its routes
 against — see `platform/auth/README.md`. `services/mcp-server/tests/test_authz.py`
 fails CI if this file's tiers ever drift from the Rego source of truth.
+
+A tool listed below as **UNTIERED** is missing from `MCP_TOOL_TIERS` entirely
+right now — a real, currently-open gap (the same one `test_authz.py`'s
+`test_every_tool_is_tiered` fails on), not a rendering artifact of this
+generator. It means that tool has no per-call authorization enforced for it
+until `MCP_TOOL_TIERS` is fixed.
 
 ## Params notation
 
@@ -75,9 +81,21 @@ Feature 15 (C9) governance — whether the M&A fit-score weights actually rank r
 
 Params: (none)
 
-### `get_xray_forward_return_validation` — viewer
+### `get_xray_forward_return_validation` — UNTIERED
 
 Feature 14 (C10) governance — whether X-Ray-flagged banks subsequently underperform in the market, validated against landed Tiingo price history.
+
+Params: (none)
+
+### `get_filing_diff_population_summary` — UNTIERED
+
+Feature 12 (C13) governance — expected false positives at the raw filing-diff z threshold across the whole population, plus a Benjamini-Hochberg FDR-controlled alternative flag set.
+
+Params: (none)
+
+### `get_backtest_results` — UNTIERED
+
+Feature 17 (C14) governance — backtest of the X-Ray, deposit-flight and filing-diff signals against subsequent deposit/capital/credit deterioration and failure/exit, pooled across every landed quarter transition.
 
 Params: (none)
 
@@ -141,6 +159,18 @@ One bank's headline Gold metrics across every landed quarter, oldest first — r
 
 Params: **cert**: integer
 
+### `get_bulk_bank_trends` — UNTIERED
+
+E10 — the SAME per-quarter trajectory get_bank_trends returns, for a whole peer set at once (up to 40 certs), so /trends' small-multiples view can render every bank's line without N sequential requests.
+
+Params: **certs**: array
+
+### `get_population_trend_sparklines` — viewer
+
+E12 — batched trailing-quarter series (last 8 quarters, up to 2500 certs) for a sparkline column next to an already-rendered population table (screener/earnings/credit/funding), one request for the whole table.
+
+Params: **certs**: array, **metrics**: array
+
 ### `get_quarterly_briefing` — viewer
 
 Population-wide 'what changed this quarter': population churn, biggest movers, behavioral-cluster migrations, and risk-leaderboard entrants vs the prior landed quarter.
@@ -167,9 +197,9 @@ Params: top_n: integer, sort_by: string, metrics: array
 
 ### `get_asset_treemap` — viewer
 
-Every bank sized by assets, grouped by behavioral cluster or state, with X-Ray risk severity for client-side coloring.
+Every bank sized by assets, grouped by behavioral cluster, state or country (the only grouping that produces a genuine pan-European view), with X-Ray risk severity for client-side coloring.
 
-Params: group_by: enum(peer_cluster_label|state)
+Params: group_by: enum(peer_cluster_label|state|country)
 
 ### `get_metric_distribution` — viewer
 
@@ -206,6 +236,12 @@ Params: certs: array, top_n: integer, window_days: integer
 B10 — per-source landing vintage (fetch timestamp, record count, expected next publication) for every registered data source.
 
 Params: (none)
+
+### `get_metric_lineage` — UNTIERED
+
+G9 — provenance for one bank's metric: the Gold function/formula that computed it, the Silver/FDIC source field(s) and raw values, and the originating Bronze partition path, checksum and fetch timestamp. Covers the FDIC capital/financial fields feeding get_risk_score, not the full Gold schema.
+
+Params: **cert**: integer, **metric**: string, quarter: string
 
 ### `get_macro_data` — viewer
 
@@ -273,20 +309,8 @@ Feature 17 — how many filers/chunks are actually landed and searchable right n
 
 Params: (none)
 
-### `get_metric_lineage` — viewer
-
-G9 — trace one Gold metric (a bounded set of FDIC-sourced core financial/capital fields) for one bank/quarter back to the gold.py function, the exact Silver/FDIC source field(s) and values, a formula, and the source Bronze partition's path, checksum, and fetch timestamp.
-
-Params: **cert**: integer, **metric**: string, quarter: string
-
 ## Regenerating this document
 
-```python
-import sys
-sys.path.insert(0, "services/mcp-server/src")
-sys.path.insert(0, "pipelines/transforms/src")
-from banklens_mcp.tools import TOOLS
-from banklens_mcp.authz import MCP_TOOL_TIERS
-# walk TOOLS, pair each tool["name"] with MCP_TOOL_TIERS[name], and print
-# name / tier / description / inputSchema.properties+required.
+```
+python scripts/generate_mcp_tools_doc.py
 ```

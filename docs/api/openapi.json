@@ -1,0 +1,3645 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "BankLens REST Bridge",
+    "version": "0.1.0",
+    "description": "Generated from bridge_server.py's own route tables (F19) \u2014 see services/api-gateway/src/openapi_spec.py's module docstring for exactly what this does and does not model."
+  },
+  "servers": [
+    {
+      "url": "/api",
+      "description": "Relative to the bridge's own origin"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "paths": {
+    "/api/activity/agent-runs": {
+      "get": {
+        "operationId": "get_api_activity_agent_runs",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'analyst' role."
+          }
+        },
+        "x-banklens-tier": "analyst",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/activity/audit-log": {
+      "get": {
+        "operationId": "get_api_activity_audit_log",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'analyst' role."
+          }
+        },
+        "x-banklens-tier": "analyst",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/alerts": {
+      "get": {
+        "operationId": "get_api_alerts",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/alerts/seen": {
+      "post": {
+        "operationId": "post_api_alerts_seen",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/annotations": {
+      "get": {
+        "operationId": "get_api_annotations",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "post_api_annotations",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "delete_api_annotations",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/asset-treemap": {
+      "get": {
+        "operationId": "get_api_asset_treemap",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/assistant/ask": {
+      "post": {
+        "operationId": "post_assistant_ask",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "persona": {
+                    "type": "string"
+                  },
+                  "question": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "persona",
+                  "question"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Server-Sent Events stream (F16) \u2014 a sequence of `event: <kind>\\ndata: <json>\\n\\n` frames, kind in tool_call/tool_result/final/timeout/error/result. See bridge_server.py's _assistant_ask_sse and frontend/apps/web/src/types.ts's AssistantStreamEvent for the exact per-kind payload shapes.",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'analyst' role."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-banklens-tier": "analyst"
+      }
+    },
+    "/api/backtest": {
+      "get": {
+        "operationId": "get_api_backtest",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/banks": {
+      "get": {
+        "operationId": "get_api_banks",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/banks/candles": {
+      "get": {
+        "operationId": "get_api_banks_candles",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/banks/correlated-stress": {
+      "get": {
+        "operationId": "get_api_banks_correlated_stress",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'analyst' role."
+          }
+        },
+        "x-banklens-tier": "analyst",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/banks/filing-diff": {
+      "get": {
+        "operationId": "get_api_banks_filing_diff",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/banks/holding-company": {
+      "get": {
+        "operationId": "get_api_banks_holding_company",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/banks/irrbb": {
+      "get": {
+        "operationId": "get_api_banks_irrbb",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/banks/liquidity-survival": {
+      "get": {
+        "operationId": "get_api_banks_liquidity_survival",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'analyst' role."
+          }
+        },
+        "x-banklens-tier": "analyst",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/banks/ma-fit": {
+      "get": {
+        "operationId": "get_api_banks_ma_fit",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/banks/ma-pro-forma": {
+      "get": {
+        "operationId": "get_api_banks_ma_pro_forma",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/banks/market-snapshot": {
+      "get": {
+        "operationId": "get_api_banks_market_snapshot",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/banks/peer-cluster": {
+      "get": {
+        "operationId": "get_api_banks_peer_cluster",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/banks/profile": {
+      "get": {
+        "operationId": "get_api_banks_profile",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/banks/risk-score": {
+      "get": {
+        "operationId": "get_api_banks_risk_score",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/banks/segmented-stress-test": {
+      "get": {
+        "operationId": "get_api_banks_segmented_stress_test",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'analyst' role."
+          }
+        },
+        "x-banklens-tier": "analyst",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/banks/stress-test": {
+      "get": {
+        "operationId": "get_api_banks_stress_test",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'analyst' role."
+          }
+        },
+        "x-banklens-tier": "analyst",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/banks/stress-test-bulk": {
+      "get": {
+        "operationId": "get_api_banks_stress_test_bulk",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'analyst' role."
+          }
+        },
+        "x-banklens-tier": "analyst",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/banks/stress-test-compare": {
+      "get": {
+        "operationId": "get_api_banks_stress_test_compare",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'analyst' role."
+          }
+        },
+        "x-banklens-tier": "analyst",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/banks/stress-test-projection": {
+      "get": {
+        "operationId": "get_api_banks_stress_test_projection",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'analyst' role."
+          }
+        },
+        "x-banklens-tier": "analyst",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/banks/stress-test-surface": {
+      "get": {
+        "operationId": "get_api_banks_stress_test_surface",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'analyst' role."
+          }
+        },
+        "x-banklens-tier": "analyst",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/banks/tearsheet": {
+      "get": {
+        "operationId": "get_api_banks_tearsheet",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/banks/trends": {
+      "get": {
+        "operationId": "get_api_banks_trends",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/banks/trends-bulk": {
+      "get": {
+        "operationId": "get_api_banks_trends_bulk",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/banks/xray": {
+      "get": {
+        "operationId": "get_api_banks_xray",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/branch-map": {
+      "get": {
+        "operationId": "get_api_branch_map",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/briefing": {
+      "get": {
+        "operationId": "get_api_briefing",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/cluster-diagnostics": {
+      "get": {
+        "operationId": "get_api_cluster_diagnostics",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/compare": {
+      "get": {
+        "operationId": "get_api_compare",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/county-concentration": {
+      "get": {
+        "operationId": "get_api_county_concentration",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/custom-scenarios": {
+      "get": {
+        "operationId": "get_api_custom_scenarios",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "post_api_custom_scenarios",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "delete_api_custom_scenarios",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/data-freshness": {
+      "get": {
+        "operationId": "get_api_data_freshness",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/filing-diff-population-summary": {
+      "get": {
+        "operationId": "get_api_filing_diff_population_summary",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/filings/coverage": {
+      "get": {
+        "operationId": "get_api_filings_coverage",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/filings/search": {
+      "get": {
+        "operationId": "get_api_filings_search",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/health": {
+      "get": {
+        "operationId": "get_api_health",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          }
+        },
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ]
+      }
+    },
+    "/api/ma-weight-validation": {
+      "get": {
+        "operationId": "get_api_ma_weight_validation",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/macro": {
+      "get": {
+        "operationId": "get_api_macro",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/market/coverage": {
+      "get": {
+        "operationId": "get_api_market_coverage",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/market/overview": {
+      "get": {
+        "operationId": "get_api_market_overview",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/metric-distribution": {
+      "get": {
+        "operationId": "get_api_metric_distribution",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/metric-lineage": {
+      "get": {
+        "operationId": "get_api_metric_lineage",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/model-card": {
+      "get": {
+        "operationId": "get_api_model_card",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/network": {
+      "get": {
+        "operationId": "get_api_network",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/openapi.json": {
+      "get": {
+        "operationId": "get_openapi_spec",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "This document.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/peer-sets": {
+      "get": {
+        "operationId": "get_api_peer_sets",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "post_api_peer_sets",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "delete_api_peer_sets",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/percentile-heatmap": {
+      "get": {
+        "operationId": "get_api_percentile_heatmap",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/population": {
+      "get": {
+        "operationId": "get_api_population",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/population-metrics": {
+      "get": {
+        "operationId": "get_api_population_metrics",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/population-trends": {
+      "get": {
+        "operationId": "get_api_population_trends",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/portfolio": {
+      "get": {
+        "operationId": "get_api_portfolio",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "post_api_portfolio",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "delete_api_portfolio",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/portfolio/summary": {
+      "get": {
+        "operationId": "get_api_portfolio_summary",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/privacy/data": {
+      "delete": {
+        "operationId": "delete_api_privacy_data",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/privacy/export": {
+      "get": {
+        "operationId": "get_api_privacy_export",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/quarters": {
+      "get": {
+        "operationId": "get_api_quarters",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/risk-leaderboard": {
+      "get": {
+        "operationId": "get_api_risk_leaderboard",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/scenarios": {
+      "get": {
+        "operationId": "get_api_scenarios",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/screens": {
+      "get": {
+        "operationId": "get_api_screens",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "post_api_screens",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "delete_api_screens",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/watchlist": {
+      "get": {
+        "operationId": "get_api_watchlist",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "post_api_watchlist",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "delete_api_watchlist",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/watchlist/note": {
+      "post": {
+        "operationId": "post_api_watchlist_note",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/watchlist/rules": {
+      "get": {
+        "operationId": "get_api_watchlist_rules",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "post_api_watchlist_rules",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "delete_api_watchlist_rules",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/xray-forward-return-validation": {
+      "get": {
+        "operationId": "get_api_xray_forward_return_validation",
+        "responses": {
+          "200": {
+            "description": "Success. Exact field-level shape not modeled here \u2014 see the matching call in frontend/apps/web/src/api.ts and its return type in frontend/apps/web/src/types.ts for the real contract.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (a bad/missing parameter, or similar) \u2014 see bridge_server.py's _route_request (F18)."
+          },
+          "401": {
+            "description": "Missing/invalid bearer token."
+          },
+          "403": {
+            "description": "Authenticated but missing the 'viewer' role."
+          }
+        },
+        "x-banklens-tier": "viewer",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Route-specific query parameters \u2014 not individually modeled here (see this module's docstring); the authoritative list is the handler lambda for this route in bridge_server.py.",
+            "schema": {
+              "type": "object"
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/metrics": {
+      "get": {
+        "operationId": "get_metrics",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Prometheus text-format metrics.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

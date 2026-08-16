@@ -22,6 +22,7 @@ answer instead of the generic "stopped" message, even against a stubborn small m
 from __future__ import annotations
 
 import json
+import threading
 from dataclasses import dataclass, field
 
 from banklens_mcp.authz import filter_authorized
@@ -41,6 +42,7 @@ class ToolCallRecord:
     name: str
     arguments: dict
     result_preview: str
+    citation_url: str | None = None
 
 
 @dataclass
@@ -57,6 +59,60 @@ class AgentResult:
     # what was AVAILABLE for the run, not just what got used.
     roles: tuple[str, ...] = field(default_factory=tuple)
     effective_tools: tuple[str, ...] = field(default_factory=tuple)
+    # F16 — set when `cancel_event` fired mid-loop (a caller-side deadline
+    # elapsed) rather than the model producing a real final answer. `answer`
+    # is still populated (an honest explanation, or the last tool result
+    # retrieved so far — see the cancellation branch below), so a caller that
+    # doesn't care about the distinction can keep just reading `answer`.
+    partial: bool = False
+
+
+# D12 — citations: which frontend page actually shows the data a given tool
+# call returned, so a claim in the answer can be deep-linked back to its
+# proof rather than trusted on the model's word alone. Deliberately partial:
+# only tools with an obvious, stable single-page home are mapped; a tool
+# whose result is spread across several pages (or has none yet) gets no
+# citation link rather than a guessed/misleading one.
+_CERT_PAGE_TOOLS = {
+    "get_bank_profile", "get_bank_xray", "get_peer_cluster", "get_risk_score",
+    "get_holding_company", "find_ma_matches", "get_ma_pro_forma", "get_price_candles",
+    "get_market_snapshot", "get_irrbb", "diff_filings", "get_metric_lineage",
+    "run_stress_test", "run_stress_test_projection", "get_liquidity_survival",
+    "run_segmented_stress_test", "run_correlated_stress", "run_stress_surface",
+    "run_stress_comparison",
+}
+_CERT_TRENDS_TOOLS = {"get_bank_trends"}
+_STATIC_PAGE_TOOLS = {
+    "get_percentile_heatmap": "/heatmap",
+    "get_asset_treemap": "/treemap",
+    "get_metric_distribution": "/distributions",
+    "get_market_overview": "/market",
+    "get_market_coverage": "/market",
+    "get_cluster_diagnostics": "/clusters",
+    "get_model_card": "/model",
+    "get_county_concentration": "/geography",
+    "get_branch_map": "/geography",
+    "get_ma_network": "/network",
+    "get_risk_leaderboard": "/screener",
+    "get_quarterly_briefing": "/briefing",
+    "get_backtest_results": "/backtest",
+    "get_filing_diff_population_summary": "/filing-diff",
+    "search_filings_text": "/filings",
+    "get_filings_coverage": "/filings",
+    "list_banks": "/screener",
+}
+_POPULATION_GROUP_PAGES = {"earnings": "/earnings", "credit": "/credit", "funding": "/funding"}
+
+
+def _citation_url(name: str, arguments: dict) -> str | None:
+    cert = arguments.get("cert") if isinstance(arguments, dict) else None
+    if name in _CERT_PAGE_TOOLS and cert is not None:
+        return f"/bank/{cert}"
+    if name in _CERT_TRENDS_TOOLS and cert is not None:
+        return f"/trends?cert={cert}"
+    if name == "get_population_metrics" and isinstance(arguments, dict):
+        return _POPULATION_GROUP_PAGES.get(arguments.get("group"))
+    return _STATIC_PAGE_TOOLS.get(name)
 
 
 def _to_tool_schemas(mcp_tools: list[dict], allowed: tuple[str, ...]) -> list[dict]:
@@ -104,9 +160,33 @@ def _looks_like_stray_tool_call(text: str, tool_names: set[str]) -> bool:
 
 def run_agent(persona: Persona, question: str, *, model: str | None = None,
              provider: str | None = None, on_event=None,
-             roles: list[str] | None = None) -> AgentResult:
+             roles: list[str] | None = None,
+             cancel_event: threading.Event | None = None,
+             history: list[dict] | None = None) -> AgentResult:
     """Run one agent turn-loop for `question` under `persona`. `on_event(kind, payload)`
     is called for live progress (kind in "tool_call", "tool_result", "final").
+
+    `history` (D12): prior turns of this same conversation, as plain
+    `{"role": "user"|"assistant", "content": str}` pairs — the FINAL answer text
+    of each earlier turn, not that turn's internal tool_use/tool_result content
+    blocks. Deliberately not round-tripping the raw provider-internal `messages`
+    list here: that shape is provider-specific (each client in this package
+    translates it differently, see ollama_client.py/gemini_client.py) and can
+    carry large tool-result payloads turn over turn, which would make every
+    later turn in a long conversation resend everything every prior turn ever
+    retrieved. A plain question/answer transcript is enough for the model to
+    stay on-topic across a follow-up, at a bounded and predictable size.
+
+    `cancel_event` (F16): checked at the top of every turn (i.e. before each
+    provider call, the part that can legitimately take tens of seconds to
+    minutes against Ollama). When set, the loop stops at that boundary and
+    returns a partial result (`AgentResult.partial=True`) instead of starting
+    another turn — cooperative, not preemptive: a provider call already
+    in-flight when `cancel_event` fires still runs to completion, this only
+    stops the NEXT one from starting. The caller (bridge_server._stream_
+    assistant_answer) is the one actually enforcing a wall-clock deadline;
+    this is what lets that enforcement actually shorten a still-running loop
+    instead of just abandoning it unobserved.
 
     `roles`: the authenticated caller's roles (from bridge_server's JWT claims),
     if this run has one. When given, persona.tool_names is intersected against
@@ -128,7 +208,7 @@ def run_agent(persona: Persona, question: str, *, model: str | None = None,
         tools = _to_tool_schemas(mcp_tools, allowed)
 
         tool_names = {t["name"] for t in tools}
-        messages: list[dict] = [{"role": "user", "content": question}]
+        messages: list[dict] = [*(history or []), {"role": "user", "content": question}]
         result = AgentResult(persona=persona.key, question=question, answer="", provider=provider_name,
                              roles=tuple(roles) if roles is not None else (),
                              effective_tools=tuple(sorted(tool_names)))
@@ -152,7 +232,30 @@ def run_agent(persona: Persona, question: str, *, model: str | None = None,
                        "retry — small local models are inconsistent at this.")
             return "(no answer produced)"
 
+        def _cancelled() -> AgentResult:
+            """F16 — `cancel_event` fired: stop here rather than starting another
+            provider call. Same last-tool-result fallback `_finalize` uses for a
+            stray artifact, but an honest "ran out of time" framing instead."""
+            result.partial = True
+            if seen_calls:
+                last = next(reversed(seen_calls.values()))
+                result.answer = ("(partial — the deadline was reached before the model "
+                                 f"produced a final answer; here is the last data it retrieved: "
+                                 f"{last[:500]})")
+            else:
+                result.answer = ("(partial — the deadline was reached before the model "
+                                 "retrieved any data or produced an answer)")
+            if on_event:
+                # A dict, not a bare string — matches bridge_server.py's own
+                # deadline-notice "timeout" event shape ({"message": ...}), so
+                # a caller reading this stream can handle one "timeout" event
+                # shape regardless of which of the two ever actually fires.
+                on_event("timeout", {"message": result.answer})
+            return result
+
         for turn in range(1, MAX_TURNS + 1):
+            if cancel_event is not None and cancel_event.is_set():
+                return _cancelled()
             result.turns = turn
             resp = client.messages_create(model=model_id, system=persona.system_prompt,
                                           messages=messages, tools=tools)
@@ -182,15 +285,18 @@ def run_agent(persona: Persona, question: str, *, model: str | None = None,
                     text = mcp.call_tool(tu["name"], tu["input"])
                     seen_calls[sig] = text
                 preview = text if len(text) <= 400 else text[:400] + "…"
-                result.tool_calls.append(ToolCallRecord(tu["name"], tu["input"], preview))
+                citation_url = _citation_url(tu["name"], tu["input"])
+                result.tool_calls.append(ToolCallRecord(tu["name"], tu["input"], preview, citation_url))
                 if on_event:
-                    on_event("tool_result", {"name": tu["name"], "preview": preview})
+                    on_event("tool_result", {"name": tu["name"], "preview": preview, "citation_url": citation_url})
                 result_text = text + (_NUDGE if sig in seen_calls and any_repeat_this_turn else "")
                 tool_results.append({"type": "tool_result", "tool_use_id": tu["id"], "content": result_text})
             messages.append({"role": "user", "content": tool_results})
 
             consecutive_repeats = consecutive_repeats + 1 if any_repeat_this_turn else 0
             if consecutive_repeats >= 2:
+                if cancel_event is not None and cancel_event.is_set():
+                    return _cancelled()
                 # Guaranteed termination: force one final call with NO tools, so the
                 # model literally cannot call anything again and must produce text.
                 final = client.messages_create(model=model_id, system=persona.system_prompt,
@@ -210,8 +316,8 @@ def run_agent(persona: Persona, question: str, *, model: str | None = None,
 def to_json(result: AgentResult) -> dict:
     return {
         "persona": result.persona, "question": result.question, "answer": result.answer,
-        "provider": result.provider, "turns": result.turns,
+        "provider": result.provider, "turns": result.turns, "partial": result.partial,
         "roles": list(result.roles), "effective_tools": list(result.effective_tools),
-        "tool_calls": [{"name": c.name, "arguments": c.arguments, "result_preview": c.result_preview}
-                       for c in result.tool_calls],
+        "tool_calls": [{"name": c.name, "arguments": c.arguments, "result_preview": c.result_preview,
+                       "citation_url": c.citation_url} for c in result.tool_calls],
     }

@@ -40,27 +40,43 @@ jobs:
           python-version: "3.13"
 
       - name: Install lint tooling
-        run: pip install ruff==0.16.0
+        run: pip install ruff==0.16.0 mypy==2.3.1
 
-      # Editable install, not PYTHONPATH — this is a real installable dependency
-      # (psycopg, duckdb) other packages import as `banklens_common`, unlike the
-      # rest of the repo's PYTHONPATH-only packages.
+      # Pinned + hashed (F14) — same requirements.txt files the Docker image
+      # installs from, so CI and the built image can never drift onto
+      # different dependency versions. `--require-hashes` refuses anything
+      # that doesn't match. Covers banklens_common (psycopg, duckdb), the
+      # bridge (duckdb, prometheus-client, gunicorn, reportlab, PyJWT[crypto]
+      # and their own transitive closure), and transforms (QuantLib).
+      - name: Install pinned dependencies
+        run: >-
+          pip install --require-hashes
+          -r libs/python/banklens_common/requirements.txt
+          -r services/api-gateway/requirements.txt
+          -r pipelines/transforms/requirements.txt
+
+      # Editable install, not PYTHONPATH — this is a real installable package
+      # other code imports as `banklens_common`, unlike the rest of the repo's
+      # PYTHONPATH-only packages. `--no-deps`: its dependencies are already
+      # pinned and installed above.
       - name: Install banklens_common (Postgres/DuckDB wiring)
-        run: pip install -e libs/python/banklens_common
-
-      # QuantLib's official prebuilt wheel (real compiled C++ under a SWIG
-      # Python binding) — needed by quantlib_pricing.py / stress.py's
-      # run_stress_test_quantlib(). PYTHONPATH-only for the rest of
-      # pipelines/transforms, so installing the one real dependency directly
-      # rather than `pip install -e` the whole package.
-      - name: Install QuantLib
-        run: pip install "QuantLib>=1.35"
+        run: pip install --no-deps -e libs/python/banklens_common
 
       # BLOCKING, not `|| true`. The rule set is an explicit, minimal contract
       # (see /ruff.toml) chosen so it catches real defects without retroactively
       # rewriting working code — the repo passes it cleanly today.
       - name: Lint
         run: ruff check .
+
+      # BLOCKING. mypy.ini's own header documents the philosophy: non-strict,
+      # incremental (disallow_untyped_defs=False, check_untyped_defs=True) —
+      # catches real drift (wrong/missing args, unsafe Optional access) without
+      # demanding a retroactive full-strict rewrite. Passes cleanly today.
+      - name: Type check (mypy)
+        run: >-
+          mypy --config-file mypy.ini
+          pipelines/ingestion/src pipelines/transforms/src pipelines/orchestration/src
+          services/mcp-server/src services/agents/src libs/python/banklens_common/src
 
       # Runs every test file under pipelines/, services/, libs/. Tests needing
       # landed Bronze data (`data/`, git-ignored and reproducible from the landing
@@ -76,6 +92,52 @@ jobs:
       # or install needed; pure text scan.
       - name: Doc-reference drift check
         run: python scripts/check_doc_references.py
+
+      # F19 — docs/api/openapi.json is generated from bridge_server.py's own
+      # ROUTES/POST_ROUTES/DELETE_ROUTES/ROUTE_TIERS tables (see
+      # services/api-gateway/src/openapi_spec.py); BLOCKING so a route added,
+      # removed, or re-tiered without regenerating the committed file fails
+      # the build instead of silently drifting.
+      - name: OpenAPI spec drift check
+        run: python scripts/generate_openapi.py --check
+
+      # Follow-up to F2/F20: docs/api/mcp-tools.md is generated from the real
+      # banklens_mcp.tools.TOOLS/authz.MCP_TOOL_TIERS registries — it had
+      # gone stale (claimed 42 tools; 46 actually registered) because nothing
+      # regenerated it after F2's one-time pass. BLOCKING for the same reason
+      # the OpenAPI check above is.
+      - name: MCP tools doc drift check
+        run: python scripts/generate_mcp_tools_doc.py --check
+
+      # F20 — catches the exact class of drift that made README.md wrong
+      # before this phase: the MCP tool count, the CronJob's real refresh
+      # schedule, a repository-layout directory that no longer exists, a
+      # scripts/*.ps1 reference that was renamed or removed.
+      - name: README claims check
+        run: python scripts/check_readme_claims.py
+
+      # F15 — dependency scanning. Audits every package actually installed in
+      # this venv (banklens_common + bridge + transforms pins above) against
+      # the PyPI/OSV advisory DB. BLOCKING: pip-audit's default exit code is
+      # non-zero the moment any advisory matches an installed version, so a
+      # known high-severity CVE in a pinned dependency fails the build.
+      - name: Dependency scan (pip-audit)
+        run: |
+          pip install pip-audit==2.7.3
+          pip-audit
+
+      # F15 — CycloneDX SBOM, published as a build artifact on every run (not
+      # gated behind a tagged release) so "what's in this build" is always
+      # answerable from the Actions run, not just at release time.
+      - name: Generate SBOM
+        run: |
+          pip install cyclonedx-bom==7.3.1
+          cyclonedx-py environment -o sbom-python.json --of JSON
+      - name: Upload SBOM (Python)
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-python
+          path: sbom-python.json
 
   rust:
     name: Rust — clippy + test (stress-engine, ingestion)
@@ -103,6 +165,32 @@ jobs:
       - name: Test — ingestion
         run: cargo test --release --manifest-path services/ingestion/Cargo.toml
 
+      # F15 — dependency scanning against the RustSec advisory database.
+      # BLOCKING: cargo-audit's default exit code is non-zero the moment any
+      # advisory matches a Cargo.lock entry.
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked
+      - name: Dependency scan — stress-engine
+        run: cargo audit --file services/stress-engine/Cargo.lock
+      - name: Dependency scan — ingestion
+        run: cargo audit --file services/ingestion/Cargo.lock
+
+      # F15 — CycloneDX SBOM per crate, published as a build artifact on
+      # every run.
+      - name: Install cargo-cyclonedx
+        run: cargo install cargo-cyclonedx --locked
+      - name: Generate SBOM — stress-engine
+        run: cargo cyclonedx --format json --manifest-path services/stress-engine/Cargo.toml
+      - name: Generate SBOM — ingestion
+        run: cargo cyclonedx --format json --manifest-path services/ingestion/Cargo.toml
+      - name: Upload SBOM (Rust)
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-rust
+          path: |
+            services/stress-engine/*.cdx.json
+            services/ingestion/*.cdx.json
+
   frontend:
     name: Frontend — typecheck + build
     runs-on: ubuntu-latest
@@ -124,6 +212,22 @@ jobs:
         run: npm test
       - name: Build
         run: npm run build
+
+      # F15 — dependency scanning. BLOCKING: npm audit's exit code is
+      # non-zero the moment any advisory at or above "high" matches an
+      # installed package.
+      - name: Dependency scan (npm audit)
+        run: npm audit --audit-level=high
+
+      # F15 — CycloneDX SBOM from package-lock.json, published as a build
+      # artifact on every run.
+      - name: Generate SBOM
+        run: npx --yes @cyclonedx/cyclonedx-npm --output-file sbom-npm.json
+      - name: Upload SBOM (npm)
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-npm
+          path: frontend/apps/web/sbom-npm.json
 
   manifests:
     name: Infra — Docker builds + Kustomize

@@ -24,13 +24,15 @@
   --border-strong: #3a372f;
   --success-text: #7fae78;
 
+  /* Kept identical to theme.css's categorical tokens (E14 colorblind-safety
+     fix) — see the comment there for the protanopia/deuteranopia rationale. */
   --cat-blue: #5b84a8;
   --cat-green: #6f9e6a;
   --cat-magenta: #a85f78;
   --cat-yellow: #c9a227;
-  --cat-aqua: #4f8f8a;
-  --cat-orange: #b1653c;
-  --cat-violet: #8a7f74;
+  --cat-aqua: #3d9494;
+  --cat-orange: #c8823f;
+  --cat-violet: #5f6aa8;
   --cat-red: #b1503f;
 
   --seq-100: #201e1a;

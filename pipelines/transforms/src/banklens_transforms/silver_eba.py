@@ -87,7 +87,7 @@ _QUARTER_END_MONTH = {"03": 1, "06": 2, "09": 3, "12": 4}
 _MONTH_LAST_DAY = {"03": "31", "06": "30", "09": "30", "12": "31"}
 
 
-def _parse_period(period: str) -> tuple[str | None, str | None]:
+def _parse_period(period: str | None) -> tuple[str | None, str | None]:
     """"202506" -> ("2025-06-30", "2025Q2"). EBA's Period is YYYYMM of the
     quarter-end month, same convention as FDIC's REPDTE."""
     if not period or len(period) != 6:

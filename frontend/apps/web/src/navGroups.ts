@@ -27,6 +27,7 @@ export const NAV_GROUPS: NavGroup[] = [
   { label: 'Governance', links: [
     { to: '/clusters', label: 'Clusters' },
     { to: '/model', label: 'Model' },
+    { to: '/backtest', label: 'Backtest' },
   ] },
   { label: 'Geography', links: [
     { to: '/geography', label: 'Branch Map' },
@@ -41,10 +42,12 @@ export const NAV_GROUPS: NavGroup[] = [
   ] },
   { label: 'My work', links: [
     { to: '/watchlist', label: 'Watchlist' },
+    { to: '/portfolio', label: 'Portfolio' },
   ] },
   { label: 'Tools', links: [
     { to: '/assistant', label: 'Assistant' },
     { to: '/activity', label: 'Activity' },
+    { to: '/glossary', label: 'Glossary' },
   ] },
 ];
 

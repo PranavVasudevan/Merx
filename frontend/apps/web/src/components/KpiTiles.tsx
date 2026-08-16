@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
 import type { BankProfile } from '../types';
+import { GlossaryTerm } from './GlossaryTerm';
 import { MicroHistogram } from './MicroHistogram';
 import { MetricLineageBadge } from './MetricLineageBadge';
 import './KpiTiles.css';
@@ -20,6 +21,8 @@ interface Tile {
   // G9 — "how is this computed?" badge, wired only where banklens_mcp.tools
   // ._METRIC_LINEAGE actually tracks the metric (a bounded subset of Gold).
   lineageMetric?: string;
+  // D14 — glossary.ts key, for the hover/click definition affordance.
+  glossaryKey?: string;
 }
 
 export function KpiTiles({ profile }: { profile: BankProfile }) {
@@ -36,7 +39,7 @@ export function KpiTiles({ profile }: { profile: BankProfile }) {
         value: profile.funding.uninsured_deposit_pct.value,
         percentile: profile.funding.uninsured_deposit_pct.percentile,
       },
-      lineageMetric: 'uninsured_deposit_pct',
+      lineageMetric: 'uninsured_deposit_pct', glossaryKey: 'uninsured_deposits',
     },
     {
       label: 'CRE concentration', value: fmtPct(profile.cre_concentration_pct), sub: 'largest loan bucket?',
@@ -53,9 +56,12 @@ export function KpiTiles({ profile }: { profile: BankProfile }) {
         value: profile.capital.cet1.value,
         percentile: profile.capital.cet1.percentile,
       },
-      lineageMetric: 'cet1_ratio',
+      lineageMetric: 'cet1_ratio', glossaryKey: 'cet1',
     },
-    { label: 'Peer cluster', value: profile.peer_cluster ?? '—', sub: 'behavioral, not size', wide: true },
+    {
+      label: 'Peer cluster', value: profile.peer_cluster ?? '—', sub: 'behavioral, not size', wide: true,
+      glossaryKey: 'behavioral_clusters',
+    },
     ...(fp ? [{
       label: 'Branch network', value: `${fp.branch_count} branches`,
       // B7: branch data is FDIC's annually-landed SOD, so it can be up to
@@ -75,7 +81,7 @@ export function KpiTiles({ profile }: { profile: BankProfile }) {
           transition={{ duration: 0.15, ease: [0.85, 0, 0.15, 1] }}
         >
           <div className="kpi-label">
-            {t.label}
+            {t.glossaryKey ? <GlossaryTerm termKey={t.glossaryKey}>{t.label}</GlossaryTerm> : t.label}
             {t.lineageMetric && <MetricLineageBadge cert={profile.cert} metric={t.lineageMetric} />}
           </div>
           <div className="kpi-value tabular">{t.value}</div>

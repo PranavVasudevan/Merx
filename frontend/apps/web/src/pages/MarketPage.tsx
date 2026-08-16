@@ -8,8 +8,11 @@ import {
 } from 'recharts';
 import { api, type BankSearchResult } from '../api';
 import { chartColors } from '../colors';
+import { RECHARTS_ENTRANCE } from '../chartMotion';
+import { ratio, signedPct, usd } from '../metricFormat';
 import { EChart } from '../components/EChart';
-import { baseEChartTheme, tooltipStyle } from '../echartsTheme';
+import { baseEChartTheme, tooltipHtml, tooltipStyle } from '../echartsTheme';
+import { ChartTooltipShell } from '../components/ChartTooltip';
 import { ExportCsvButton } from '../components/ExportCsvButton';
 import type { CsvColumn } from '../csvExport';
 import type { MarketMetricsRow, MarketOverviewResult } from '../types';
@@ -28,24 +31,15 @@ type SortKey = keyof Pick<MarketMetricsRow,
   'name' | 'total_return_pct' | 'realized_volatility_pct' | 'vol_vs_peer_median_pct' |
   'max_drawdown_pct' | 'beta_vs_peer_basket' | 'tangible_book_value_usd'>;
 
-function fmtPct(v: number | null, decimals = 2): string {
-  if (v === null || v === undefined) return '—';
-  return `${v > 0 ? '+' : ''}${v.toFixed(decimals)}%`;
-}
-
-function fmtRatio(v: number | null): string {
-  if (v === null || v === undefined) return '—';
-  return v.toFixed(2);
-}
-
-function fmtUsd(v: number | null): string {
-  if (v === null || v === undefined) return '—';
-  const abs = Math.abs(v);
-  const sign = v < 0 ? '-' : '';
-  if (abs >= 1e9) return `${sign}$${(abs / 1e9).toFixed(2)}B`;
-  if (abs >= 1e6) return `${sign}$${(abs / 1e6).toFixed(1)}M`;
-  return `${sign}$${abs.toLocaleString()}`;
-}
+// E15 — thin aliases over the shared metricFormat.ts formatters (signedPct/
+// ratio/usd), which replaced three locally-defined fmtPct/fmtRatio/fmtUsd
+// that each re-implemented the same sign/decimal logic. Note: usd()'s
+// negative convention is `$-2.50B` (dollar sign first — see its tests in
+// metricFormat.test.ts), whereas the old local fmtUsd here put the sign
+// first (`-$2.50B`); this normalizes to the one shared convention.
+const fmtPct = (v: number | null, decimals = 2): string => signedPct(v, decimals);
+const fmtRatio = (v: number | null): string => (v === null || v === undefined ? '—' : ratio(v, ''));
+const fmtUsd = (v: number | null): string => usd(v);
 
 // Categorical palette cycled across as many priced banks as are in view —
 // the same 8 tokens theme.css defines for every other multi-series chart in
@@ -59,16 +53,11 @@ function PerfTooltip({ active, payload, label }: {
   active?: boolean; payload?: { name: string; value: number; color: string }[]; label?: string;
 }) {
   if (!active || !payload?.length) return null;
-  return (
-    <motion.div className="chart-tooltip" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.12 }}>
-      <div className="chart-tooltip-label">{label}</div>
-      {payload.slice(0, 10).map((p) => (
-        <div key={p.name} className="chart-tooltip-value tabular" style={{ color: p.color, fontSize: 'var(--text-xs)' }}>
-          {p.name}: {typeof p.value === 'number' ? p.value.toFixed(1) : '—'}
-        </div>
-      ))}
-    </motion.div>
-  );
+  const lines = payload.slice(0, 10).map((p) => ({
+    text: `${p.name}: ${typeof p.value === 'number' ? p.value.toFixed(1) : '—'}`,
+    style: { color: p.color, fontSize: 'var(--text-xs)' },
+  }));
+  return <ChartTooltipShell label={label} lines={lines} />;
 }
 
 function ScatterTooltip({ active, payload }: {
@@ -77,11 +66,13 @@ function ScatterTooltip({ active, payload }: {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
   return (
-    <motion.div className="chart-tooltip" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.12 }}>
-      <div className="chart-tooltip-label">{d.name}</div>
-      <div className="chart-tooltip-sub">Return: {fmtPct(d.return_pct)}</div>
-      <div className="chart-tooltip-sub">Realized vol (ann.): {fmtPct(d.volatility_pct, 1)}</div>
-    </motion.div>
+    <ChartTooltipShell
+      label={d.name}
+      lines={[
+        { text: `Return: ${fmtPct(d.return_pct)}`, className: 'chart-tooltip-sub' },
+        { text: `Realized vol (ann.): ${fmtPct(d.volatility_pct, 1)}`, className: 'chart-tooltip-sub' },
+      ]}
+    />
   );
 }
 
@@ -186,8 +177,9 @@ export function MarketPage() {
           const cell = (Array.isArray(p) ? p[0] : p) as { data?: [number, number, number | null] };
           if (!cell.data) return '';
           const [x, y, v] = cell.data;
-          return `<strong>${labels[y]}</strong> vs <strong>${labels[x]}</strong><br/>`
-            + (v === null ? 'not enough overlapping trading days' : `correlation: ${v.toFixed(2)}`);
+          return tooltipHtml(`${labels[y]} vs ${labels[x]}`, [
+            { text: v === null ? 'not enough overlapping trading days' : `correlation: ${v.toFixed(2)}`, muted: v === null },
+          ]);
         },
       },
       xAxis: {
@@ -356,7 +348,7 @@ export function MarketPage() {
                 {perfData.series.map((s, i) => (
                   <Line key={s.cert} type="monotone" dataKey={`c${s.cert}`} name={s.name}
                     stroke={pal[i % pal.length]} dot={false} strokeWidth={1.5}
-                    connectNulls animationDuration={500} />
+                    connectNulls {...RECHARTS_ENTRANCE} />
                 ))}
               </LineChart>
             </ResponsiveContainer>
@@ -379,7 +371,7 @@ export function MarketPage() {
                   label={{ value: 'Total return %', angle: -90, position: 'insideLeft', fill: colors.muted, fontSize: 11 }} />
                 <ZAxis range={[50, 50]} />
                 <Tooltip content={<ScatterTooltip />} cursor={{ strokeDasharray: '3 3', stroke: colors.baseline }} />
-                <Scatter data={result.scatter} fill={colors.blue} fillOpacity={0.75} animationDuration={500} />
+                <Scatter data={result.scatter} fill={colors.blue} fillOpacity={0.75} {...RECHARTS_ENTRANCE} />
               </ScatterChart>
             </ResponsiveContainer>
           </div>

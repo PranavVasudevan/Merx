@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, type BankSearchResult } from '../api';
 import type {
-  BulkStressResult, LiquiditySurvivalResult, PopulationBank, RiskLeaderboardEntry,
-  StressComparisonResult, StressProjectionResult, StressSurfaceResult, WatchlistItem,
+  BulkStressResult, CustomScenarioItem, LiquiditySurvivalResult, NamedScenario, PopulationBank,
+  RiskLeaderboardEntry, StressComparisonResult, StressProjectionResult, StressSurfaceResult, WatchlistItem,
 } from '../types';
 import { ExportCsvButton } from '../components/ExportCsvButton';
 import { RISK_DISCLAIMER, type CsvColumn } from '../csvExport';
@@ -24,6 +24,46 @@ export function StressLabPage() {
   const [loanLoss, setLoanLoss] = useState(3);
   const [outflow, setOutflow] = useState(15);
   const [rateBps, setRateBps] = useState(200);
+
+  // D10 — named scenario registry (config/scenarios.json) + user-saved custom ones.
+  const [namedScenarios, setNamedScenarios] = useState<NamedScenario[]>([]);
+  const [customScenarios, setCustomScenarios] = useState<CustomScenarioItem[]>([]);
+  const [activeScenarioNote, setActiveScenarioNote] = useState<string | null>(null);
+
+  useEffect(() => {
+    api.scenarioLibrary().then((r) => setNamedScenarios(r.scenarios)).catch(() => setNamedScenarios([]));
+    api.getCustomScenarios().then((r) => setCustomScenarios(r.items)).catch(() => setCustomScenarios([]));
+  }, []);
+
+  function applyNamedScenario(id: string) {
+    const s = namedScenarios.find((x) => x.id === id);
+    if (!s) { setActiveScenarioNote(null); return; }
+    setLoanLoss(s.loan_loss_pct); setOutflow(s.deposit_outflow_pct); setRateBps(s.rate_shock_bps);
+    setActiveScenarioNote(`${s.description} — ${s.assumptions}`);
+  }
+
+  function applyCustomScenario(id: number) {
+    const s = customScenarios.find((x) => x.id === id);
+    if (!s) return;
+    setLoanLoss(s.loan_loss_pct); setOutflow(s.deposit_outflow_pct); setRateBps(s.rate_shock_bps);
+    setActiveScenarioNote(null);
+  }
+
+  async function saveCurrentAsScenario() {
+    const name = window.prompt('Name this scenario:');
+    if (!name) return;
+    try {
+      const r = await api.saveCustomScenario(name, loanLoss, outflow, rateBps);
+      setCustomScenarios(r.items);
+    } catch { /* non-critical, no banner needed for a save-scenario failure here */ }
+  }
+
+  async function deleteCustomScenario(id: number) {
+    try {
+      const r = await api.deleteCustomScenario(id);
+      setCustomScenarios(r.items);
+    } catch { /* non-critical */ }
+  }
 
   const [scope, setScope] = useState<Scope>('top_assets');
   const [clusterLabel, setClusterLabel] = useState('');
@@ -182,6 +222,40 @@ export function StressLabPage() {
           not a supervisory stress test and not a prediction of which banks will actually fail.
           {' '}{RISK_DISCLAIMER}
         </p>
+        <div className="stress-scenario-picker">
+          <select
+            className="stress-lab-select"
+            defaultValue=""
+            onChange={(e) => { if (e.target.value) applyNamedScenario(e.target.value); e.target.value = ''; }}
+          >
+            <option value="" disabled>Load a named scenario…</option>
+            {namedScenarios.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
+          {customScenarios.length > 0 && (
+            <select
+              className="stress-lab-select"
+              defaultValue=""
+              onChange={(e) => { if (e.target.value) applyCustomScenario(Number(e.target.value)); e.target.value = ''; }}
+            >
+              <option value="" disabled>Load a saved scenario…</option>
+              {customScenarios.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          )}
+          <button className="stress-scenario-save" onClick={saveCurrentAsScenario}>Save current as scenario</button>
+          {customScenarios.map((s) => (
+            <button
+              key={`del-${s.id}`}
+              className="stress-scenario-delete"
+              onClick={() => deleteCustomScenario(s.id)}
+              title={`Delete saved scenario "${s.name}"`}
+            >
+              🗑 {s.name}
+            </button>
+          ))}
+        </div>
+        {activeScenarioNote && <p className="muted chart-caption stress-scenario-note">{activeScenarioNote}</p>}
         <div className="stress-controls">
           <label className="stress-slider">
             <span>Loan losses <b className="tabular">{loanLoss.toFixed(0)}%</b></span>
@@ -244,9 +318,10 @@ export function StressLabPage() {
                 columns={[
                   { key: 'name', label: 'Bank', value: (r) => r.name, source: 'fdic' },
                   { key: 'cert', label: 'FDIC Cert', value: (r) => r.cert, source: 'fdic' },
-                  { key: 'cet1_before', label: 'CET1 before %', value: (r) => r.before.cet1, source: 'derived' },
-                  { key: 'cet1_after', label: 'CET1 after %', value: (r) => r.after.cet1, source: 'derived' },
-                  { key: 'passes_all', label: 'Passes all minimums', value: (r) => (r.passes_all ? 'yes' : 'no'), source: 'derived' },
+                  { key: 'cet1_before', label: 'CET1 before %', value: (r) => r.before.cet1 ?? 'n/a', source: 'derived' },
+                  { key: 'cet1_after', label: 'CET1 after %', value: (r) => r.after.cet1 ?? 'n/a', source: 'derived' },
+                  { key: 'passes_all', label: 'Passes all minimums',
+                    value: (r) => (r.passes_all === null ? 'n/a' : r.passes_all ? 'yes' : 'no'), source: 'derived' },
                 ] as CsvColumn<BulkStressResult['results'][number]>[]}
                 rows={bulk.results}
                 meta={{ sourceLabel: `Scenario: ${loanLoss}% loan loss / ${outflow}% outflow / +${rateBps}bps rate shock` }}
@@ -255,11 +330,15 @@ export function StressLabPage() {
             <div className="stress-lab-results">
               {bulk.results.map((r) => (
                 <Link className="stress-lab-row" key={r.cert} to={`/bank/${r.cert}`}>
-                  <span className={r.passes_all ? 'stress-lab-dot stress-lab-dot-pass' : 'stress-lab-dot stress-lab-dot-fail'} />
+                  <span className={
+                    r.passes_all === null ? 'stress-lab-dot' : r.passes_all ? 'stress-lab-dot stress-lab-dot-pass' : 'stress-lab-dot stress-lab-dot-fail'
+                  } />
                   <span className="stress-lab-name">{r.name}</span>
-                  <span className="tabular muted">{r.before.cet1}%</span>
+                  <span className="tabular muted">{r.before.cet1 === null ? 'n/a' : `${r.before.cet1}%`}</span>
                   <span className="muted">→</span>
-                  <span className={`tabular ${r.passes.cet1 ? 'stress-good-text' : 'stress-bad-text'}`}>{r.after.cet1}%</span>
+                  <span className={`tabular ${r.passes.cet1 === undefined ? '' : r.passes.cet1 ? 'stress-good-text' : 'stress-bad-text'}`}>
+                    {r.after.cet1 === null ? 'n/a' : `${r.after.cet1}%`}
+                  </span>
                 </Link>
               ))}
             </div>
@@ -419,12 +498,14 @@ export function StressLabPage() {
             <div className="stress-lab-results">
               {projection.path.map((p) => (
                 <div className="stress-lab-row" key={p.quarter_offset}>
-                  <span className={p.passes_all ? 'stress-lab-dot stress-lab-dot-pass' : 'stress-lab-dot stress-lab-dot-fail'} />
+                  <span className={
+                    p.passes_all === null ? 'stress-lab-dot' : p.passes_all ? 'stress-lab-dot stress-lab-dot-pass' : 'stress-lab-dot stress-lab-dot-fail'
+                  } />
                   <span className="stress-lab-name">Q{p.quarter_offset}</span>
                   <span className="tabular muted">hit {fmtB(p.gross_capital_hit)}</span>
                   <span className="muted">− PPNR {fmtB(p.ppnr_offset_applied)} =</span>
-                  <span className={`tabular ${p.passes.cet1 ? 'stress-good-text' : 'stress-bad-text'}`}>
-                    CET1 {p.after.cet1}%
+                  <span className={`tabular ${p.passes.cet1 === undefined ? '' : p.passes.cet1 ? 'stress-good-text' : 'stress-bad-text'}`}>
+                    CET1 {p.after.cet1 === null ? 'n/a' : `${p.after.cet1}%`}
                   </span>
                 </div>
               ))}

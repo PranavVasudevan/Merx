@@ -1,7 +1,9 @@
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { motion } from 'motion/react';
 import { chartColors, resemblanceZone } from '../colors';
+import { RECHARTS_ENTRANCE, EASE_ORGANIC, DURATION_SLOW_S } from '../chartMotion';
 import { RISK_DISCLAIMER } from '../csvExport';
+import { ChartTooltipShell } from './ChartTooltip';
 import type { RiskScoreResult } from '../types';
 import './RiskScorePanel.css';
 import './charts.css';
@@ -10,11 +12,13 @@ function DriverTip({ active, payload }: { active?: boolean; payload?: { payload:
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
   return (
-    <motion.div className="chart-tooltip" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.12 }}>
-      <div className="chart-tooltip-label">{d.feature}</div>
-      <div className="chart-tooltip-value tabular">value {d.value}</div>
-      <div className="chart-tooltip-sub muted">log-odds contribution {d.contribution > 0 ? '+' : ''}{d.contribution}</div>
-    </motion.div>
+    <ChartTooltipShell
+      label={d.feature}
+      lines={[
+        { text: `value ${d.value}` },
+        { text: `log-odds contribution ${d.contribution > 0 ? '+' : ''}${d.contribution}`, className: 'chart-tooltip-sub muted' },
+      ]}
+    />
   );
 }
 
@@ -37,7 +41,7 @@ export function RiskScorePanel({ result }: { result: RiskScoreResult }) {
             style={{ background: zone.color }}
             initial={{ width: 0 }}
             animate={{ width: `${pctile ?? 0}%` }}
-            transition={{ duration: 0.7, ease: [0.85, 0, 0.15, 1] }}
+            transition={{ duration: DURATION_SLOW_S, ease: EASE_ORGANIC }}
           />
         </div>
         <span className="muted risk-zone-label">{zone.label}</span>
@@ -54,7 +58,7 @@ export function RiskScorePanel({ result }: { result: RiskScoreResult }) {
           <YAxis type="category" dataKey="feature" tick={{ fill: colors.muted, fontSize: 10.5 }}
             axisLine={false} tickLine={false} width={130} />
           <Tooltip content={<DriverTip />} cursor={{ fill: 'var(--surface-2)' }} />
-          <Bar dataKey="contribution" radius={3} maxBarSize={16} animationDuration={700} animationEasing="ease-out">
+          <Bar dataKey="contribution" radius={3} maxBarSize={16} {...RECHARTS_ENTRANCE}>
             {data.map((d, i) => (
               <Cell key={i} fill={d.contribution >= 0 ? colors.red : colors.blue} />
             ))}

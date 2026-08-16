@@ -1,0 +1,43 @@
+.portfolio-page { display: flex; flex-direction: column; gap: var(--space-4); }
+.portfolio-subtitle { margin: 0 0 var(--space-3); font-size: var(--text-sm); }
+
+.portfolio-add-row { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.portfolio-input {
+  padding: 8px var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  min-width: 140px;
+}
+.portfolio-add-btn {
+  padding: 8px var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+.portfolio-add-btn:hover:not(:disabled) { border-color: var(--cat-blue); color: var(--cat-blue); }
+.portfolio-add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.portfolio-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); margin-bottom: var(--space-2); }
+@media (max-width: 900px) { .portfolio-stats { grid-template-columns: repeat(2, 1fr); } }
+.portfolio-stat { display: flex; flex-direction: column; gap: 4px; }
+.portfolio-stat-value { font-size: var(--text-lg); font-weight: 650; }
+
+.portfolio-stress-caption { font-size: var(--text-xs); margin: var(--space-2) 0 var(--space-4); }
+
+.portfolio-conc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); }
+@media (max-width: 700px) { .portfolio-conc-grid { grid-template-columns: 1fr; } }
+.portfolio-conc-title { font-size: var(--text-sm); margin: 0 0 var(--space-2); }
+.portfolio-conc-row { display: flex; justify-content: space-between; padding: 3px 0; font-size: var(--text-sm); border-bottom: 1px solid var(--gridline); }
+
+.portfolio-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.portfolio-table th { text-align: left; padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--gridline); }
+.portfolio-table td { padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--gridline); }
+.portfolio-remove-btn { border: none; background: none; color: var(--text-muted); cursor: pointer; font-size: var(--text-sm); }
+.portfolio-remove-btn:hover { color: var(--status-critical); }

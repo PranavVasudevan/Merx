@@ -1,21 +1,18 @@
-/* BankLens Candlestick Chart - Vibrant Glassmorphism */
+/* BankLens Candlestick Chart */
 
 .candle-container {
   width: 100%;
   padding: var(--space-6);
   border-radius: var(--radius-lg);
   background: var(--surface);
-  backdrop-filter: var(--glass-blur);
   border: 1px solid var(--border);
-  box-shadow: var(--glass-glow);
-  transition: all var(--duration-fast) var(--ease-organic);
+  transition: border-color var(--duration-fast) var(--ease-organic),
+              box-shadow var(--duration-fast) var(--ease-organic);
 }
 
 .candle-container:hover {
   border-color: var(--border-strong);
-  box-shadow: 0 0 0 1px rgba(148, 163, 196, 0.15),
-              0 12px 40px rgba(0, 0, 0, 0.6),
-              0 0 50px -8px rgba(59, 130, 246, 0.4);
+  box-shadow: var(--shadow);
 }
 
 /* Chart Header */
@@ -42,7 +39,7 @@
   font-size: var(--text-sm);
   flex-wrap: wrap;
   padding: var(--space-4);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--surface-2);
   border-radius: var(--radius);
   border: 1px solid var(--border);
 }
@@ -87,19 +84,19 @@
   font-size: var(--text-base);
   line-height: 1.6;
   color: var(--text-secondary);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--surface-2);
   border-radius: var(--radius);
   border: 1px dashed var(--border);
 }
 
 .candle-empty code {
-  background: rgba(59, 130, 246, 0.1);
-  color: var(--cat-aqua);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
   padding: 2px 6px;
   border-radius: var(--radius-sm);
   font-size: var(--text-sm);
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 /* Chart Canvas Container */
@@ -123,7 +120,7 @@
   padding: 2px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--surface-2);
 }
 
 .candle-range-btn,
@@ -165,7 +162,7 @@
   padding: 5px var(--space-3);
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--surface-2);
   font-size: var(--text-sm);
   color: var(--text-primary);
 }

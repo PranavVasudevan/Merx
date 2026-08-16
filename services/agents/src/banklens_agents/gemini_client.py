@@ -45,7 +45,11 @@ class MissingApiKey(RuntimeError):
 
 
 class GeminiAPIError(RuntimeError):
-    pass
+    # Tagged after construction with the real HTTP status (401/403/429) so
+    # gemini_keys.py's rotation logic can tell an auth/quota failure (rotate
+    # to the next key) from any other error (don't) -- a real attribute, not
+    # ad hoc dynamic-attribute abuse mypy would otherwise have no way to see.
+    status_code: int | None = None
 
 
 def resolve_model(model: str | None) -> str:

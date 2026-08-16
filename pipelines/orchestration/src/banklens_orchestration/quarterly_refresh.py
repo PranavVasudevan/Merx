@@ -43,6 +43,19 @@ from . import alerts_cli, purge_cli  # noqa: E402
 from .dag import Stage, run_dag  # noqa: E402
 
 
+def _run_alerts() -> None:
+    # alerts_cli.run()/purge_cli.run() return a summary dict (triggered/purged
+    # counts) for their own CLI's stdout — Stage.fn is Callable[[], None], and
+    # this run's summary already surfaces through print()s inside each run(),
+    # not through this DAG's own result plumbing, so the return value is
+    # deliberately discarded here rather than threaded through Stage/dag.py.
+    alerts_cli.run()
+
+
+def _run_purge() -> None:
+    purge_cli.run()
+
+
 def build_dag(*, repdte: str, quarters: int, data_dir: Path,
               land_sod: bool, sod_year: int, filings_limit: int,
               market_limit: int) -> list[Stage]:
@@ -61,8 +74,14 @@ def build_dag(*, repdte: str, quarters: int, data_dir: Path,
               lambda: market_cli.run(data_dir, limit=market_limit, refresh_days=1,
                                      start_date="2023-01-01"),
               depends_on=("crosswalk",), retries=2, retry_delay_s=10),
+        # F13 (mypy) caught this live: filings_cli.run() has no default for
+        # refresh_days, so this call was missing a required argument entirely
+        # -- the filings stage would have raised a real TypeError the first
+        # time this DAG actually ran it. 180 matches filings_cli.py's own
+        # --refresh-days CLI default.
         Stage("filings",
-              lambda: filings_cli.run(limit=filings_limit, repdte=repdte, data_dir=data_dir),
+              lambda: filings_cli.run(limit=filings_limit, refresh_days=180,
+                                      repdte=repdte, data_dir=data_dir),
               depends_on=("crosswalk",), retries=2, retry_delay_s=10),
         # Both derived-model stages only need Bronze/Silver population, not the
         # crosswalk/market/filings branch — they run independently so a filings
@@ -79,7 +98,7 @@ def build_dag(*, repdte: str, quarters: int, data_dir: Path,
         # cluster- and risk-leaderboard-based rules see this run's retrained
         # state rather than a stale one from before the refresh.
         Stage("evaluate_alerts",
-              lambda: alerts_cli.run(),
+              _run_alerts,
               depends_on=("clustering", "deposit_flight_retrain"), retries=1),
         # G4 — retention purge for the user-generated layer (agent-run
         # transcripts, MCP audit log). No dependencies: it operates on
@@ -87,7 +106,7 @@ def build_dag(*, repdte: str, quarters: int, data_dir: Path,
         # lands, so it runs regardless of whether the data stages above
         # succeed — a bad market-data pull shouldn't also block housekeeping.
         Stage("purge_expired_user_data",
-              lambda: purge_cli.run(),
+              _run_purge,
               retries=1),
     ]
     if land_sod:

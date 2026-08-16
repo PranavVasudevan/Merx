@@ -92,15 +92,14 @@
 
 .app-nav-link-redesigned:hover {
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface-2);
   border-color: var(--border);
 }
 
 .app-nav-link-active-redesigned {
-  color: var(--cat-blue);
-  background: rgba(59, 130, 246, 0.15);
-  border-color: rgba(59, 130, 246, 0.3);
-  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.2);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 .app-nav-link-gated-redesigned {
@@ -129,10 +128,9 @@
 
 .app-user-card {
   padding: var(--space-3);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  backdrop-filter: blur(8px);
 }
 
 .app-sidebar-controls {
@@ -156,7 +154,7 @@
 .app-user-logout-redesigned:hover {
   color: var(--text-primary);
   border-color: var(--border-strong);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface-2);
 }
 
 /* ===== MAIN CONTENT AREA ===== */
@@ -171,7 +169,6 @@
 .app-header-redesigned {
   height: 64px;
   background: var(--surface);
-  backdrop-filter: var(--glass-blur);
   border-bottom: 1px solid var(--border);
   padding: 0 var(--space-8);
   display: flex;
@@ -213,6 +210,9 @@
 }
 
 .app-header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
   flex-shrink: 0;
 }
 
@@ -231,7 +231,6 @@
   font-size: var(--text-xs);
   flex-shrink: 0;
   background: var(--surface);
-  backdrop-filter: var(--glass-blur);
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
@@ -263,10 +262,7 @@
 .app-error h1 {
   font-size: var(--text-2xl);
   margin: 0 0 var(--space-4);
-  background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 50%, #3b82f6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary);
 }
 
 .app-error p {
@@ -275,7 +271,7 @@
 }
 
 .app-error code {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface-2);
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-sm);
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;

@@ -1,8 +1,10 @@
 import { useMemo } from 'react';
 import type { EChartsOption } from 'echarts';
 import { EChart } from './EChart';
-import { baseEChartTheme, tooltipStyle } from '../echartsTheme';
+import { Figure } from './Figure';
+import { baseEChartTheme, tooltipHtml, tooltipStyle } from '../echartsTheme';
 import { chartColors } from '../colors';
+import { pct } from '../metricFormat';
 import type { StressSurfaceResult } from '../types';
 
 /**
@@ -21,7 +23,10 @@ export function StressSurfaceChart({ result }: { result: StressSurfaceResult }) 
     const theme = baseEChartTheme();
     const colors = chartColors();
     const min = result.cet1_minimum_pct;
-    const data: [number, number, number][] = result.cells.map((c) => [
+    // F6 — a cell's CET1 after ratio is null when this bank discloses no RWA
+    // to compute it against (not a fabricated 0%); ECharts renders a null
+    // heatmap value as a blank cell rather than a fake data point.
+    const data: [number, number, number | null][] = result.cells.map((c) => [
       result.rate_shock_values.indexOf(c.rate_shock_bps),
       result.deposit_outflow_values.indexOf(c.deposit_outflow_pct),
       c.cet1_after,
@@ -31,14 +36,19 @@ export function StressSurfaceChart({ result }: { result: StressSurfaceResult }) 
       tooltip: {
         ...tooltipStyle(),
         formatter: (p: unknown) => {
-          const cell = (Array.isArray(p) ? p[0] : p) as { data?: [number, number, number] };
+          const cell = (Array.isArray(p) ? p[0] : p) as { data?: [number, number, number | null] };
           if (!cell.data) return '';
           const [x, y, v] = cell.data;
           const rate = result.rate_shock_values[x];
           const outflow = result.deposit_outflow_values[y];
+          const label = `Deposit outflow ${outflow}%, rate shock +${rate}bps`;
+          if (v === null) {
+            return tooltipHtml(label, [{ text: 'CET1 after: n/a — no RWA disclosed to compute it against', muted: true }]);
+          }
           const pass = v >= min;
-          return `Deposit outflow ${outflow}%, rate shock +${rate}bps<br/>`
-            + `CET1 after: <strong>${v.toFixed(2)}%</strong> — ${pass ? 'clears' : 'breaches'} the ${min}% minimum`;
+          return tooltipHtml(label, [
+            { text: `CET1 after: ${pct(v)} — ${pass ? 'clears' : 'breaches'} the ${min}% minimum` },
+          ]);
         },
       },
       xAxis: {
@@ -81,11 +91,30 @@ export function StressSurfaceChart({ result }: { result: StressSurfaceResult }) 
     return opt;
   }, [result]);
 
+  const ariaLabel = `Stressed CET1 surface across deposit outflow and rate shock for ${result.name}, `
+    + `regulatory minimum ${result.cet1_minimum_pct}% CET1, loan losses held at ${result.loan_loss_pct}%`;
+
   return (
     <>
-      <EChart option={option} height={340}
-        resetKey={`${result.cert}-${result.loan_loss_pct}-${result.steps}`}
-        ariaLabel="Stressed CET1 surface across deposit outflow and rate shock" />
+      <Figure
+        ariaLabel={ariaLabel}
+        rows={result.cells}
+        columns={[
+          { key: 'deposit_outflow_pct', label: 'Deposit outflow (%)' },
+          { key: 'rate_shock_bps', label: 'Rate shock (bps)' },
+          { key: 'cet1_after', label: 'CET1 after (%)', value: (r) => (r.cet1_after === null ? 'n/a' : r.cet1_after) },
+          { key: 'passes_cet1', label: `Passes ${result.cet1_minimum_pct}% minimum`,
+            value: (r) => (r.passes_cet1 === undefined ? 'n/a' : r.passes_cet1 ? 'yes' : 'no') },
+        ]}
+        filename={`banklens-stress-surface-${result.cert}.csv`}
+        csvMeta={{ sourceLabel: `${result.name} (CERT ${result.cert}), ${result.quarter}` }}
+      >
+        {/* EChart's own role="img"/aria-label is redundant once wrapped in Figure
+            (which applies the same label to its outer chart region), so it's left
+            unset here rather than announced twice. */}
+        <EChart option={option} height={340}
+          resetKey={`${result.cert}-${result.loan_loss_pct}-${result.steps}`} />
+      </Figure>
       <p className="muted chart-caption">
         Loan losses held fixed at {result.loan_loss_pct}% across the grid — only deposit
         outflow and rate shock vary. Regulatory minimum: CET1 ≥ {result.cet1_minimum_pct}%

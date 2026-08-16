@@ -118,6 +118,43 @@ export function resemblanceZone(percentile: number | null): { color: string; lab
   return { color: c.good, label: 'Low resemblance' };
 }
 
+/**
+ * E14 colorblind-safety check (documented result, not just a claim):
+ *
+ * The 8 --cat-* tokens in theme.css/skin-terminal.css were run through a
+ * throwaway Node script applying the standard Machado, Oliveira & Fluet
+ * (2009) protanopia/deuteranopia simulation matrices (100% severity, linear-
+ * RGB) to each color, then measuring every pairwise CIE76 Lab distance
+ * (dE76) under normal vision and each simulated deficiency. No real
+ * image-based simulator was run — this is a matrix-transform approximation,
+ * documented as such rather than overclaimed.
+ *
+ * First pass (original tokens: aqua #4f8f8a, orange #b1653c,
+ * violet #8a7f74) found three pairs that collapse below a dE76=10
+ * "hard to tell apart at a glance" threshold:
+ *   - protanopia:   aqua/violet   dE=8.6
+ *   - deuteranopia: magenta/aqua  dE=8.7, magenta/violet dE=6.5,
+ *                   orange/red    dE=7.1
+ * Root cause: --cat-violet was barely saturated (Lab a=2.2, b=7.5 — nearly
+ * neutral grey-brown), so it had little chroma in reserve on the axes
+ * (lightness, blue-yellow) that survive red-green color-vision deficiency,
+ * and orange/red sat close together in Lab space even under normal vision
+ * (dE76=14).
+ *
+ * Fix: --cat-aqua -> #3d9494, --cat-orange -> #c8823f, --cat-violet ->
+ * #5f6aa8 (applied in theme.css and skin-terminal.css; blue/green/magenta/
+ * yellow/red unchanged). Re-running the same check against all 28 pairs
+ * under normal vision, protanopia, and deuteranopia gives a worst-case
+ * dE76 of 12.76 (blue vs violet, deuteranopia) — every pair now clears the
+ * threshold with margin.
+ *
+ * Out of scope: FALLBACK_LIGHT/FALLBACK_DARK above are a separate, legacy
+ * palette used only when no stylesheet is present (SSR / non-DOM test
+ * contexts) — never seen by a real user in the browser, since the app is a
+ * client-rendered SPA that always has theme.css loaded. They were left
+ * unchecked; a colorblind-safety pass would need to cover them too if they
+ * are ever pressed into a real rendering path.
+ */
 /** The categorical ramp, in the fixed order the dataviz tokens define. */
 export function categoricalPalette(): string[] {
   const c = chartColors();

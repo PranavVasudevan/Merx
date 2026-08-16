@@ -81,41 +81,41 @@ export function CommandPalette() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Jump to a page or search a bank by name…"
-              className="w-full bg-transparent text-base font-medium text-primary outline-none placeholder:text-muted"
+              className="w-full bg-transparent text-base font-medium text-body outline-none placeholder:text-faint"
             />
           </div>
 
           <div className="max-h-96 overflow-y-auto p-2">
             {banks.length > 0 && (
               <div className="mb-1">
-                <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted">Banks</div>
+                <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-faint">Banks</div>
                 {banks.map((b) => (
                   <button
                     key={b.cert}
                     onClick={() => go(`/bank/${b.cert}`)}
                     className="flex w-full items-center justify-between rounded-panel px-3 py-2 text-left text-sm
-                               text-primary transition-colors hover:bg-surface-2"
+                               text-body transition-colors hover:bg-surface-2"
                   >
                     <span className="font-medium">{b.name}</span>
-                    <span className="text-xs text-muted">${b.assets_b.toFixed(1)}B · {b.state ?? '—'}</span>
+                    <span className="text-xs text-faint">${b.assets_b.toFixed(1)}B · {b.state ?? '—'}</span>
                   </button>
                 ))}
               </div>
             )}
 
-            <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted">Pages</div>
+            <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-faint">Pages</div>
             {routeMatches.length === 0 ? (
-              <div className="px-3 py-4 text-center text-sm text-muted">No matching pages.</div>
+              <div className="px-3 py-4 text-center text-sm text-faint">No matching pages.</div>
             ) : (
               routeMatches.map((link) => (
                 <button
                   key={link.to}
                   onClick={() => go(link.to)}
                   className="flex w-full items-center justify-between rounded-panel px-3 py-2 text-left text-sm
-                             text-primary transition-colors hover:bg-surface-2"
+                             text-body transition-colors hover:bg-surface-2"
                 >
                   <span className="font-medium">{link.label}</span>
-                  <span className="rounded-panel-sm border border-border px-1.5 py-0.5 text-[10px] text-muted">
+                  <span className="rounded-panel-sm border border-border px-1.5 py-0.5 text-[10px] text-faint">
                     {link.group}
                   </span>
                 </button>
@@ -123,7 +123,7 @@ export function CommandPalette() {
             )}
           </div>
 
-          <div className="flex items-center justify-between border-t border-border bg-surface-2 px-3 py-2 text-[10px] text-muted">
+          <div className="flex items-center justify-between border-t border-border bg-surface-2 px-3 py-2 text-[10px] text-faint">
             <span>ENTER TO NAVIGATE</span>
             <span>ESC TO CLOSE</span>
           </div>

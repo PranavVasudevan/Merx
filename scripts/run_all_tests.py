@@ -34,7 +34,7 @@ SRC_PATHS = [
     REPO / "pipelines" / "orchestration" / "src",
 ]
 
-SEARCH_DIRS = [REPO / "pipelines", REPO / "services", REPO / "libs"]
+SEARCH_DIRS = [REPO / "pipelines", REPO / "services", REPO / "libs", REPO / "scripts"]
 
 _COUNT_RE = re.compile(r"^(PASS|FAIL|SKIP|ERROR)\s", re.MULTILINE)
 

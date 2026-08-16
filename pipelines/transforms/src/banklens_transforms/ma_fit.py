@@ -15,7 +15,9 @@ over Gold features + real branch footprints.
 
 from __future__ import annotations
 
+import bisect
 import math
+from collections import defaultdict
 
 from .footprint import cell_overlap, deposit_weighted_overlap
 
@@ -110,11 +112,9 @@ def fit_score(target: dict, cand: dict, *, target_footprint: dict | None = None,
 
     w = dict(weights)
     if geo is None:                              # renormalize without geo
-        gw = w.pop("geo")
+        w.pop("geo")
         s = sum(w.values())
-        w = {k: v / s * (s + gw) / s for k, v in w.items()} if s else w
-        s2 = sum(w.values())
-        w = {k: v / s2 for k, v in w.items()}
+        w = {k: v / s for k, v in w.items()} if s else w
         score = comp * w["funding"] + sim * w["business"] + szf * w["size"]
     else:
         score = (comp * w["funding"] + sim * w["business"]
@@ -135,10 +135,103 @@ def fit_score(target: dict, cand: dict, *, target_footprint: dict | None = None,
 
 def rank_partners(target: dict, population: list[dict], *, top_n: int = 10,
                   footprints: dict | None = None) -> list[dict]:
-    """Rank all other banks as acquirers/partners for the target."""
+    """Rank all other banks as acquirers/partners for the target — the exact,
+    real O(n) sweep for ONE target. Fine for a single user-triggered lookup
+    (find_ma_matches); network_edges() calling this for EVERY bank in the
+    population is the real O(n^2) cost F8 addresses — see
+    build_loan_mix_index()/rank_partners_approx() below."""
     t_fp = (footprints or {}).get(target.get("cert_number"))
     out = []
     for cand in population:
+        if cand.get("cert_number") == target.get("cert_number"):
+            continue
+        c_fp = (footprints or {}).get(cand.get("cert_number"))
+        out.append(fit_score(target, cand, target_footprint=t_fp, cand_footprint=c_fp))
+    out.sort(key=lambda r: r["fit_score"], reverse=True)
+    return out[:top_n]
+
+
+# ---- F8: blocked/approximate nearest-neighbour search for the whole-network
+#      view (network_edges()), where the naive approach scores EVERY bank
+#      against EVERY other bank — the real O(n^2) cost measured live at ~17s
+#      for the original 1,049-bank population, unworkable at B3's ~4,500-bank
+#      universe. ---------------------------------------------------------
+
+def _dominant_category(bank: dict) -> tuple[int, float]:
+    """(index into LOAN_MIX of the bank's largest loan-mix share, that share)
+    — a coarse signature used only to narrow the candidate set before exact
+    fit_score(), not a replacement for business_similarity()'s real cosine
+    computation."""
+    vec = _vec(bank)
+    idx = max(range(len(vec)), key=lambda i: vec[i])
+    return idx, vec[idx]
+
+
+def build_loan_mix_index(population: list[dict]) -> dict[int, list[tuple[float, dict]]]:
+    """One pass over the population (O(n log n), the sort dominates): group
+    banks by their DOMINANT loan-mix category, each group sorted by that
+    category's share. `rank_partners_approx()` searches this index instead of
+    scanning the whole population per target — build it ONCE and reuse it for
+    every target, the same "build once" pattern the rest of Gold follows."""
+    by_category: dict[int, list[tuple[float, dict]]] = defaultdict(list)
+    for bank in population:
+        idx, share = _dominant_category(bank)
+        by_category[idx].append((share, bank))
+    for entries in by_category.values():
+        entries.sort(key=lambda e: e[0])
+    return by_category
+
+
+def _window_candidates(target: dict, index: dict[int, list[tuple[float, dict]]],
+                       window: int) -> list[dict]:
+    """Approximate nearest neighbours by loan mix: the `window` banks either
+    side of the target's own position in its dominant category's share-sorted
+    list, PLUS the same window in the target's SECOND-largest category — a
+    bank near an even split between two categories can have its closest real
+    match sitting in either bucket, so searching only its single dominant
+    category would miss it. Deterministic (no randomization), so results are
+    reproducible run to run for the same population and window size."""
+    vec = _vec(target)
+    ranked_categories = sorted(range(len(vec)), key=lambda i: vec[i], reverse=True)
+    seen: set = set()
+    out: list[dict] = []
+    for cat_idx in ranked_categories[:2]:
+        entries = index.get(cat_idx, [])
+        if not entries:
+            continue
+        shares = [e[0] for e in entries]
+        pos = bisect.bisect_left(shares, vec[cat_idx])
+        lo, hi = max(0, pos - window), min(len(entries), pos + window)
+        for _, bank in entries[lo:hi]:
+            cert = bank.get("cert_number")
+            if cert not in seen:
+                seen.add(cert)
+                out.append(bank)
+    return out
+
+
+def rank_partners_approx(target: dict, index: dict[int, list[tuple[float, dict]]], *,
+                         top_n: int = 10, footprints: dict | None = None,
+                         window: int = 150) -> list[dict]:
+    """Approximate-nearest-neighbour version of rank_partners(): narrow to a
+    candidate set via `_window_candidates` (blocked on the loan-mix vector,
+    business_similarity's real input and 25% of the default fit weight), then
+    run the SAME exact fit_score() the naive sweep uses on only that reduced
+    set — "exact scoring only for the retained candidates," per this repo's
+    own audit backlog. Approximate by construction: a candidate with
+    unremarkable business_similarity but an exceptional funding/size/geo fit
+    could in principle sit in the true top-N while falling outside the
+    window; the tradeoff is deliberate, not an oversight — re-scoring the
+    full population for every one of the population's own banks is exactly
+    the cost this function exists to avoid. `window` defaults large enough
+    (150) that this is a genuinely close approximation in practice, not just
+    a fast wrong answer — see the population-level agreement check in
+    test_ma_fit.py.
+    """
+    candidates = _window_candidates(target, index, window)
+    t_fp = (footprints or {}).get(target.get("cert_number"))
+    out = []
+    for cand in candidates:
         if cand.get("cert_number") == target.get("cert_number"):
             continue
         c_fp = (footprints or {}).get(cand.get("cert_number"))

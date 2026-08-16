@@ -1,15 +1,21 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { api, type BankSearchResult } from '../api';
 import { ExportCsvButton } from '../components/ExportCsvButton';
 import type { CsvColumn } from '../csvExport';
-import type { SavedScreen } from '../types';
+import type { PopulationTrendSparklinesResult, SavedScreen } from '../types';
+import { Sparkline } from '../components/Sparkline';
 import './ScreenerPage.css';
 
 type ScreenerRow = BankSearchResult['banks'][number];
 
-const CSV_COLUMNS: CsvColumn<ScreenerRow>[] = [
+// E12 — the three trend-eligible screener columns: one per metric group
+// (earnings/credit/capital), matching what get_population_trend_sparklines
+// validates through licensing.assert_fields_bulk_allowed.
+const SPARKLINE_METRICS = ['roa_pct', 'npl_ratio_pct', 'cet1_ratio'] as const;
+
+const BASE_CSV_COLUMNS: CsvColumn<ScreenerRow>[] = [
   { key: 'name', label: 'Bank', value: (b) => b.name },
   { key: 'cert', label: 'FDIC Cert', value: (b) => b.cert, source: 'fdic' },
   { key: 'loc', label: 'Location', value: (b) => (b.country === 'US' ? b.state ?? '' : b.country ?? '') },
@@ -20,6 +26,10 @@ const CSV_COLUMNS: CsvColumn<ScreenerRow>[] = [
   { key: 'cet1_ratio', label: 'CET1 %', value: (b) => b.cet1_ratio, source: 'fdic' },
 ];
 
+const SPARKLINE_LABELS: Record<(typeof SPARKLINE_METRICS)[number], string> = {
+  roa_pct: 'ROA %', npl_ratio_pct: 'NPL ratio %', cet1_ratio: 'CET1 %',
+};
+
 type SortKey = 'name' | 'state' | 'country' | 'assets_b' | 'cluster' | 'roa_pct' | 'npl_ratio_pct' | 'cet1_ratio';
 
 function fmtPct(v: number | null): string {
@@ -28,17 +38,36 @@ function fmtPct(v: number | null): string {
 
 export function ScreenerPage() {
   const navigate = useNavigate();
-  const [query, setQuery] = useState('');
-  const [state, setState] = useState('');
-  const [country, setCountry] = useState('');
-  const [minAssets, setMinAssets] = useState('');
-  const [maxAssets, setMaxAssets] = useState('');
-  const [sortKey, setSortKey] = useState<SortKey>('assets_b');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  // D8 — filters/sort live in the URL (same pattern /trends established),
+  // so a copied link reproduces the exact same screen.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [query, setQuery] = useState(searchParams.get('q') ?? '');
+  const [state, setState] = useState(searchParams.get('state') ?? '');
+  const [country, setCountry] = useState(searchParams.get('country') ?? '');
+  const [minAssets, setMinAssets] = useState(searchParams.get('min') ?? '');
+  const [maxAssets, setMaxAssets] = useState(searchParams.get('max') ?? '');
+  const [sortKey, setSortKey] = useState<SortKey>((searchParams.get('sort') as SortKey) || 'assets_b');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>((searchParams.get('dir') as 'asc' | 'desc') || 'desc');
   const [result, setResult] = useState<BankSearchResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedScreens, setSavedScreens] = useState<SavedScreen[]>([]);
+  // E12 — sparkline trend series for the ROA/NPL/CET1 columns, batched ONE
+  // extra request per filtered result rather than one per row.
+  const [sparklines, setSparklines] = useState<PopulationTrendSparklinesResult | null>(null);
+
+  useEffect(() => {
+    const next: Record<string, string> = {};
+    if (query) next.q = query;
+    if (state) next.state = state;
+    if (country) next.country = country;
+    if (minAssets) next.min = minAssets;
+    if (maxAssets) next.max = maxAssets;
+    if (sortKey !== 'assets_b') next.sort = sortKey;
+    if (sortDir !== 'desc') next.dir = sortDir;
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, state, country, minAssets, maxAssets, sortKey, sortDir]);
 
   useEffect(() => {
     api.getSavedScreens().then((r) => setSavedScreens(r.items)).catch(() => setSavedScreens([]));
@@ -90,6 +119,36 @@ export function ScreenerPage() {
     return () => clearTimeout(t);
   }, [query, state, country, minAssets, maxAssets]);
 
+  useEffect(() => {
+    if (!result || result.banks.length === 0) { setSparklines(null); return; }
+    const certs = result.banks.map((b) => b.cert);
+    api.populationTrendSparklines(certs, [...SPARKLINE_METRICS])
+      .then(setSparklines)
+      // Supplementary context, not core table data — a failure here shouldn't
+      // blank out an otherwise-working screener.
+      .catch(() => setSparklines(null));
+  }, [result]);
+
+  const sparkByCert = useMemo(() => {
+    const m = new Map<number, Record<string, (number | null)[]>>();
+    for (const b of sparklines?.banks ?? []) m.set(b.cert, b.values);
+    return m;
+  }, [sparklines]);
+
+  const csvColumns = useMemo((): CsvColumn<ScreenerRow>[] => [
+    ...BASE_CSV_COLUMNS,
+    // E12 — each sparkline metric's trailing per-quarter series, same
+    // convention as MetricGroupPage's csvColumns (earnings/credit/funding).
+    ...(sparklines
+      ? SPARKLINE_METRICS.flatMap((m) => sparklines.quarters.map((q, qi) => ({
+          key: `${m}__${q}`,
+          label: `${SPARKLINE_LABELS[m]} (${q})`,
+          value: (b: ScreenerRow) => sparkByCert.get(b.cert)?.[m]?.[qi] ?? null,
+          source: 'fdic' as const,
+        })))
+      : []),
+  ], [sparklines, sparkByCert]);
+
   const rows = [...(result?.banks ?? [])].sort((a, b) => {
     const dir = sortDir === 'asc' ? 1 : -1;
     const av = a[sortKey] ?? '';
@@ -118,7 +177,7 @@ export function ScreenerPage() {
             </button>
             <ExportCsvButton
               filename="banklens-screener.csv"
-              columns={CSV_COLUMNS}
+              columns={csvColumns}
               rows={rows}
               meta={{ sourceLabel: 'FDIC BankFind / EBA Transparency Exercise' }}
             />
@@ -213,9 +272,24 @@ export function ScreenerPage() {
                   <td>{b.country === 'US' ? (b.state ?? '—') : (b.country ?? '—')}</td>
                   <td className="tabular screener-td-right">${b.assets_b.toFixed(1)}B</td>
                   <td className="muted">{b.cluster ?? '—'}</td>
-                  <td className="tabular screener-td-right">{fmtPct(b.roa_pct)}</td>
-                  <td className="tabular screener-td-right">{fmtPct(b.npl_ratio_pct)}</td>
-                  <td className="tabular screener-td-right">{fmtPct(b.cet1_ratio)}</td>
+                  <td className="tabular screener-td-right">
+                    <span className="screener-td-value">
+                      <span>{fmtPct(b.roa_pct)}</span>
+                      <Sparkline values={sparkByCert.get(b.cert)?.roa_pct ?? []} title="ROA trend" />
+                    </span>
+                  </td>
+                  <td className="tabular screener-td-right">
+                    <span className="screener-td-value">
+                      <span>{fmtPct(b.npl_ratio_pct)}</span>
+                      <Sparkline values={sparkByCert.get(b.cert)?.npl_ratio_pct ?? []} title="NPL ratio trend" />
+                    </span>
+                  </td>
+                  <td className="tabular screener-td-right">
+                    <span className="screener-td-value">
+                      <span>{fmtPct(b.cet1_ratio)}</span>
+                      <Sparkline values={sparkByCert.get(b.cert)?.cet1_ratio ?? []} title="CET1 trend" />
+                    </span>
+                  </td>
                 </motion.tr>
               ))}
             </tbody>

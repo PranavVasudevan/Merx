@@ -1,0 +1,310 @@
+{
+  "quarters_covered": [
+    "20210331",
+    "20210630",
+    "20210930",
+    "20211231",
+    "20220331",
+    "20220630",
+    "20220930",
+    "20230331",
+    "20230630",
+    "20230930",
+    "20231231",
+    "20240331",
+    "20240630",
+    "20240930",
+    "20241231",
+    "20250331",
+    "20250630",
+    "20250930",
+    "20251231",
+    "20260331"
+  ],
+  "n_transitions": 19,
+  "horizon_quarters": 1,
+  "signal_definitions": {
+    "xray_high_risk": "X-Ray overall_risk in {elevated, high} at quarter t",
+    "deposit_flight_top_decile": "Deposit-flight risk_score in the top 10.0% at quarter t",
+    "filing_diff_flagged": "filing_diff.diff() found >= 1 flagged line item vs quarter t-1"
+  },
+  "results": {
+    "xray_high_risk": {
+      "deposit_outflow": {
+        "label": "Deposit outflow > 3%",
+        "flagged_hits": 6870,
+        "flagged_n": 50082,
+        "flagged_hit_rate": {
+          "point": 0.1372,
+          "lo": 0.1342,
+          "hi": 0.1402
+        },
+        "base_hits": 12134,
+        "base_n": 87337,
+        "base_hit_rate": {
+          "point": 0.1389,
+          "lo": 0.1367,
+          "hi": 0.1412
+        },
+        "lift": 0.99
+      },
+      "capital_deterioration": {
+        "label": "CET1 declined > 1pp",
+        "flagged_hits": 3420,
+        "flagged_n": 50082,
+        "flagged_hit_rate": {
+          "point": 0.0683,
+          "lo": 0.0661,
+          "hi": 0.0705
+        },
+        "base_hits": 5734,
+        "base_n": 87337,
+        "base_hit_rate": {
+          "point": 0.0657,
+          "lo": 0.064,
+          "hi": 0.0673
+        },
+        "lift": 1.04
+      },
+      "credit_deterioration": {
+        "label": "Credit-deterioration flag (C8)",
+        "flagged_hits": 20194,
+        "flagged_n": 50082,
+        "flagged_hit_rate": {
+          "point": 0.4032,
+          "lo": 0.3989,
+          "hi": 0.4075
+        },
+        "base_hits": 34276,
+        "base_n": 87337,
+        "base_hit_rate": {
+          "point": 0.3925,
+          "lo": 0.3892,
+          "hi": 0.3957
+        },
+        "lift": 1.03
+      },
+      "cluster_migration": {
+        "label": "Behavioral cluster changed",
+        "flagged_hits": 0,
+        "flagged_n": 0,
+        "flagged_hit_rate": {
+          "point": null,
+          "lo": null,
+          "hi": null
+        },
+        "base_hits": 0,
+        "base_n": 0,
+        "base_hit_rate": {
+          "point": null,
+          "lo": null,
+          "hi": null
+        },
+        "lift": null
+      },
+      "failed_or_exited": {
+        "label": "Failed or exited the landed population",
+        "flagged_hits": 563,
+        "flagged_n": 50565,
+        "flagged_hit_rate": {
+          "point": 0.0111,
+          "lo": 0.0103,
+          "hi": 0.0121
+        },
+        "base_hits": 873,
+        "base_n": 88088,
+        "base_hit_rate": {
+          "point": 0.0099,
+          "lo": 0.0093,
+          "hi": 0.0106
+        },
+        "lift": 1.12
+      }
+    },
+    "deposit_flight_top_decile": {
+      "deposit_outflow": {
+        "label": "Deposit outflow > 3%",
+        "flagged_hits": 2012,
+        "flagged_n": 8698,
+        "flagged_hit_rate": {
+          "point": 0.2313,
+          "lo": 0.2226,
+          "hi": 0.2403
+        },
+        "base_hits": 12134,
+        "base_n": 87337,
+        "base_hit_rate": {
+          "point": 0.1389,
+          "lo": 0.1367,
+          "hi": 0.1412
+        },
+        "lift": 1.67
+      },
+      "capital_deterioration": {
+        "label": "CET1 declined > 1pp",
+        "flagged_hits": 1042,
+        "flagged_n": 8698,
+        "flagged_hit_rate": {
+          "point": 0.1198,
+          "lo": 0.1131,
+          "hi": 0.1268
+        },
+        "base_hits": 5734,
+        "base_n": 87337,
+        "base_hit_rate": {
+          "point": 0.0657,
+          "lo": 0.064,
+          "hi": 0.0673
+        },
+        "lift": 1.82
+      },
+      "credit_deterioration": {
+        "label": "Credit-deterioration flag (C8)",
+        "flagged_hits": 3079,
+        "flagged_n": 8698,
+        "flagged_hit_rate": {
+          "point": 0.354,
+          "lo": 0.344,
+          "hi": 0.3641
+        },
+        "base_hits": 34276,
+        "base_n": 87337,
+        "base_hit_rate": {
+          "point": 0.3925,
+          "lo": 0.3892,
+          "hi": 0.3957
+        },
+        "lift": 0.9
+      },
+      "cluster_migration": {
+        "label": "Behavioral cluster changed",
+        "flagged_hits": 0,
+        "flagged_n": 0,
+        "flagged_hit_rate": {
+          "point": null,
+          "lo": null,
+          "hi": null
+        },
+        "base_hits": 0,
+        "base_n": 0,
+        "base_hit_rate": {
+          "point": null,
+          "lo": null,
+          "hi": null
+        },
+        "lift": null
+      },
+      "failed_or_exited": {
+        "label": "Failed or exited the landed population",
+        "flagged_hits": 131,
+        "flagged_n": 8800,
+        "flagged_hit_rate": {
+          "point": 0.0149,
+          "lo": 0.0126,
+          "hi": 0.0176
+        },
+        "base_hits": 873,
+        "base_n": 88088,
+        "base_hit_rate": {
+          "point": 0.0099,
+          "lo": 0.0093,
+          "hi": 0.0106
+        },
+        "lift": 1.51
+      }
+    },
+    "filing_diff_flagged": {
+      "deposit_outflow": {
+        "label": "Deposit outflow > 3%",
+        "flagged_hits": 7509,
+        "flagged_n": 49133,
+        "flagged_hit_rate": {
+          "point": 0.1528,
+          "lo": 0.1497,
+          "hi": 0.156
+        },
+        "base_hits": 12134,
+        "base_n": 87337,
+        "base_hit_rate": {
+          "point": 0.1389,
+          "lo": 0.1367,
+          "hi": 0.1412
+        },
+        "lift": 1.1
+      },
+      "capital_deterioration": {
+        "label": "CET1 declined > 1pp",
+        "flagged_hits": 3850,
+        "flagged_n": 49133,
+        "flagged_hit_rate": {
+          "point": 0.0784,
+          "lo": 0.076,
+          "hi": 0.0808
+        },
+        "base_hits": 5734,
+        "base_n": 87337,
+        "base_hit_rate": {
+          "point": 0.0657,
+          "lo": 0.064,
+          "hi": 0.0673
+        },
+        "lift": 1.19
+      },
+      "credit_deterioration": {
+        "label": "Credit-deterioration flag (C8)",
+        "flagged_hits": 17488,
+        "flagged_n": 49133,
+        "flagged_hit_rate": {
+          "point": 0.3559,
+          "lo": 0.3517,
+          "hi": 0.3602
+        },
+        "base_hits": 34276,
+        "base_n": 87337,
+        "base_hit_rate": {
+          "point": 0.3925,
+          "lo": 0.3892,
+          "hi": 0.3957
+        },
+        "lift": 0.91
+      },
+      "cluster_migration": {
+        "label": "Behavioral cluster changed",
+        "flagged_hits": 0,
+        "flagged_n": 0,
+        "flagged_hit_rate": {
+          "point": null,
+          "lo": null,
+          "hi": null
+        },
+        "base_hits": 0,
+        "base_n": 0,
+        "base_hit_rate": {
+          "point": null,
+          "lo": null,
+          "hi": null
+        },
+        "lift": null
+      },
+      "failed_or_exited": {
+        "label": "Failed or exited the landed population",
+        "flagged_hits": 596,
+        "flagged_n": 49642,
+        "flagged_hit_rate": {
+          "point": 0.012,
+          "lo": 0.0111,
+          "hi": 0.013
+        },
+        "base_hits": 873,
+        "base_n": 88088,
+        "base_hit_rate": {
+          "point": 0.0099,
+          "lo": 0.0093,
+          "hi": 0.0106
+        },
+        "lift": 1.21
+      }
+    }
+  },
+  "note": "Pooled across every consecutive quarter transition available. A lift near 1.0 or a confidence interval that straddles it means no detectable signal at this horizon with this sample \u2014 reported as a real, publishable finding, not hidden. cluster_migration is not computed by this harness (it doesn't run the k-means clustering pipeline) \u2014 n=0 there is a scope statement, not a null result."
+}

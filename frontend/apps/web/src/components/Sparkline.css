@@ -1,0 +1,10 @@
+.sparkline {
+  display: inline-block;
+  vertical-align: middle;
+  overflow: visible;
+}
+
+.sparkline-empty {
+  display: inline-block;
+  vertical-align: middle;
+}

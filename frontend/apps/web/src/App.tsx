@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react';
 import type { User } from 'oidc-client-ts';
 import { Route, Routes } from 'react-router-dom';
 import { NavShell } from './components/NavShell';
+import { PeerSetProvider } from './PeerSetContext';
 import { QuarterProvider } from './QuarterContext';
 
 // Every route is code-split. Eager imports put all pages plus three charting
@@ -27,12 +28,15 @@ const BriefingPage = lazy(() => import('./pages/BriefingPage').then(m => ({ defa
 const FilingDiffPage = lazy(() => import('./pages/FilingDiffPage').then(m => ({ default: m.FilingDiffPage })));
 const ClustersPage = lazy(() => import('./pages/ClustersPage').then(m => ({ default: m.ClustersPage })));
 const ModelPage = lazy(() => import('./pages/ModelPage').then(m => ({ default: m.ModelPage })));
+const BacktestPage = lazy(() => import('./pages/BacktestPage').then(m => ({ default: m.BacktestPage })));
 const GeographyPage = lazy(() => import('./pages/GeographyPage').then(m => ({ default: m.GeographyPage })));
 const MarketSharePage = lazy(() => import('./pages/MarketSharePage').then(m => ({ default: m.MarketSharePage })));
 const MarketPage = lazy(() => import('./pages/MarketPage').then(m => ({ default: m.MarketPage })));
 const NetworkPage = lazy(() => import('./pages/NetworkPage').then(m => ({ default: m.NetworkPage })));
 const StressLabPage = lazy(() => import('./pages/StressLabPage').then(m => ({ default: m.StressLabPage })));
 const FilingsPage = lazy(() => import('./pages/FilingsPage').then(m => ({ default: m.FilingsPage })));
+const PortfolioPage = lazy(() => import('./pages/PortfolioPage').then(m => ({ default: m.PortfolioPage })));
+const GlossaryPage = lazy(() => import('./pages/GlossaryPage').then(m => ({ default: m.GlossaryPage })));
 
 function RouteFallback() {
   return <div className="route-loading muted">Loading…</div>;
@@ -41,6 +45,7 @@ function RouteFallback() {
 export default function App({ user, onLogout }: { user: User; onLogout: () => void }) {
   return (
     <QuarterProvider>
+    <PeerSetProvider>
     <Routes>
       <Route element={<NavShell user={user} onLogout={onLogout} />}>
         <Route index element={<Suspense fallback={<RouteFallback />}><OverviewPage /></Suspense>} />
@@ -57,6 +62,7 @@ export default function App({ user, onLogout }: { user: User; onLogout: () => vo
         <Route path="/filing-diff" element={<Suspense fallback={<RouteFallback />}><FilingDiffPage /></Suspense>} />
         <Route path="/clusters" element={<Suspense fallback={<RouteFallback />}><ClustersPage /></Suspense>} />
         <Route path="/model" element={<Suspense fallback={<RouteFallback />}><ModelPage /></Suspense>} />
+        <Route path="/backtest" element={<Suspense fallback={<RouteFallback />}><BacktestPage /></Suspense>} />
         <Route path="/geography" element={<Suspense fallback={<RouteFallback />}><GeographyPage /></Suspense>} />
         <Route path="/market-share" element={<Suspense fallback={<RouteFallback />}><MarketSharePage /></Suspense>} />
         <Route path="/market" element={<Suspense fallback={<RouteFallback />}><MarketPage /></Suspense>} />
@@ -64,11 +70,14 @@ export default function App({ user, onLogout }: { user: User; onLogout: () => vo
         <Route path="/stress-lab" element={<Suspense fallback={<RouteFallback />}><StressLabPage /></Suspense>} />
         <Route path="/filings" element={<Suspense fallback={<RouteFallback />}><FilingsPage /></Suspense>} />
         <Route path="/watchlist" element={<Suspense fallback={<RouteFallback />}><WatchlistPage /></Suspense>} />
+        <Route path="/portfolio" element={<Suspense fallback={<RouteFallback />}><PortfolioPage /></Suspense>} />
+        <Route path="/glossary" element={<Suspense fallback={<RouteFallback />}><GlossaryPage /></Suspense>} />
         <Route path="/assistant" element={<Suspense fallback={<RouteFallback />}><AssistantPage /></Suspense>} />
         <Route path="/activity" element={<Suspense fallback={<RouteFallback />}><ActivityPage /></Suspense>} />
         <Route path="/bank/:cert" element={<Suspense fallback={<RouteFallback />}><BankPage /></Suspense>} />
       </Route>
     </Routes>
+    </PeerSetProvider>
     </QuarterProvider>
   );
 }

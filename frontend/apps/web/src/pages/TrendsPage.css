@@ -73,3 +73,28 @@
 .trends-chart-box { padding: var(--space-3); border-radius: var(--radius-sm); background: var(--surface-2); }
 .trends-chart-title { font-size: var(--text-sm); margin: 0 0 var(--space-2); font-weight: 650; }
 .trends-ytd-caveat { font-size: 10.5px; margin: -4px 0 var(--space-2); line-height: 1.35; }
+
+/* E10 — peer-set small-multiples legend, shared above all 5 panels rather
+   than repeated per-chart (12 banks x a recharts <Legend> per panel would
+   dominate each small chart). */
+.trends-peer-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  margin: 0 0 var(--space-3);
+}
+.trends-peer-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+.trends-peer-legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex: none;
+}
+.trends-peer-legend-median { border-radius: 50%; }
+.trends-peer-skipped { margin: var(--space-3) 0 0; font-size: var(--text-xs); }

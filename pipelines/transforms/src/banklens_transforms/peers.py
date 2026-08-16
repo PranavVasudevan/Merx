@@ -11,6 +11,7 @@ a LOW `percentile_rank_cet1_ratio` means unusually thin capital.
 
 from __future__ import annotations
 
+import bisect
 from collections import defaultdict
 
 # Metrics we rank a bank against its peers on. Computed ONCE here and reused by every
@@ -55,6 +56,32 @@ def percentile_rank(value: float | None, population: list[float | None]) -> floa
     return round(count_leq / len(vals) * 100, 1)
 
 
+def _batch_percentile_ranks(population: list[float | None]) -> list[float | None]:
+    """F8 — the same values `percentile_rank(v, population)` would return for
+    every `v` in `population`, computed in one O(n log n) pass instead of n
+    separate O(n) scans (`add_percentile_ranks`/`_add_conditional_ranks` used
+    to call `percentile_rank` once per row per metric — an O(n^2) sweep that
+    was ~23 million comparisons per quarter at the original 1,049-bank
+    population, and grows unworkable at B3's ~4,500-bank universe). Sort the
+    non-None values ONCE, then every value's rank is a single `bisect_right`
+    lookup: `bisect_right` returns the count of elements <= value, exactly
+    `percentile_rank`'s own weak-tie definition — so results are bit-identical
+    to calling `percentile_rank` per value, just computed faster.
+    """
+    sorted_vals = sorted(v for v in population if v is not None)
+    n = len(sorted_vals)
+    if n == 0:
+        return [None] * len(population)
+    out: list[float | None] = []
+    for v in population:
+        if v is None:
+            out.append(None)
+        else:
+            count_leq = bisect.bisect_right(sorted_vals, v)
+            out.append(round(count_leq / n * 100, 1))
+    return out
+
+
 def _add_conditional_ranks(gold_rows: list[dict], metrics: list[str], *,
                            group_field: str, suffix: str) -> None:
     """Shared helper for the `_within_size`/`_within_cluster` passes below:
@@ -70,8 +97,9 @@ def _add_conditional_ranks(gold_rows: list[dict], metrics: list[str], *,
     for rows in by_group.values():
         for m in metrics:
             population = [g.get(m) for g in rows]
-            for g in rows:
-                g[f"percentile_rank_{m}{suffix}"] = percentile_rank(g.get(m), population)
+            ranks = _batch_percentile_ranks(population)
+            for g, r in zip(rows, ranks, strict=True):
+                g[f"percentile_rank_{m}{suffix}"] = r
     for g in gold_rows:
         if g.get(group_field) is None:
             for m in metrics:
@@ -98,8 +126,9 @@ def add_percentile_ranks(gold_rows: list[dict], metrics: list[str] = RANK_METRIC
     """
     for m in metrics:
         population = [g.get(m) for g in gold_rows]
-        for g in gold_rows:
-            g[f"percentile_rank_{m}"] = percentile_rank(g.get(m), population)
+        ranks = _batch_percentile_ranks(population)
+        for g, r in zip(gold_rows, ranks, strict=True):
+            g[f"percentile_rank_{m}"] = r
 
     _add_conditional_ranks(gold_rows, metrics, group_field="asset_band", suffix="_within_size")
     _add_conditional_ranks(gold_rows, metrics, group_field="peer_cluster_label", suffix="_within_cluster")

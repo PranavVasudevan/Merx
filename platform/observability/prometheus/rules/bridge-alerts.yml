@@ -1,0 +1,32 @@
+# F18 — a real Prometheus alerting rule, not just a dashboard panel: "a
+# deliberately broken transform surfaces as a 500 and fires an alert" is the
+# acceptance test for this file. Loaded via prometheus.yml's `rule_files`,
+# visible in Prometheus's own Alerts UI (http://localhost:9090/alerts) once
+# it fires — no Alertmanager is wired into this stack (see
+# docker-compose.dev.yml), so "fires" here means "Prometheus itself marks it
+# firing and it's queryable via ALERTS{alertname="BridgeInternalServerError"}",
+# not "someone gets paged." Wiring an actual notification channel is real
+# future work, not attempted here.
+groups:
+  - name: banklens-bridge
+    rules:
+      - alert: BridgeInternalServerError
+        # Any 500 at all, not a percentage-of-traffic threshold: unlike a
+        # high-volume production service where a single 5xx is noise, this is
+        # a reference platform where a 500 should never happen in normal
+        # operation (see bridge_server.py's _route_request — ValueError/
+        # KeyError, the deliberate validation failures, are mapped to 400;
+        # everything reaching this alert is a genuine, unexpected fault).
+        expr: increase(banklens_bridge_requests_total{status="500"}[1m]) > 0
+        for: 0s
+        labels:
+          severity: critical
+        annotations:
+          summary: "BankLens bridge route {{ $labels.route }} returned a 500"
+          description: >
+            {{ $labels.route }} returned {{ $value }} genuine server-fault
+            response(s) (HTTP 500) in the last minute — not a client error (a
+            bad param would be 400). Find the exact request via its
+            request_id: bridge_server.py's _route_request (F17) writes one
+            structured JSON log line per request to stdout, and the matching
+            traceback is on stderr, both tagged with the same request_id.

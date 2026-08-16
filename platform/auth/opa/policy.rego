@@ -22,7 +22,7 @@ default allow := false
 # shouldn't need a login (see bridge_server.py, these routes skip auth
 # entirely and never call OPA — listed here too for documentation, this
 # rule is never actually evaluated for them).
-open_routes := {"/api/health", "/metrics"}
+open_routes := {"/api/health", "/metrics", "/api/openapi.json"}
 
 # Any authenticated viewer or analyst can read core bank data. `ma-fit`
 # belongs here, not in analyst_routes below: the frontend's App.tsx loads it
@@ -44,6 +44,7 @@ viewer_routes := {
     "/api/ma-weight-validation",
     "/api/xray-forward-return-validation",
     "/api/filing-diff-population-summary",
+    "/api/backtest",
     "/api/banks/filing-diff",
     "/api/banks/risk-score",
     "/api/banks/candles",
@@ -61,6 +62,13 @@ viewer_routes := {
     "/api/percentile-heatmap",
     "/api/asset-treemap",
     "/api/banks/trends",
+    # E10 — batched per-bank trends for a peer-set small-multiples view, same
+    # read-only tier as the single-bank /api/banks/trends it sits alongside.
+    "/api/banks/trends-bulk",
+    # E12 — batched trailing-quarter series for a table's sparkline column
+    # (screener/earnings/credit/funding), same read-only tier as
+    # /api/population-metrics and /api/banks/trends it sits alongside.
+    "/api/population-trends",
     "/api/briefing",
     "/api/cluster-diagnostics",
     "/api/model-card",
@@ -86,6 +94,11 @@ viewer_routes := {
     "/api/watchlist/rules",
     "/api/screens",
     "/api/peer-sets",
+    "/api/annotations",
+    "/api/scenarios",
+    "/api/custom-scenarios",
+    "/api/portfolio",
+    "/api/portfolio/summary",
     "/api/alerts",
     "/api/alerts/seen",
     # G4 — export/delete the caller's own stored data (watchlist, agent-run
@@ -163,7 +176,8 @@ mcp_viewer_tools := {
     "get_market_overview",
     "get_data_freshness", "get_metric_lineage", "get_macro_data", "get_cluster_diagnostics", "get_model_card",
     "get_county_concentration", "get_branch_map", "get_ma_network", "search_filings_text",
-    "get_filings_coverage",
+    "get_filings_coverage", "get_population_trend_sparklines",
+    "get_filing_diff_population_summary", "get_backtest_results",
 }
 
 mcp_analyst_tools := {

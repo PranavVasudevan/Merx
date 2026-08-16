@@ -33,12 +33,11 @@
   left: 50%;
   transform: translateX(-50%);
   background: var(--surface-elevated);
-  backdrop-filter: var(--glass-blur);
   border: 1px solid var(--border-strong);
   border-radius: 8px;
   padding: var(--space-3);
   min-width: 320px;
-  box-shadow: var(--glass-glow);
+  box-shadow: var(--shadow-lg);
   z-index: 40;
 }
 

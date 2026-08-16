@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { motion } from 'motion/react';
 import { api } from '../api';
 import { chartColors } from '../colors';
+import { RECHARTS_ENTRANCE } from '../chartMotion';
+import { pct } from '../metricFormat';
+import { ChartTooltipShell } from '../components/ChartTooltip';
 import type { ClusterDiagnosticsResult } from '../types';
 import '../components/charts.css';
 import './ClustersPage.css';
@@ -24,11 +26,13 @@ function SilhouetteTip({ active, payload }: {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
   return (
-    <motion.div className="chart-tooltip" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.12 }}>
-      <div className="chart-tooltip-label">k = {d.k}</div>
-      <div className="chart-tooltip-value tabular">silhouette {d.silhouette.toFixed(3)}</div>
-      <div className="chart-tooltip-sub muted">largest cluster {(d.max_share * 100).toFixed(0)}% of population</div>
-    </motion.div>
+    <ChartTooltipShell
+      label={`k = ${d.k}`}
+      lines={[
+        { text: `silhouette ${d.silhouette.toFixed(3)}` },
+        { text: `largest cluster ${pct(d.max_share * 100, 0)} of population`, className: 'chart-tooltip-sub muted' },
+      ]}
+    />
   );
 }
 
@@ -97,7 +101,7 @@ export function ClustersPage() {
                   axisLine={{ stroke: colors.baseline }} tickLine={false} />
                 <YAxis tick={{ fill: colors.muted, fontSize: 11 }} axisLine={false} tickLine={false} width={40} />
                 <Tooltip content={<SilhouetteTip />} cursor={{ fill: 'var(--surface-2)' }} />
-                <Bar dataKey="silhouette" radius={[3, 3, 0, 0]} animationDuration={600} animationEasing="ease-out">
+                <Bar dataKey="silhouette" radius={[3, 3, 0, 0]} {...RECHARTS_ENTRANCE}>
                   {diag.silhouette_by_k.map((s) => (
                     <Cell key={s.k} fill={s.k === diag.served_k ? colors.blue : colors.muted}
                       fillOpacity={s.k === diag.served_k ? 1 : 0.45} />

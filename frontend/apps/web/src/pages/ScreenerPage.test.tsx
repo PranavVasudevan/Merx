@@ -5,7 +5,7 @@ import { ScreenerPage } from './ScreenerPage';
 import { api } from '../api';
 
 vi.mock('../api', () => ({
-  api: { screenBanks: vi.fn(), getSavedScreens: vi.fn() },
+  api: { screenBanks: vi.fn(), getSavedScreens: vi.fn(), populationTrendSparklines: vi.fn() },
 }));
 
 const ROW = {
@@ -21,6 +21,9 @@ afterEach(() => vi.resetAllMocks());
 
 function stubSavedScreens() {
   vi.mocked(api.getSavedScreens).mockResolvedValue({ items: [] });
+  // Supplementary sparkline data (E12) -- rejecting is a real, handled path
+  // (ScreenerPage swallows this failure rather than blanking the table).
+  vi.mocked(api.populationTrendSparklines).mockRejectedValue(new Error('not needed for this test'));
 }
 
 describe('ScreenerPage', () => {

@@ -7,8 +7,10 @@ import { roles } from '../auth';
 import { RISK_DISCLAIMER } from '../csvExport';
 import { BankSearch } from './BankSearch';
 import { CommandPalette } from './CommandPalette';
+import { CopyLinkButton } from './CopyLinkButton';
 import { DataFreshnessStrip } from './DataFreshnessStrip';
 import { DisclaimerModal } from './DisclaimerModal';
+import { PeerSetSelector } from './PeerSetSelector';
 import { QuarterSelector } from './QuarterSelector';
 import { SkinToggle } from './SkinToggle';
 import { NAV_GROUPS } from '../navGroups';
@@ -83,9 +85,9 @@ export function NavShell({ user, onLogout }: { user: User; onLogout: () => void 
         {/* User Footer */}
         <div className="app-sidebar-footer">
           <div className="app-user-card">
-            <p className="text-xs text-muted">Logged in as</p>
-            <p className="text-sm font-semibold text-primary truncate">{user.profile.preferred_username}</p>
-            <p className="text-xs text-muted">{userRoles.join(', ') || 'viewer'}</p>
+            <p className="text-xs text-faint">Logged in as</p>
+            <p className="text-sm font-semibold text-body truncate">{user.profile.preferred_username}</p>
+            <p className="text-xs text-faint">{userRoles.join(', ') || 'viewer'}</p>
           </div>
           <div className="app-sidebar-controls">
             <SkinToggle />
@@ -103,9 +105,10 @@ export function NavShell({ user, onLogout }: { user: User; onLogout: () => void 
           <div className="app-header-left">
             <div className="app-status-indicator">
               <div className="app-status-dot" />
-              <span className="text-xs font-mono text-muted uppercase tracking-wider">Live • FDIC Connected</span>
+              <span className="text-xs font-mono text-faint uppercase tracking-wider">Live • FDIC Connected</span>
             </div>
             <QuarterSelector />
+            <PeerSetSelector />
           </div>
 
           <div className="app-header-center">
@@ -113,6 +116,7 @@ export function NavShell({ user, onLogout }: { user: User; onLogout: () => void 
           </div>
 
           <div className="app-header-right">
+            <CopyLinkButton />
             <CommandPalette />
           </div>
         </header>

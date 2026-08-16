@@ -311,6 +311,33 @@ export interface XrayValidationResult {
   note: string;
 }
 
+// C14 — backtest harness.
+export interface BacktestRate {
+  point: number | null;
+  lo: number | null;
+  hi: number | null;
+}
+
+export interface BacktestOutcome {
+  label: string;
+  flagged_hits: number;
+  flagged_n: number;
+  flagged_hit_rate: BacktestRate;
+  base_hits: number;
+  base_n: number;
+  base_hit_rate: BacktestRate;
+  lift: number | null;
+}
+
+export interface BacktestResults {
+  quarters_covered: string[];
+  n_transitions: number;
+  horizon_quarters: number;
+  signal_definitions: Record<string, string>;
+  results: Record<string, Record<string, BacktestOutcome>>;
+  note: string;
+}
+
 export interface StressRatios {
   cet1: number;
   tier1: number;
@@ -318,15 +345,32 @@ export interface StressRatios {
   leverage: number;
 }
 
+// F6 — before/after ratios are null when the underlying denominator (RWA /
+// leverage exposure) wasn't disclosed for this bank, rather than a
+// fabricated 0.00% that would silently fail the regulatory minimum on a
+// number that was never actually computed.
+export interface StressRatiosOrNull {
+  cet1: number | null;
+  tier1: number | null;
+  total: number | null;
+  leverage: number | null;
+}
+
 export interface StressResult {
   name: string;
   quarter: string;
   shock: Record<string, number | boolean>;
-  before: StressRatios;
-  after: StressRatios;
+  before: StressRatiosOrNull;
+  after: StressRatiosOrNull;
   minimums: StressRatios;
-  passes: Record<keyof StressRatios, boolean>;
-  passes_all: boolean;
+  // Only ratios that were actually computed appear here — a ratio with no
+  // disclosed denominator has no entry at all (not `false`).
+  passes: Partial<Record<keyof StressRatios, boolean>>;
+  // null when NONE of the four ratios could be computed (nothing to assess),
+  // distinct from a real pass/fail verdict over whatever WAS computed.
+  passes_all: boolean | null;
+  // Which of the four ratios (if any) couldn't be computed at all.
+  ratios_not_computed: (keyof StressRatios)[];
   // Non-empty when a requested shock leg could not be applied because the driving
   // input isn't disclosed for this bank (e.g. EU/EBA banks report no deposit total,
   // so a deposit-run leg is skipped). When present, `passes_all` reflects FEWER
@@ -380,9 +424,10 @@ export interface StressProjectionPeriod {
   gross_capital_hit: number;
   ppnr_offset_applied: number;
   net_capital_hit: number;
-  after: StressRatios;
-  passes: Record<keyof StressRatios, boolean>;
-  passes_all: boolean;
+  after: StressRatiosOrNull;
+  passes: Partial<Record<keyof StressRatios, boolean>>;
+  passes_all: boolean | null;
+  ratios_not_computed: (keyof StressRatios)[];
 }
 
 export interface StressProjectionResult {
@@ -547,6 +592,37 @@ export interface BankTrendsResult {
   cluster_mode: 'fixed' | 'refit';
 }
 
+// E10 — same per-bank shape get_bank_trends returns, for a whole peer set at
+// once. `skipped` mirrors compare_banks/run_bulk_stress_test's pattern for
+// certs with no landed history in any quarter.
+export interface BulkBankTrendsBank {
+  cert: number;
+  name: string;
+  quarters: string[];
+  series: BankTrendPoint[];
+}
+
+export interface BulkBankTrendsResult {
+  metrics: string[];
+  quarters: string[];
+  cluster_mode: 'fixed' | 'refit';
+  requested: number;
+  banks: BulkBankTrendsBank[];
+  skipped: { cert: number; reason: string }[];
+}
+
+// E12 — batched trailing-quarter series for a table's sparkline column
+// (screener/earnings/credit/funding). Every bank's `values[metric]` array is
+// aligned 1:1 to `quarters` (null where that bank has no landed row that
+// quarter) so a caller never has to reconcile a per-bank offset.
+export interface PopulationTrendSparklinesResult {
+  metrics: string[];
+  quarters: string[];
+  requested: number;
+  banks: { cert: number; values: Record<string, (number | null)[]> }[];
+  skipped: { cert: number; reason: string }[];
+}
+
 export interface BriefingMover {
   cert: number;
   name: string;
@@ -696,6 +772,77 @@ export interface PeerSetItem {
   created_at: string;
 }
 
+// D7 — analyst annotations, shared across users for one bank.
+export interface AnnotationItem {
+  id: number;
+  user_sub: string;
+  cert: number;
+  quarter: string | null;
+  note_md: string;
+  created_at: string;
+}
+
+// D10 — named scenario registry + user-saved custom scenarios.
+export interface NamedScenario {
+  id: string;
+  name: string;
+  description: string;
+  loan_loss_pct: number;
+  deposit_outflow_pct: number;
+  rate_shock_bps: number;
+  assumptions: string;
+  provenance: string;
+}
+
+export interface ScenarioLibraryResult {
+  version: number;
+  scenarios: NamedScenario[];
+}
+
+export interface CustomScenarioItem {
+  id: number;
+  name: string;
+  loan_loss_pct: number;
+  deposit_outflow_pct: number;
+  rate_shock_bps: number;
+  created_at: string;
+}
+
+// D11 — exposure/portfolio positions.
+export interface PortfolioPosition {
+  id: number;
+  cert: number;
+  exposure_amount: number;
+  exposure_type: string;
+  created_at: string;
+}
+
+export interface PortfolioBankSummary {
+  cert: number;
+  name: string;
+  exposure: number;
+  xray_severity: 'low' | 'elevated' | 'high' | null;
+  risk_resemblance_percentile: number | null;
+}
+
+export interface PortfolioStressSummary {
+  scenario: Record<string, unknown>;
+  exposure_passing: number;
+  exposure_failing: number;
+  exposure_untested: number;
+}
+
+export interface PortfolioSummaryResult {
+  positions: number;
+  total_exposure: number;
+  banks: PortfolioBankSummary[];
+  exposure_weighted_xray_severity?: 'low' | 'elevated' | 'high' | null;
+  exposure_weighted_risk_resemblance_percentile?: number | null;
+  concentration_by_cluster?: Record<string, number>;
+  concentration_by_state?: Record<string, number>;
+  stress_summary?: PortfolioStressSummary | null;
+}
+
 export interface AlertItem {
   id: number;
   cert: number;
@@ -732,6 +879,18 @@ export interface ToolCallRecord {
   name: string;
   arguments: Record<string, unknown>;
   result_preview: string;
+  // D12 — deep link to the frontend page that shows the data this call
+  // returned, so a claim in the answer can be verified in place; null when
+  // no single page is an obvious home for that tool's result.
+  citation_url: string | null;
+}
+
+// D12 — one earlier turn of the conversation, as sent to/from
+// /api/assistant/ask's `history` field (see bridge_server.py's
+// _assistant_ask_sse for the exact shape it accepts and echoes back).
+export interface AssistantHistoryTurn {
+  role: 'user' | 'assistant';
+  content: string;
 }
 
 export interface AssistantResult {
@@ -740,8 +899,29 @@ export interface AssistantResult {
   answer: string;
   provider: string;
   turns: number;
+  // F16 — true when the answer came back because the server-side deadline
+  // (BANKLENS_ASSISTANT_DEADLINE_S) was reached, not because the model
+  // actually finished reasoning — see AssistantPage's partial-answer banner.
+  partial: boolean;
+  roles: string[];
+  effective_tools: string[];
   tool_calls: ToolCallRecord[];
+  // D12 — this turn's question/answer appended to whatever `history` was
+  // sent in; pass straight back as `history` on the next ask() call to keep
+  // the conversation's context across a follow-up question.
+  history: AssistantHistoryTurn[];
 }
+
+// F16 — POST /api/assistant/ask now streams Server-Sent Events instead of
+// returning one JSON blob; see api.ts's streamAssistantAsk. Payload shape
+// per event kind mirrors bridge_server.py's _sse_line call sites exactly.
+export type AssistantStreamEvent =
+  | { event: 'tool_call'; data: { name: string; input: Record<string, unknown>; repeat?: boolean } }
+  | { event: 'tool_result'; data: { name: string; preview: string; citation_url: string | null } }
+  | { event: 'final'; data: string }
+  | { event: 'timeout'; data: { message: string } }
+  | { event: 'error'; data: { error: string; request_id?: string } }
+  | { event: 'result'; data: AssistantResult };
 
 export interface MarketSnapshot {
   cert: number;
@@ -967,6 +1147,14 @@ export interface ModelCardCalibrationPoint {
   n: number;
 }
 
+export interface ModelCardRocPoint {
+  threshold: number | null;
+  fpr: number;
+  tpr: number;
+  tp: number;
+  fp: number;
+}
+
 export interface ModelCardResult {
   features: string[];
   weights: number[];
@@ -982,6 +1170,7 @@ export interface ModelCardResult {
   imputation_rates: Record<string, number>;
   bootstrap: ModelCardBootstrap | null;
   pr_curve: ModelCardPrPoint[];
+  roc_curve: ModelCardRocPoint[];
   calibration_curve: ModelCardCalibrationPoint[];
 }
 
@@ -1022,11 +1211,23 @@ export interface BranchPoint {
   fips: string | null;
 }
 
+// F9 — server-side county/grid aggregate, returned instead of individual
+// BranchPoints for the default (no-state) national view.
+export interface BranchCell {
+  fips: string | null;
+  lat: number;
+  lon: number;
+  branch_count: number;
+  deposits: number;
+}
+
 export interface BranchMapResult {
+  aggregated: boolean;
   branch_count: number;
   excluded_non_contiguous: number;
   bank_names: Record<number, string>;
   branches: BranchPoint[];
+  cells: BranchCell[];
   sod_vintage: SodVintage;
 }
 
@@ -1078,8 +1279,8 @@ export interface BulkStressResult {
 export interface StressSurfaceCell {
   deposit_outflow_pct: number;
   rate_shock_bps: number;
-  cet1_after: number;
-  passes_cet1: boolean;
+  cet1_after: number | null;
+  passes_cet1: boolean | undefined;
 }
 
 export interface StressSurfaceResult {

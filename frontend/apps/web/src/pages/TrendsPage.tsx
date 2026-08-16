@@ -2,13 +2,83 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import {
-  CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
+  Area, CartesianGrid, ComposedChart, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts';
 import { api, type BankSearchResult } from '../api';
-import { chartColors } from '../colors';
-import type { BankTrendsResult } from '../types';
+import { categoricalPalette, chartColors } from '../colors';
+import { RECHARTS_ENTRANCE } from '../chartMotion';
+import { usePeerSet } from '../PeerSetContext';
+import { ChartTooltipShell } from '../components/ChartTooltip';
+import type { BankTrendsResult, BulkBankTrendsResult } from '../types';
 import '../components/charts.css';
 import './TrendsPage.css';
+
+// E10 — one representative metric per PANELS category above, so a 12-bank peer
+// set renders 5 readable small-multiples (12 lines each) instead of pairing
+// two metrics per panel like the single-bank view does (which would put 24
+// lines on one chart).
+interface SmallMultiple { key: string; title: string; suffix: string; transform?: (v: number) => number }
+const SMALL_MULTIPLES: SmallMultiple[] = [
+  { key: 'total_assets', title: 'Total assets ($B)', suffix: 'B', transform: (v) => v / 1e9 },
+  { key: 'roa_pct_quarterly', title: 'ROA (quarter-isolated)', suffix: '%' },
+  { key: 'npl_ratio_pct', title: 'NPL ratio', suffix: '%' },
+  { key: 'uninsured_deposit_pct', title: 'Uninsured deposits', suffix: '%' },
+  { key: 'cet1_ratio', title: 'CET1 ratio', suffix: '%' },
+];
+
+/** Linear-interpolated percentile (numpy/Excel PERCENTILE.INC convention) over
+ * an already-sorted ascending array. Returns null for an empty input — a
+ * quarter where every bank in the set is missing this metric. */
+function percentile(sortedVals: number[], p: number): number | null {
+  if (sortedVals.length === 0) return null;
+  if (sortedVals.length === 1) return sortedVals[0];
+  const idx = (p / 100) * (sortedVals.length - 1);
+  const lo = Math.floor(idx);
+  const hi = Math.ceil(idx);
+  if (lo === hi) return sortedVals[lo];
+  return sortedVals[lo] + (sortedVals[hi] - sortedVals[lo]) * (idx - lo);
+}
+
+const bankKey = (cert: number) => `c${cert}`;
+
+/** Per-quarter rows for one metric panel: each bank's own value under its
+ * `c<cert>` key, plus a peer p25/p75 band and bold median computed client-side
+ * from the SAME bulk-fetched series (no extra request, no synthetic fill —
+ * a quarter with fewer landed banks just has a narrower/absent band). */
+function buildPanelData(bulk: BulkBankTrendsResult, sm: SmallMultiple) {
+  const transform = sm.transform ?? ((v: number) => v);
+  return bulk.quarters.map((quarter) => {
+    const row: Record<string, number | string | [number, number] | null> = { quarter };
+    const vals: number[] = [];
+    for (const b of bulk.banks) {
+      const pt = b.series.find((s) => s.quarter === quarter);
+      const raw = pt?.[sm.key];
+      const v = typeof raw === 'number' ? transform(raw) : null;
+      row[bankKey(b.cert)] = v;
+      if (v !== null && Number.isFinite(v)) vals.push(v);
+    }
+    vals.sort((a, b) => a - b);
+    const p25 = percentile(vals, 25);
+    const p75 = percentile(vals, 75);
+    row.median = percentile(vals, 50);
+    row.band = p25 !== null && p75 !== null ? [p25, p75] : null;
+    return row;
+  });
+}
+
+function PeerTrendsTooltip({ active, payload, label, suffix, names }: {
+  active?: boolean; payload?: { dataKey: string; value: number | [number, number]; color: string }[];
+  label?: string; suffix: string; names: Record<string, string>;
+}) {
+  if (!active || !payload?.length) return null;
+  const lines = payload
+    .filter((p) => p.dataKey !== 'band' && typeof p.value === 'number')
+    .map((p) => ({
+      text: `${p.dataKey === 'median' ? 'Peer median' : names[p.dataKey] ?? p.dataKey}: ${(p.value as number).toFixed(2)}${suffix}`,
+      style: { color: p.color },
+    }));
+  return <ChartTooltipShell label={label} lines={lines} />;
+}
 
 interface Panel { title: string; lines: { key: string; label: string; color: keyof ReturnType<typeof chartColors> }[]; suffix: string }
 
@@ -37,16 +107,11 @@ function CustomTooltip({ active, payload, label, suffix }: {
   active?: boolean; payload?: { name: string; value: number; color: string }[]; label?: string; suffix: string;
 }) {
   if (!active || !payload?.length) return null;
-  return (
-    <motion.div className="chart-tooltip" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.12 }}>
-      <div className="chart-tooltip-label">{label}</div>
-      {payload.map((p) => (
-        <div key={p.name} className="chart-tooltip-value tabular" style={{ color: p.color }}>
-          {p.name}: {p.value?.toFixed(2)}{suffix}
-        </div>
-      ))}
-    </motion.div>
-  );
+  const lines = payload.map((p) => ({
+    text: `${p.name}: ${p.value?.toFixed(2)}${suffix}`,
+    style: { color: p.color },
+  }));
+  return <ChartTooltipShell label={label} lines={lines} />;
 }
 
 export function TrendsPage() {
@@ -61,6 +126,23 @@ export function TrendsPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const colors = chartColors();
+  const palette = categoricalPalette();
+
+  // E10 — active peer set's trajectories, batched in one request rather than
+  // one bankTrends() call per bank in the set.
+  const { activePeerSet } = usePeerSet();
+  const [peerTrends, setPeerTrends] = useState<BulkBankTrendsResult | null>(null);
+  const [peerError, setPeerError] = useState<string | null>(null);
+  const [peerLoading, setPeerLoading] = useState(false);
+
+  useEffect(() => {
+    if (!activePeerSet || activePeerSet.certs.length === 0) { setPeerTrends(null); setPeerError(null); return; }
+    setPeerLoading(true);
+    api.bulkBankTrends(activePeerSet.certs)
+      .then((r) => { setPeerTrends(r); setPeerError(null); })
+      .catch((e: Error) => { setPeerError(e.message); setPeerTrends(null); })
+      .finally(() => setPeerLoading(false));
+  }, [activePeerSet]);
 
   useEffect(() => {
     if (query.trim().length < 2) { setResults([]); return; }
@@ -182,13 +264,76 @@ export function TrendsPage() {
                     {p.lines.map((l) => (
                       <Line key={l.key} type="monotone" dataKey={l.key} name={l.label}
                         stroke={colors[l.color]} strokeWidth={2} dot={{ r: 2.5 }}
-                        animationDuration={600} animationEasing="ease-out" connectNulls />
+                        {...RECHARTS_ENTRANCE} connectNulls />
                     ))}
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {activePeerSet && (
+        <div className="panel">
+          <h2>Peer set — {activePeerSet.name}</h2>
+          <p className="muted trends-subtitle">
+            Every bank in this saved peer set, overlaid one small chart per metric, with the
+            set's own p25–p75 band (shaded) and median (bold line) computed from these {activePeerSet.certs.length} banks'
+            real landed history — not the whole population.
+          </p>
+          {peerError && <p className="app-banner-error">{peerError}</p>}
+          {peerLoading && !peerTrends && <p className="muted">Loading peer set trends…</p>}
+          {peerTrends && (
+            <>
+              <div className="trends-peer-legend">
+                {peerTrends.banks.map((b, i) => (
+                  <span key={b.cert} className="trends-peer-legend-item">
+                    <span className="trends-peer-legend-swatch" style={{ background: palette[i % palette.length] }} />
+                    {b.name}
+                  </span>
+                ))}
+                <span className="trends-peer-legend-item">
+                  <span className="trends-peer-legend-swatch trends-peer-legend-median" style={{ background: colors.text }} />
+                  Peer median (p25–p75 band shaded)
+                </span>
+              </div>
+              <div className="trends-grid">
+                {SMALL_MULTIPLES.map((sm) => {
+                  const data = buildPanelData(peerTrends, sm);
+                  const names = Object.fromEntries(peerTrends.banks.map((b) => [bankKey(b.cert), b.name]));
+                  return (
+                    <div key={sm.key} className="trends-chart-box">
+                      <h3 className="trends-chart-title">{sm.title}</h3>
+                      <ResponsiveContainer width="100%" height={180}>
+                        <ComposedChart data={data} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
+                          <CartesianGrid stroke={colors.gridline} vertical={false} />
+                          <XAxis dataKey="quarter" tick={{ fill: colors.muted, fontSize: 10 }}
+                            axisLine={{ stroke: colors.baseline }} tickLine={false} />
+                          <YAxis tick={{ fill: colors.muted, fontSize: 10 }} axisLine={false} tickLine={false} width={36} />
+                          <Tooltip content={<PeerTrendsTooltip suffix={sm.suffix} names={names} />} />
+                          <Area dataKey="band" stroke="none" fill={colors.blue} fillOpacity={0.14}
+                            isAnimationActive={false} connectNulls />
+                          {peerTrends.banks.map((b, i) => (
+                            <Line key={b.cert} type="monotone" dataKey={bankKey(b.cert)} name={b.name}
+                              stroke={palette[i % palette.length]} strokeWidth={1.25} dot={false}
+                              isAnimationActive={false} connectNulls />
+                          ))}
+                          <Line type="monotone" dataKey="median" name="Peer median" stroke={colors.text}
+                            strokeWidth={2.5} dot={false} isAnimationActive={false} connectNulls />
+                        </ComposedChart>
+                      </ResponsiveContainer>
+                    </div>
+                  );
+                })}
+              </div>
+              {peerTrends.skipped.length > 0 && (
+                <p className="muted trends-peer-skipped">
+                  Skipped (no landed history): {peerTrends.skipped.map((s) => `CERT ${s.cert}`).join(', ')}
+                </p>
+              )}
+            </>
+          )}
         </div>
       )}
 

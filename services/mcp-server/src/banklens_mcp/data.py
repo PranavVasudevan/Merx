@@ -20,7 +20,7 @@ from banklens_transforms import clustering
 from banklens_transforms.footprint import build_footprints, county_deposit_table, decode_cell
 from banklens_transforms.gold import gold_features
 from banklens_transforms.holdco import build_holdco_table, build_parent_index
-from banklens_transforms.ma_fit import rank_partners
+from banklens_transforms.ma_fit import build_loan_mix_index, rank_partners_approx
 from banklens_transforms.market import to_price_bar
 from banklens_transforms.peers import add_percentile_ranks
 from banklens_transforms.silver import to_bank_financials
@@ -50,6 +50,47 @@ _TRAINING_ONLY_QUARTERS = {"20221231", "20080331"}
 
 _cache: dict = {}
 
+# F5 — the MCP server and the REST bridge both run multi-threaded request
+# handlers (ThreadingHTTPServer / gunicorn's threaded workers), and this
+# module's accessors are called concurrently from real request threads.
+# Reentrant (not a plain Lock): several accessors call other cached
+# accessors internally (e.g. population() -> _gold_conn(), available_quarters()),
+# so the SAME thread must be able to re-acquire the lock while already
+# holding it during a cold fill, or that would deadlock instead of just
+# nesting harmlessly.
+_cache_lock = threading.RLock()
+
+
+def _cached(key: str, compute):
+    """Thread-safe memoized fetch for the common single-key case: a warm read
+    never touches the lock; a cold fill acquires it with a double-check, so
+    two concurrent callers for the SAME key (e.g. network_edges()'s ~17s
+    computation) can't both pay for it — one computes, the other gets the
+    result once it's cached. `compute` is only ever invoked while holding the
+    lock, so it's safe for it to call other _cached()/_cache_lock users too.
+    """
+    if key in _cache:
+        return _cache[key]
+    with _cache_lock:
+        if key in _cache:
+            return _cache[key]
+        _cache[key] = compute()
+    return _cache[key]
+
+
+def invalidate_cache() -> None:
+    """Explicit invalidation hook — call after landing new data (a fresh
+    quarterly refresh, a re-land of any source this module reads) so the next
+    request recomputes from the new Bronze/Gold instead of serving whatever
+    was cached from before the refresh. Nothing calls this automatically:
+    the MCP server and bridge are long-running processes with no other signal
+    that the data under them changed, so the refresh job (or an operator)
+    must call it deliberately."""
+    with _cache_lock:
+        _cache.clear()
+        _pop_cache_order.clear()
+
+
 # When set, every function below reads from the materialized DuckDB artifact
 # gold_db_cli.py produces instead of walking Bronze JSON under DATA — the
 # free-hosting path (see docs/audit/04-remediation-prompts.md A5): no
@@ -70,9 +111,7 @@ def _gold_conn() -> duckdb.DuckDBPyConnection | None:
     lifetime, same as every other accessor in this module."""
     if not _GOLD_DB:
         return None
-    if "gold_conn" not in _cache:
-        _cache["gold_conn"] = duckdb.connect(_GOLD_DB, read_only=True)
-    return _cache["gold_conn"]
+    return _cached("gold_conn", lambda: duckdb.connect(_GOLD_DB, read_only=True))
 
 
 def _rows(conn: duckdb.DuckDBPyConnection, sql: str, params: list | tuple = ()) -> list[dict]:
@@ -144,7 +183,7 @@ def available_quarters() -> list[str]:
     which made every multi-quarter view impossible. When BANKLENS_GOLD_DB is set,
     discovered from the artifact's `gold.pop_quarter` column instead of Bronze.
     """
-    if "quarters" not in _cache:
+    def compute():
         conn = _gold_conn()
         if conn is not None:
             found = [r[0] for r in conn.execute(
@@ -152,8 +191,8 @@ def available_quarters() -> list[str]:
         else:
             found = sorted((p.name.split("=", 1)[1] for p in _POP_DIR.glob("repdte=*")
                             if p.is_dir() and any(p.glob("landed=*/records.json"))), reverse=True)
-        _cache["quarters"] = [q for q in found if q not in _TRAINING_ONLY_QUARTERS]
-    return _cache["quarters"]
+        return [q for q in found if q not in _TRAINING_ONLY_QUARTERS]
+    return _cached("quarters", compute)
 
 
 def _pop_snapshots(repdte: str) -> list[str]:
@@ -213,8 +252,7 @@ def _silver_for(repdte: str, as_of: str | None = None) -> list[dict]:
     (BANKLENS_GOLD_DB) holds only the latest snapshot, so an `as_of` request
     against it fails loudly rather than silently answering with "latest".
     """
-    key = f"silver:{repdte}:{as_of or 'latest'}"
-    if key not in _cache:
+    def compute():
         conn = _gold_conn()
         if conn is not None:
             if as_of is not None:
@@ -222,16 +260,14 @@ def _silver_for(repdte: str, as_of: str | None = None) -> list[dict]:
                     "as_of point-in-time queries need the JSON/Bronze path "
                     "(BANKLENS_GOLD_DB unset) — the materialized DuckDB artifact "
                     "only ever holds the latest landed snapshot of each quarter.")
-            _cache[key] = _rows(
+            return _rows(
                 conn, "SELECT * FROM silver WHERE pop_quarter = ? AND origin = 'us'", [repdte])
-        else:
-            path = _pop_snapshot_path(repdte, as_of)
-            if path is None:
-                _cache[key] = []
-            else:
-                raw = json.loads(path.read_text(encoding="utf-8-sig"))
-                _cache[key] = [to_bank_financials(r) for r in raw]
-    return _cache[key]
+        path = _pop_snapshot_path(repdte, as_of)
+        if path is None:
+            return []
+        raw = json.loads(path.read_text(encoding="utf-8-sig"))
+        return [to_bank_financials(r) for r in raw]
+    return _cached(f"silver:{repdte}:{as_of or 'latest'}", compute)
 
 
 def _eu_silver() -> list[dict]:
@@ -246,10 +282,9 @@ def _eu_silver() -> list[dict]:
     `filing_date` in the returned row is the honest source of truth for what's
     actually being shown, not the US repdte this function is indifferent to.
     """
-    if "eu_silver" not in _cache:
+    def compute():
         if not (_EBA_INSTITUTIONS.exists() and _EBA_FINANCIALS.exists() and _FX_EUR_USD.exists()):
-            _cache["eu_silver"] = []
-            return _cache["eu_silver"]
+            return []
         institutions = {i["lei"]: i for i in
                         json.loads(_EBA_INSTITUTIONS.read_text(encoding="utf-8-sig"))}
         financials = json.loads(_EBA_FINANCIALS.read_text(encoding="utf-8-sig"))
@@ -276,8 +311,8 @@ def _eu_silver() -> list[dict]:
             cr = credit_risk_by_key.get((lei, row["period"]))
             out.append(to_bank_financials_eba(row, inst, fx_rate=fx["rate"],
                                               fx_date=fx["date"], credit_risk=cr))
-        _cache["eu_silver"] = out
-    return _cache["eu_silver"]
+        return out
+    return _cached("eu_silver", compute)
 
 
 def population(repdte: str | None = None, as_of: str | None = None,
@@ -369,7 +404,11 @@ def _compute_population(repdte: str, as_of: str | None, effective_mode: str,
             cid = g.get("peer_cluster_id")
             if cid is not None:
                 cluster_members[cid].append(g["cert_number"])
-                cluster_labels[cid] = g.get("peer_cluster_label")
+                # gold_db_cli.py's build-time population() call guarantees a
+                # real label wherever peer_cluster_id is set; `g` is an
+                # untyped dict row (from a DuckDB SELECT *), so mypy sees the
+                # lookup as Any | None rather than that real invariant.
+                cluster_labels[cid] = g.get("peer_cluster_label")  # type: ignore[assignment]
         return {
             "quarter": repdte, "gold": gold_rows,
             "by_cert": {g["cert_number"]: g for g in gold_rows},
@@ -400,8 +439,12 @@ def _compute_population(repdte: str, as_of: str | None, effective_mode: str,
             c = s.get("cert_number")
             if c is not None:
                 history_by_cert[c].append(s)
+    # s.get("cert_number") is Any | None (an untyped Silver dict row) against
+    # history_by_cert's real dict[int, list[dict]] -- safe at runtime either
+    # way (dict.get on a wrong-type/None key just returns the None default,
+    # same as the missing-history case this already handles).
     gold = [gold_features(s, prev_by_cert.get(s.get("cert_number")),
-                          history_by_cert.get(s.get("cert_number")))
+                          history_by_cert.get(s.get("cert_number")))  # type: ignore[arg-type]
            for s in silver]
 
     # EU banks (EBA Transparency Exercise), if landed. No QoQ history landed yet for
@@ -449,8 +492,13 @@ def _compute_population(repdte: str, as_of: str | None, effective_mode: str,
     # the same behavioral group keeps the same id across quarters — otherwise a
     # multi-quarter view renders fake migration EVEN under refit mode.
     members: dict[int, list] = defaultdict(list)
-    cluster_labels: dict[int, str] = {}
+    cluster_labels_json: dict[int, str] = {}
     if effective_mode == "fixed":
+        # `effective_mode` is only ever "fixed" when the caller (population())
+        # already confirmed `fixed is not None` before computing it -- real,
+        # but a cross-function invariant the type checker can't see from
+        # _compute_population's own `fixed: dict | None` signature alone.
+        assert fixed is not None
         # C3 — assign to centroids fit ONCE on `fixed["reference_quarter"]`
         # (cluster_centroids_cli), standardized against THAT fit's persisted
         # mu/sd, not this quarter's own — a genuinely fixed comparison, not
@@ -465,7 +513,7 @@ def _compute_population(repdte: str, as_of: str | None, effective_mode: str,
                 text = fixed_labels[sid]
                 g["peer_cluster_id"] = sid
                 g["peer_cluster_label"] = text
-                cluster_labels[sid] = text
+                cluster_labels_json[sid] = text
                 members[sid].append(g)
     else:
         kept, X = clustering.build_matrix(gold)
@@ -481,7 +529,7 @@ def _compute_population(repdte: str, as_of: str | None, effective_mode: str,
             means = {m: _avg(ms, m) for m in _CLUSTER_METRICS}
             text = clustering.label_cluster(means)
             sid = clustering.stable_cluster_id(text)
-            cluster_labels[sid] = text
+            cluster_labels_json[sid] = text
             for g in ms:
                 g["peer_cluster_id"] = sid
                 g["peer_cluster_label"] = text
@@ -498,7 +546,7 @@ def _compute_population(repdte: str, as_of: str | None, effective_mode: str,
         "silver_by_cert": silver_by_cert,
         "cluster_mode": effective_mode,
         "cluster_members": {lab: [g["cert_number"] for g in ms] for lab, ms in members.items()},
-        "cluster_labels": cluster_labels,
+        "cluster_labels": cluster_labels_json,
     }
 
 
@@ -516,15 +564,13 @@ def cluster_diagnostics(repdte: str | None = None) -> dict:
     repdte = repdte or latest_quarter()
     if repdte is None:
         raise FileNotFoundError(f"no landed population quarters under {_POP_DIR}")
-    key = f"cluster_diag:{repdte}"
-    if key in _cache:
-        return _cache[key]
-    pop = population(repdte)
-    _, X = clustering.build_matrix(pop["gold"])
-    diag = clustering.silhouette_by_k(X, k_range=range(2, 8))
-    _cache[key] = {k: {"silhouette": v["silhouette"], "max_share": v["max_share"]}
-                   for k, v in diag.items()}
-    return _cache[key]
+    def compute():
+        pop = population(repdte)
+        _, X = clustering.build_matrix(pop["gold"])
+        diag = clustering.silhouette_by_k(X, k_range=range(2, 8))
+        return {k: {"silhouette": v["silhouette"], "max_share": v["max_share"]}
+               for k, v in diag.items()}
+    return _cached(f"cluster_diag:{repdte}", compute)
 
 
 def bank_history(cert: int, as_of: str | None = None) -> list[dict]:
@@ -576,9 +622,10 @@ def duckdb_gold() -> duckdb.DuckDBPyConnection:
     only the in-memory table persists (for the life of this cache entry, same
     as population()'s own cache).
     """
-    if "duckdb_conn" in _cache:
-        return _cache["duckdb_conn"]
+    return _cached("duckdb_conn", _build_duckdb_gold)
 
+
+def _build_duckdb_gold() -> duckdb.DuckDBPyConnection:
     if _GOLD_DB:
         # A DEDICATED connection, deliberately NOT the shared _gold_conn()
         # every other accessor in this module reads through. Verified live:
@@ -601,11 +648,12 @@ def duckdb_gold() -> duckdb.DuckDBPyConnection:
         # 'gold'"). The artifact's real catalog name is its filename (see
         # PRAGMA database_list), not "main", so it's looked up rather than
         # assumed, and the view references it three-part-qualified.
-        (catalog,) = conn.execute("SELECT current_catalog()").fetchone()
+        catalog_row = conn.execute("SELECT current_catalog()").fetchone()
+        assert catalog_row is not None, "current_catalog() always returns exactly one row"
+        (catalog,) = catalog_row
         conn.execute(
             f'CREATE OR REPLACE TEMP VIEW gold AS SELECT * FROM "{catalog}".main.gold '
             f"WHERE pop_quarter = '{quarter}'")
-        _cache["duckdb_conn"] = conn
         return conn
 
     gold = population()["gold"]
@@ -620,7 +668,6 @@ def duckdb_gold() -> duckdb.DuckDBPyConnection:
         con.execute("CREATE TABLE gold AS SELECT * FROM read_json_auto(?)", [tmp_path])
     finally:
         Path(tmp_path).unlink(missing_ok=True)
-    _cache["duckdb_conn"] = con
     return con
 
 
@@ -631,7 +678,8 @@ def query_banks(query: str | None = None, state: str | None = None,
     """Filter/sort the Gold population via real SQL, replacing what used to be
     a hand-rolled Python list comprehension in tools.list_banks()."""
     con = duckdb_gold()
-    clauses, params = [], []
+    clauses: list[str] = []
+    params: list[str | float | int] = []
     if query:
         clauses.append("lower(name) LIKE ?")
         params.append(f"%{query.lower()}%")
@@ -660,30 +708,28 @@ def holdco_table() -> dict[int, dict]:
     docs/audit/04-remediation-prompts.md). Empty dict if fed_nic hasn't been
     landed (see scripts/land_fed_nic.ps1) — degrades the same way
     footprints()/sod_raw() do when their source is absent."""
-    if "holdco_table" not in _cache:
+    def compute():
         periods = sorted((p.name.split("=", 1)[1] for p in (_FED_NIC_DIR / "financials").glob("period=*")
                           if p.is_dir() and (p / "records.json").exists()), reverse=True) \
                  if (_FED_NIC_DIR / "financials").exists() else []
         if not periods or not _FED_NIC_ATTRS.exists():
-            _cache["holdco_table"] = {}
-        else:
-            fin = json.loads((_FED_NIC_DIR / "financials" / f"period={periods[0]}" /
-                              "records.json").read_text(encoding="utf-8-sig"))
-            attrs = json.loads(_FED_NIC_ATTRS.read_text(encoding="utf-8-sig"))
-            _cache["holdco_table"] = build_holdco_table(fin, attrs)
-    return _cache["holdco_table"]
+            return {}
+        fin = json.loads((_FED_NIC_DIR / "financials" / f"period={periods[0]}" /
+                          "records.json").read_text(encoding="utf-8-sig"))
+        attrs = json.loads(_FED_NIC_ATTRS.read_text(encoding="utf-8-sig"))
+        return build_holdco_table(fin, attrs)
+    return _cached("holdco_table", compute)
 
 
 def holdco_parent_index() -> dict[int, int]:
     """{offspring_rssd: parent_rssd} from Fed NIC's landed relationships.
     Empty dict if not landed."""
-    if "holdco_parent_index" not in _cache:
+    def compute():
         if not _FED_NIC_RELATIONSHIPS.exists():
-            _cache["holdco_parent_index"] = {}
-        else:
-            rels = json.loads(_FED_NIC_RELATIONSHIPS.read_text(encoding="utf-8-sig"))
-            _cache["holdco_parent_index"] = build_parent_index(rels)
-    return _cache["holdco_parent_index"]
+            return {}
+        rels = json.loads(_FED_NIC_RELATIONSHIPS.read_text(encoding="utf-8-sig"))
+        return build_parent_index(rels)
+    return _cached("holdco_parent_index", compute)
 
 
 def holding_company_for_cert(cert: int) -> dict | None:
@@ -710,7 +756,7 @@ def macro_series() -> dict[str, list[dict]]:
     docs/audit/04-remediation-prompts.md — scripts/land_fred.ps1, needs the
     user's own free FRED_API_KEY). Empty dict if not landed, same degrade-
     don't-crash contract as footprints()/sod_raw()."""
-    if "macro_series" not in _cache:
+    def compute():
         out: dict[str, list[dict]] = {}
         if _FRED_DIR.exists():
             for part in sorted(_FRED_DIR.glob("series=*")):
@@ -718,8 +764,8 @@ def macro_series() -> dict[str, list[dict]]:
                 if records_path.exists():
                     series_id = part.name.split("=", 1)[1]
                     out[series_id] = json.loads(records_path.read_text(encoding="utf-8-sig"))
-        _cache["macro_series"] = out
-    return _cache["macro_series"]
+        return out
+    return _cached("macro_series", compute)
 
 
 def sod_vintage() -> dict:
@@ -734,17 +780,16 @@ def sod_vintage() -> dict:
     `"as_of": "SOD 2025"` string on a single tool.
 
     `None` if SOD hasn't been landed at all (see scripts/land_sod.ps1)."""
-    if "sod_vintage" not in _cache:
+    def compute():
         if not _SOD.exists():
-            _cache["sod_vintage"] = None
-        else:
-            year = _SOD.parent.name.split("=", 1)[1] if "=" in _SOD.parent.name else None
-            prov_path = _SOD.parent / "_provenance.json"
-            fetched_at = None
-            if prov_path.exists():
-                fetched_at = json.loads(prov_path.read_text(encoding="utf-8-sig")).get("fetched_at")
-            _cache["sod_vintage"] = {"sod_year": int(year) if year else None, "fetched_at": fetched_at}
-    return _cache["sod_vintage"]
+            return None
+        year = _SOD.parent.name.split("=", 1)[1] if "=" in _SOD.parent.name else None
+        prov_path = _SOD.parent / "_provenance.json"
+        fetched_at = None
+        if prov_path.exists():
+            fetched_at = json.loads(prov_path.read_text(encoding="utf-8-sig")).get("fetched_at")
+        return {"sod_year": int(year) if year else None, "fetched_at": fetched_at}
+    return _cached("sod_vintage", compute)
 
 
 def footprints() -> dict[int, dict]:
@@ -753,15 +798,13 @@ def footprints() -> dict[int, dict]:
     dict if SOD hasn't been landed (see scripts/land_sod.ps1), unless
     BANKLENS_GOLD_DB is set, in which case they're read back from the
     materialized `footprints` table instead of recomputed from raw SOD."""
-    if "footprints" in _cache:
-        return _cache["footprints"]
-    conn = _gold_conn()
-    if conn is not None:
-        _cache["footprints"] = {r["cert_number"]: _footprint_from_row(r)
-                                for r in _rows(conn, "SELECT * FROM footprints")}
-    else:
-        _cache["footprints"] = build_footprints(sod_raw())
-    return _cache["footprints"]
+    def compute():
+        conn = _gold_conn()
+        if conn is not None:
+            return {r["cert_number"]: _footprint_from_row(r)
+                   for r in _rows(conn, "SELECT * FROM footprints")}
+        return build_footprints(sod_raw())
+    return _cached("footprints", compute)
 
 
 # Territories with no boundary data landed in usTopology.ts's Albers-USA insets
@@ -786,13 +829,12 @@ def sod_raw() -> list[dict]:
     docs/audit/04-remediation-prompts.md for making this lazy/per-state rather
     than loading the whole table into memory, which this function still does.)
     """
-    if "sod_raw" not in _cache:
+    def compute():
         conn = _gold_conn()
         if conn is not None:
-            _cache["sod_raw"] = _rows(conn, "SELECT * FROM sod")
-        else:
-            _cache["sod_raw"] = json.loads(_SOD.read_text(encoding="utf-8-sig")) if _SOD.exists() else []
-    return _cache["sod_raw"]
+            return _rows(conn, "SELECT * FROM sod")
+        return json.loads(_SOD.read_text(encoding="utf-8-sig")) if _SOD.exists() else []
+    return _cached("sod_raw", compute)
 
 
 def county_table() -> dict[str, dict]:
@@ -800,14 +842,13 @@ def county_table() -> dict[str, dict]:
     Feature 15's county-level HHI, cached the same way population()'s clustering is.
     Read back from the materialized `county_table` when BANKLENS_GOLD_DB is set,
     rather than recomputed from raw SOD."""
-    if "county_table" not in _cache:
+    def compute():
         conn = _gold_conn()
         if conn is not None:
-            _cache["county_table"] = {r["fips"]: _county_from_row(r)
-                                      for r in _rows(conn, "SELECT * FROM county_table")}
-        else:
-            _cache["county_table"] = county_deposit_table(sod_raw())
-    return _cache["county_table"]
+            return {r["fips"]: _county_from_row(r)
+                   for r in _rows(conn, "SELECT * FROM county_table")}
+        return county_deposit_table(sod_raw())
+    return _cached("county_table", compute)
 
 
 def bank_name_by_cert() -> dict[int, str]:
@@ -815,39 +856,37 @@ def bank_name_by_cert() -> dict[int, str]:
     SOD's per-row NAMEBR is the BRANCH's own name (wrong for a multi-branch bank), but
     the BRNUM==0 row is FDIC's own head-office branch, whose NAMEBR is the institution's
     registered name. Verified live: all 4,431 landed certs carry a BRNUM==0 row."""
-    if "bank_name_by_cert" not in _cache:
-        _cache["bank_name_by_cert"] = {
+    def compute():
+        return {
             int(r["CERT"]): r.get("NAMEBR") for r in sod_raw()
             if r.get("BRNUM") == 0 and r.get("CERT") is not None
         }
-    return _cache["bank_name_by_cert"]
+    return _cached("bank_name_by_cert", compute)
 
 
 def network_edges() -> dict[int, list[dict]]:
     """Feature 15 network view — each bank's top-3 M&A-fit partners, precomputed
-    ONCE and cached rather than scored on the request path. Measured live at the
-    original ~1,049-bank population: a full sweep (every bank ranked against
-    the whole population, the real O(n^2) `fit_score` cost) took ~17s in pure
-    Python — fine to pay once per quarter and cache (same pattern as
-    population()'s own clustering step), but far too slow to repeat on every
-    /network page load.
+    ONCE and cached rather than scored on the request path.
 
-    NOT re-measured at the ~4,350-bank widened population (B3) — O(n^2) at ~4.1x
-    the banks is ~17x the comparisons, so the true cold-cache cost here is on the
-    order of minutes, not seconds, and may need F8's blocked/approximate
-    nearest-neighbour search (docs/audit/04-remediation-prompts.md) before this
-    is comfortable on a live first request rather than a warmed cache.
+    F8 — the naive full sweep (every bank ranked with the real O(n^2)
+    `fit_score` cost against every other bank) was measured live at ~17s for
+    the original 1,049-bank population; at B3's ~4,350-4,500-bank widened
+    universe that's ~17x the comparisons (O(n^2) at ~4.1x the banks), on the
+    order of minutes rather than seconds. Uses `ma_fit.build_loan_mix_index`
+    + `rank_partners_approx` instead: one O(n log n) index build, then a
+    windowed approximate-nearest-neighbour search per target with exact
+    `fit_score` scoring only on the retained candidates — see
+    `rank_partners_approx`'s own docstring for the accuracy tradeoff.
     """
-    if "network_edges" in _cache:
-        return _cache["network_edges"]
-    pop = population()
-    fps = footprints()
-    edges = {
-        g["cert_number"]: rank_partners(g, pop["gold"], top_n=3, footprints=fps)
-        for g in pop["gold"]
-    }
-    _cache["network_edges"] = edges
-    return edges
+    def compute():
+        pop = population()
+        fps = footprints()
+        index = build_loan_mix_index(pop["gold"])
+        return {
+            g["cert_number"]: rank_partners_approx(g, index, top_n=3, footprints=fps)
+            for g in pop["gold"]
+        }
+    return _cached("network_edges", compute)
 
 
 def bank_quarters(cert: int) -> list[dict] | None:
@@ -881,7 +920,7 @@ def _confident_crosswalk_by_rssd() -> dict:
     """{rssd: crosswalk_row} restricted to exact/high_confidence matches only
     (never a low-confidence guess) — the one crosswalk load every confident-
     match consumer in this module shares."""
-    if "crosswalk_by_rssd" not in _cache:
+    def compute():
         conn = _gold_conn()
         if conn is not None:
             rows = _rows(conn, "SELECT * FROM crosswalk")
@@ -889,10 +928,8 @@ def _confident_crosswalk_by_rssd() -> dict:
             rows = json.loads(_CROSSWALK.read_text(encoding="utf-8"))
         else:
             rows = []
-        _cache["crosswalk_by_rssd"] = {
-            r["rssd"]: r for r in rows if r["match_type"] in ("exact", "high_confidence")
-        }
-    return _cache["crosswalk_by_rssd"]
+        return {r["rssd"]: r for r in rows if r["match_type"] in ("exact", "high_confidence")}
+    return _cached("crosswalk_by_rssd", compute)
 
 
 def ticker_for_cert(cert: int) -> str | None:
@@ -935,18 +972,24 @@ def price_bars(ticker: str) -> list[dict] | None:
     mean, instead of guessing an allowed character set.
     """
     cache_key = f"bars:{ticker}"
-    if cache_key in _cache:
+    if cache_key in _cache:            # warm path: never touches the lock
         return _cache[cache_key]
     base = DATA / "bronze" / "source=tiingo" / "daily"
     p = base / f"ticker={ticker}" / "records.json"
     if base.resolve() not in p.resolve().parents:
         return None
     if not p.exists():
+        # Deliberately NOT cached: a not-yet-landed ticker should be re-checked
+        # on the next call rather than permanently remembered as absent (a
+        # market-data landing run can add it any time, and this filesystem
+        # check is cheap — unlike the values this module actually caches).
         return None
-    raw = json.loads(p.read_text(encoding="utf-8"))
-    bars = sorted((to_price_bar(r) for r in raw), key=lambda b: b["date"])
-    _cache[cache_key] = bars
-    return bars
+    with _cache_lock:
+        if cache_key in _cache:
+            return _cache[cache_key]
+        raw = json.loads(p.read_text(encoding="utf-8"))
+        _cache[cache_key] = sorted((to_price_bar(r) for r in raw), key=lambda b: b["date"])
+    return _cache[cache_key]
 
 
 def market_coverage() -> dict:

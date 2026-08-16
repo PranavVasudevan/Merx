@@ -1,4 +1,4 @@
-/* BankLens Bank Detail Page - Production-Grade Glassmorphism */
+/* BankLens Bank Detail Page */
 
 .bank-page {
   display: flex;
@@ -19,21 +19,17 @@
   justify-content: space-between;
   gap: var(--space-4);
   padding: var(--space-6);
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(6, 182, 212, 0.05) 100%);
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  backdrop-filter: var(--glass-blur);
 }
 
 .bank-page-title {
   font-size: 32px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: -0.02em;
   margin: 0;
-  background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 50%, #3b82f6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary);
   flex: 1;
 }
 
@@ -47,19 +43,18 @@
 .bank-page-header-link {
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--cat-blue);
+  color: var(--accent);
   text-decoration: none;
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius);
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
   transition: all var(--duration-fast) var(--ease-organic);
 }
 
 .bank-page-header-link:hover {
-  background: rgba(59, 130, 246, 0.2);
-  border-color: rgba(59, 130, 246, 0.5);
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.2);
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
 }
 
 .bank-page-peer-basis {
@@ -85,8 +80,8 @@
 }
 
 .bank-page-tearsheet-btn:hover:not(:disabled) {
-  color: var(--cat-blue);
-  border-color: rgba(59, 130, 246, 0.5);
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
 }
 
 .bank-page-tearsheet-btn:disabled {
@@ -160,9 +155,9 @@
 
 /* Error Banner */
 .bank-page .app-banner-error {
-  background: rgba(239, 68, 68, 0.12);
-  color: #fca5a5;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: color-mix(in srgb, var(--status-critical) 12%, transparent);
+  color: var(--status-critical);
+  border: 1px solid color-mix(in srgb, var(--status-critical) 30%, transparent);
   border-radius: var(--radius);
   padding: var(--space-3) var(--space-4);
   font-size: var(--text-sm);

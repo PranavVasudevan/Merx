@@ -134,7 +134,9 @@ def _write_table(con: duckdb.DuckDBPyConnection, name: str, rows: list[dict]) ->
         con.execute(f"CREATE OR REPLACE TABLE {name} AS SELECT * FROM read_json_auto(?)", [tmp_path])
     finally:
         Path(tmp_path).unlink(missing_ok=True)
-    (n,) = con.execute(f"SELECT count(*) FROM {name}").fetchone()
+    count_row = con.execute(f"SELECT count(*) FROM {name}").fetchone()
+    assert count_row is not None, "a bare COUNT(*) aggregate always returns exactly one row"
+    (n,) = count_row
     print(f"  {name}: {n} rows")
 
 

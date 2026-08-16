@@ -1,0 +1,63 @@
+# Pinned + hashed for reproducible builds (F14). Installed with
+# `pip install --require-hashes -r requirements.txt` in both the Dockerfile
+# and CI, so the same commit always produces the same dependency set.
+# --require-hashes demands every package actually installed be listed here
+# with a hash — direct AND transitive — so this is the full closure, not
+# just the five packages the bridge imports by name.
+#
+# Direct:
+#   duckdb        — banklens_mcp.data imports it unconditionally (Gold-layer
+#                   SQL engine backing list_banks); crashes at import time
+#                   without it.
+#   prometheus-client — bridge_server.py's /metrics endpoint.
+#   gunicorn      — BANKLENS_SERVER=prod transport (bridge_server.wsgi_app).
+#   reportlab     — banklens_mcp.tearsheet's per-bank PDF export (D1).
+#   PyJWT[crypto] — auth.py's `import jwt` / `PyJWKClient`, imported
+#                   unconditionally by bridge_server.py at module load
+#                   (`import auth`) regardless of BANKLENS_AUTH_ENABLED.
+#                   `[crypto]` (-> cryptography) is required at runtime:
+#                   auth.py verifies with RS256 (jwt.decode(...,
+#                   algorithms=["RS256"])), which PyJWT can only do with the
+#                   cryptography backend installed. Both PyJWT and cryptography
+#                   were missing from the Dockerfile entirely before F14 — the
+#                   built image crashed on container start with
+#                   ModuleNotFoundError: No module named 'jwt'.
+#
+# Transitive (pulled in by the above; pinned explicitly so `--require-hashes`
+# has a hash for every wheel pip actually installs):
+#   cryptography -> cffi -> pycparser
+#   gunicorn -> packaging
+#   reportlab -> charset-normalizer, pillow
+#
+# Regenerate in a clean venv after bumping a direct pin:
+#   pip install "PyJWT[crypto]==<v>" "duckdb==<v>" "prometheus-client==<v>" \
+#     "gunicorn==<v>" "reportlab==<v>"
+#   pip freeze   # <- the new full closure
+#   # then, per package, for the CI target (linux/x86_64, cp313):
+#   pip download --no-deps -d /tmp/whl "<pkg>==<v>" \
+#     --platform manylinux_2_28_x86_64 --python-version 3.13 \
+#     --implementation cp --abi cp313 --only-binary=:all:
+#   pip hash /tmp/whl/*.whl
+
+duckdb==1.5.3 \
+    --hash=sha256:787df63824f07bf18022dbc3b8ca4b2bfab0ebe616464f55c6e8cd0f59ea762e
+prometheus-client==0.23.1 \
+    --hash=sha256:dd1913e6e76b59cfe44e7a4b83e01afc9873c1bdfd2ed8739f1e76aeca115f99
+gunicorn==23.0.0 \
+    --hash=sha256:ec400d38950de4dfd418cff8328b2c8faed0edb0d517d3394e457c317908ca4d
+reportlab==5.0.0 \
+    --hash=sha256:9d5a3affa84919e1111ede580031266a570e93b1ce388219621347965ff1d93c
+PyJWT==2.10.1 \
+    --hash=sha256:dcdd193e30abefd5debf142f9adfcdd2b58004e644f25406ffaebd50bd98dacb
+cryptography==46.0.3 \
+    --hash=sha256:a2c0cd47381a3229c403062f764160d57d4d175e022c1df84e168c6251a22eec
+cffi==2.1.1 \
+    --hash=sha256:a931079504ecc49efed7744c476a5c343a92fabf66dec2db95edb1b2fdc770e2
+pycparser==3.0 \
+    --hash=sha256:b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992
+packaging==26.3 \
+    --hash=sha256:d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c
+charset-normalizer==3.5.1 \
+    --hash=sha256:62b55f6722735a6c472f88361cde6640608773d9443cebdbb51abf436a1fcdd3
+pillow==12.3.0 \
+    --hash=sha256:0847a763afefb695bc912d7c131e7e0632d4edc1d8698f58ddabec8e46b8b6d3

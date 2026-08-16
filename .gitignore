@@ -8,6 +8,11 @@
 !/data/samples/
 *.parquet
 *.duckdb
+# F11 — guards against the PowerShell quoting accident that created a stray
+# `data;C` directory at the repo root (an unquoted path argument containing a
+# `;` got split by the shell, e.g. `data;C:\...`) — catches a recurrence of
+# that exact shape without ignoring anything under the real /data/ tree above.
+/data;*
 
 # ---- Secrets / env ----
 .env
@@ -33,7 +38,15 @@ venv/
 
 # ---- Rust ----
 target/
-Cargo.lock  # keep for binaries, ignore for libs; adjust per-crate as needed
+# F12 — gitignore has no inline-comment syntax; the line this replaced
+# (`Cargo.lock  # keep for binaries...`) was the literal pattern
+# "Cargo.lock  # keep for binaries..." and matched nothing, so Cargo.lock was
+# never actually ignored despite the comment's intent. Made explicit instead:
+# both Rust crates in this repo (services/stress-engine, services/ingestion)
+# build binaries (each has a main.rs), and Cargo's own guidance is to commit
+# Cargo.lock for binaries (reproducible builds) — so it is deliberately
+# tracked, not ignored. Both are already committed; this comment exists so
+# a future crate doesn't get its lockfile dropped by a copy-pasted line.
 
 # ---- Node / frontend ----
 node_modules/
@@ -59,6 +72,10 @@ crash.log
 .DS_Store
 Thumbs.db
 *.swp
+
+# ---- SBOM (F15 — generated per CI run, not a source artifact) ----
+*.cdx.json
+sbom-*.json
 
 # ---- ML artifacts ----
 mlruns/

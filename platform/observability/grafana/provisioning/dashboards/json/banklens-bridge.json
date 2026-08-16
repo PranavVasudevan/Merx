@@ -25,6 +25,7 @@
     {
       "id": 2,
       "title": "Error rate (non-200) by route",
+      "description": "F18 — the `status` label's meaning: 400 is the CALLER's fault (a bad param, an unknown persona — bridge_server.py's _route_request maps ValueError/KeyError here) and is informational, not page-worthy on its own. 401/403 are auth. 429 is the bridge's own rate limiter. 500 is a genuine SERVER fault (everything else — a missing data file, an unhandled None in a transform, a real bug) and is what panel 6 below isolates and what the BridgeInternalServerError Prometheus alert (platform/observability/prometheus/rules/bridge-alerts.yml) fires on. Before F18, every non-2xx here — including real server faults — was reported as 400, so this panel could never distinguish 'a user typo'd a cert' from 'the service is broken.'",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
       "datasource": { "type": "prometheus", "uid": "banklens-prometheus" },
@@ -96,6 +97,29 @@
           "mappings": [
             { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }
           ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 6,
+      "title": "5xx (server fault) rate",
+      "description": "F18 — isolated from panel 2's full non-200 breakdown because a 5xx is never the caller's fault and should be visually impossible to miss: a real transform bug, a missing data file, an unhandled exception. Backed by the same BridgeInternalServerError Prometheus alert rule (platform/observability/prometheus/rules/bridge-alerts.yml) that pages on any 500 — this panel is what that alert is watching. Should read exactly 0 in a healthy system; correlate a nonzero value with the request_id in bridge_server.py's structured JSON log (F17) to find the exact failing request and its traceback.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "banklens-prometheus" },
+      "targets": [
+        {
+          "expr": "sum(rate(banklens_bridge_requests_total{status=\"500\"}[1m])) by (route)",
+          "legendFormat": "{{route}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "color": { "mode": "fixed", "fixedColor": "red" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 0.001 }] }
         },
         "overrides": []
       }

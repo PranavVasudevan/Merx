@@ -1,0 +1,117 @@
+/* E14 — shared chart wrapper: figure/figcaption + data-table toggle + CSV
+   download. Deliberately reuses .panel-style hairlines/tokens rather than
+   introducing new visual language — this sits INSIDE existing chart panels. */
+
+.figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.figure-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.figure-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: border-color var(--duration-fast) ease, color var(--duration-fast) ease;
+}
+
+.figure-toggle-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.figure-toggle-btn[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.figure-body {
+  min-width: 0;
+}
+
+.figure-chart {
+  min-width: 0;
+}
+
+.figure-table-scroll {
+  overflow: auto;
+  max-height: 480px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.figure-table-scroll:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.figure-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.figure-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-2);
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  font-weight: 600;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-strong);
+  white-space: nowrap;
+}
+
+.figure-table tbody td {
+  padding: var(--space-1) var(--space-3);
+  border-bottom: 1px solid var(--gridline);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.figure-table tbody tr:hover {
+  background: var(--surface-2);
+}
+
+.figure-table-empty {
+  text-align: center;
+  color: var(--text-muted);
+  padding: var(--space-4);
+}
+
+.figure-caption {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+/* Visually hidden but present for screen readers — used for the table's
+   <caption> so the visible figcaption isn't duplicated on screen. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

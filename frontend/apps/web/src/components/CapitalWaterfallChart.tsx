@@ -1,13 +1,18 @@
 import { useMemo } from 'react';
 import type { EChartsOption } from 'echarts';
 import { EChart } from './EChart';
-import { baseEChartTheme, tooltipStyle } from '../echartsTheme';
+import { baseEChartTheme, tooltipHtml, tooltipStyle } from '../echartsTheme';
 import { chartColors } from '../colors';
+import { usd } from '../metricFormat';
+import { ChartEmpty } from './ChartTooltip';
 import type { StressResult } from '../types';
 
+// Both call sites below only ever pass a non-negative magnitude (see the
+// `−${fmtB(...)}` pattern a few lines down, where the sign is prepended
+// separately) — so this is a thin, behavior-preserving alias over the shared
+// `usd()` formatter rather than a re-implementation.
 function fmtB(v: number): string {
-  const sign = v < 0 ? '−' : '';
-  return `${sign}$${(Math.abs(v) / 1e9).toFixed(2)}B`;
+  return usd(v);
 }
 
 interface WaterfallStep {
@@ -79,7 +84,9 @@ export function CapitalWaterfallChart({ result }: { result: StressResult }) {
             | undefined;
           if (!bar) return '';
           const step = steps[bar.dataIndex];
-          return `<strong>${step.label}</strong><br/>${step.kind === 'total' ? fmtB(step.delta) : `−${fmtB(step.delta)}`}`;
+          return tooltipHtml(step.label, [
+            { text: step.kind === 'total' ? fmtB(step.delta) : `−${fmtB(step.delta)}` },
+          ]);
         },
       },
       xAxis: {
@@ -130,7 +137,7 @@ export function CapitalWaterfallChart({ result }: { result: StressResult }) {
   }, [steps]);
 
   if (!steps) {
-    return <p className="muted stress-liq-note">Capital-dollar figures unavailable for this result.</p>;
+    return <ChartEmpty>Capital-dollar figures unavailable for this result.</ChartEmpty>;
   }
 
   return (

@@ -18,6 +18,8 @@ Two important corrections learned from the live FDIC data:
 
 from __future__ import annotations
 
+from typing import TypedDict
+
 _THOUSANDS = 1000
 
 # raw FDIC code -> canonical column, for DOLLAR amounts (reported in thousands)
@@ -106,6 +108,99 @@ _RATIO_FIELDS = {
     "NPERFV": "noncurrent_assets_ratio_reported",
     "IDLNCORR": "loans_to_core_deposits_reported",
 }
+
+
+class SilverRow(TypedDict):
+    """The real, complete shape `to_bank_financials()` returns — documented here
+    so a typo in a consumer's key access (``row["toatl_assets"]``) is a mypy
+    error instead of a silent `None`/`KeyError` at runtime. `to_bank_financials`
+    builds this dynamically (looping over `_DOLLAR_FIELDS`/`_RATIO_FIELDS`), so
+    the dict literal there is `cast` to this at the return point rather than
+    constructed field-by-field."""
+
+    cert_number: int | None
+    name: str | None
+    state: str | None
+    country: str
+    currency: str
+    quarter: str | None
+    filing_date: str | None
+    restated_flag: bool
+    _source: str
+    rssd_id: int | None
+    holding_company_name: str | None
+    holding_company_rssd: int | None
+
+    total_assets: float | None
+    total_deposits: float | None
+    domestic_deposits: float | None
+    insured_deposits: float | None
+    uninsured_deposits: float | None
+    core_deposits: float | None
+    total_loans_gross: float | None
+    total_loans_net: float | None
+    total_equity: float | None
+    real_estate_loans: float | None
+    construction_loans: float | None
+    multifamily_loans: float | None
+    nonfarm_nonres_loans: float | None
+    heloc_loans: float | None
+    residential_mortgage_loans: float | None
+    farmland_loans: float | None
+    agricultural_loans: float | None
+    c_and_i_loans: float | None
+    consumer_loans: float | None
+    credit_card_loans: float | None
+    auto_loans: float | None
+    consumer_other_loans: float | None
+    securities_total: float | None
+    securities_afs: float | None
+    securities_htm_reported: float | None
+    tier1_capital: float | None
+    total_capital: float | None
+    risk_weighted_assets: float | None
+    average_assets: float | None
+    cash_and_balances: float | None
+    net_income: float | None
+    interest_income: float | None
+    interest_expense: float | None
+    noninterest_income: float | None
+    noninterest_expense: float | None
+    provision_for_credit_losses: float | None
+    noncurrent_loans: float | None
+    net_charge_offs: float | None
+    net_charge_offs_construction: float | None
+    net_charge_offs_multifamily: float | None
+    net_charge_offs_nonfarm_nonres: float | None
+    net_charge_offs_residential_mortgage: float | None
+    net_charge_offs_farmland: float | None
+    net_charge_offs_agricultural: float | None
+    net_charge_offs_c_and_i: float | None
+    net_charge_offs_consumer: float | None
+    allowance_for_credit_losses: float | None
+    assets_past_due_30_89: float | None
+    assets_past_due_90_plus: float | None
+    other_real_estate_owned: float | None
+    intangible_assets: float | None
+    brokered_deposits: float | None
+    volatile_liabilities: float | None
+    large_denomination_deposits: float | None
+    time_deposits: float | None
+    securities_htm: float | None
+    cre_loans: float | None
+
+    cet1_ratio: float | None
+    tier1_rbc_ratio: float | None
+    total_rbc_ratio: float | None
+    leverage_ratio: float | None
+    equity_to_assets_ratio_reported: float | None
+    loan_to_deposit_ratio_reported: float | None
+    net_interest_margin_reported: float | None
+    roa_reported: float | None
+    roe_reported: float | None
+    efficiency_ratio_reported: float | None
+    noncurrent_assets_ratio_reported: float | None
+    loans_to_core_deposits_reported: float | None
 
 
 def _to_usd(value) -> float | None:

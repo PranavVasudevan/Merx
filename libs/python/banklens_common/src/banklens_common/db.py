@@ -158,6 +158,34 @@ CREATE TABLE IF NOT EXISTS annotations (
 );
 CREATE INDEX IF NOT EXISTS annotations_cert_idx ON annotations (cert, created_at DESC);
 CREATE INDEX IF NOT EXISTS annotations_user_idx ON annotations (user_sub);
+
+-- D10 — user-saved custom stress scenarios, alongside the named registry in
+-- config/scenarios.json (which is static, not stored here).
+CREATE TABLE IF NOT EXISTS custom_scenarios (
+    id BIGSERIAL PRIMARY KEY,
+    user_sub TEXT NOT NULL,
+    name TEXT NOT NULL,
+    loan_loss_pct DOUBLE PRECISION NOT NULL,
+    deposit_outflow_pct DOUBLE PRECISION NOT NULL,
+    rate_shock_bps DOUBLE PRECISION NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL
+);
+CREATE INDEX IF NOT EXISTS custom_scenarios_user_idx ON custom_scenarios (user_sub);
+
+-- D11 — exposure/portfolio positions: a counterparty-exposure line per bank,
+-- persisted per user. `exposure_type` is free text (e.g. "loan", "bond",
+-- "deposit relationship") — not constrained to an enum since a real desk's
+-- exposure taxonomy varies by institution and this is display/aggregation
+-- context, not a regulatory classification.
+CREATE TABLE IF NOT EXISTS portfolio_positions (
+    id BIGSERIAL PRIMARY KEY,
+    user_sub TEXT NOT NULL,
+    cert INTEGER NOT NULL,
+    exposure_amount DOUBLE PRECISION NOT NULL,
+    exposure_type TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL
+);
+CREATE INDEX IF NOT EXISTS portfolio_positions_user_idx ON portfolio_positions (user_sub);
 """
 
 # Feature 17 (Tier 6 capstone) — real SEC 10-K Item 1A chunks + embeddings.
@@ -456,6 +484,7 @@ def add_watchlist_rule(user_sub: str, cert: int, rule_type: str, *, metric: str 
         (user_sub, cert, rule_type, metric, operator, threshold, top_n,
          ts or datetime.datetime.now(datetime.timezone.utc)),
     ).fetchone()
+    assert row is not None, "INSERT ... RETURNING id must return exactly one row"
     return row[0]
 
 
@@ -488,6 +517,7 @@ def save_screen(user_sub: str, name: str, filters: dict,
         "VALUES (%s, %s, %s, %s) RETURNING id",
         (user_sub, name, json.dumps(filters), ts or datetime.datetime.now(datetime.timezone.utc)),
     ).fetchone()
+    assert row is not None, "INSERT ... RETURNING id must return exactly one row"
     return row[0]
 
 
@@ -515,6 +545,7 @@ def save_peer_set(user_sub: str, name: str, certs: list[int],
         "RETURNING id",
         (user_sub, name, json.dumps(certs), ts or datetime.datetime.now(datetime.timezone.utc)),
     ).fetchone()
+    assert row is not None, "INSERT ... RETURNING id must return exactly one row"
     return row[0]
 
 
@@ -542,6 +573,7 @@ def add_annotation(user_sub: str, cert: int, note_md: str, quarter: str | None =
         "VALUES (%s, %s, %s, %s, %s) RETURNING id",
         (user_sub, cert, quarter, note_md, ts or datetime.datetime.now(datetime.timezone.utc)),
     ).fetchone()
+    assert row is not None, "INSERT ... RETURNING id must return exactly one row"
     return row[0]
 
 
@@ -561,6 +593,65 @@ def delete_annotation(user_sub: str, annotation_id: int) -> None:
     conn = get_conn()
     conn.execute(
         "DELETE FROM annotations WHERE id = %s AND user_sub = %s", (annotation_id, user_sub))
+
+
+def save_custom_scenario(user_sub: str, name: str, loan_loss_pct: float,
+                          deposit_outflow_pct: float, rate_shock_bps: float,
+                          ts: datetime.datetime | None = None) -> int:
+    conn = get_conn()
+    row = conn.execute(
+        "INSERT INTO custom_scenarios (user_sub, name, loan_loss_pct, deposit_outflow_pct, "
+        "rate_shock_bps, created_at) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id",
+        (user_sub, name, loan_loss_pct, deposit_outflow_pct, rate_shock_bps,
+         ts or datetime.datetime.now(datetime.timezone.utc)),
+    ).fetchone()
+    assert row is not None, "INSERT ... RETURNING id must return exactly one row"
+    return row[0]
+
+
+def fetch_custom_scenarios(user_sub: str) -> list[dict]:
+    conn = get_conn()
+    cols = ("id", "name", "loan_loss_pct", "deposit_outflow_pct", "rate_shock_bps", "created_at")
+    rows = conn.execute(
+        f"SELECT {', '.join(cols)} FROM custom_scenarios WHERE user_sub = %s ORDER BY created_at DESC",
+        (user_sub,),
+    ).fetchall()
+    return [dict(zip(cols, row, strict=True)) for row in rows]
+
+
+def delete_custom_scenario(user_sub: str, scenario_id: int) -> None:
+    conn = get_conn()
+    conn.execute(
+        "DELETE FROM custom_scenarios WHERE id = %s AND user_sub = %s", (scenario_id, user_sub))
+
+
+def add_portfolio_position(user_sub: str, cert: int, exposure_amount: float, exposure_type: str,
+                            ts: datetime.datetime | None = None) -> int:
+    conn = get_conn()
+    row = conn.execute(
+        "INSERT INTO portfolio_positions (user_sub, cert, exposure_amount, exposure_type, created_at) "
+        "VALUES (%s, %s, %s, %s, %s) RETURNING id",
+        (user_sub, cert, exposure_amount, exposure_type,
+         ts or datetime.datetime.now(datetime.timezone.utc)),
+    ).fetchone()
+    assert row is not None, "INSERT ... RETURNING id must return exactly one row"
+    return row[0]
+
+
+def fetch_portfolio_positions(user_sub: str) -> list[dict]:
+    conn = get_conn()
+    cols = ("id", "cert", "exposure_amount", "exposure_type", "created_at")
+    rows = conn.execute(
+        f"SELECT {', '.join(cols)} FROM portfolio_positions WHERE user_sub = %s ORDER BY created_at DESC",
+        (user_sub,),
+    ).fetchall()
+    return [dict(zip(cols, row, strict=True)) for row in rows]
+
+
+def delete_portfolio_position(user_sub: str, position_id: int) -> None:
+    conn = get_conn()
+    conn.execute(
+        "DELETE FROM portfolio_positions WHERE id = %s AND user_sub = %s", (position_id, user_sub))
 
 
 def alert_already_recorded(rule_id: int, quarter: str) -> bool:
@@ -666,9 +757,11 @@ def filing_coverage_stats() -> dict:
     able to cite rather than imply full coverage."""
     conn = get_conn()
     _ensure_filings_schema(conn)
-    total_filers, total_chunks = conn.execute(
+    count_row = conn.execute(
         "SELECT COUNT(DISTINCT cik), COUNT(*) FROM filing_chunks").fetchone()
-    by_confidence = dict(conn.execute(
+    assert count_row is not None, "a bare COUNT(*) aggregate always returns exactly one row"
+    total_filers, total_chunks = count_row
+    by_confidence: dict[str, int] = dict(conn.execute(
         "SELECT extraction_confidence, COUNT(DISTINCT cik) FROM filing_chunks "
         "GROUP BY extraction_confidence").fetchall())
     return {"filers": total_filers or 0, "chunks": total_chunks or 0,

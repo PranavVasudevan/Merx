@@ -4,10 +4,11 @@ import type { EChartsOption } from 'echarts';
 import type { BoxplotSeriesOption, ScatterSeriesOption } from 'echarts/charts';
 import { EChart } from './EChart';
 import { BankSearch } from './BankSearch';
-import { baseEChartTheme, tooltipStyle } from '../echartsTheme';
+import { baseEChartTheme, tooltipHtml, tooltipStyle } from '../echartsTheme';
 import { api } from '../api';
 import { categoricalPalette, chartColors } from '../colors';
 import { pct } from '../metricFormat';
+import { ChartEmpty } from './ChartTooltip';
 import type { MetricGroup, PopulationMetricRow } from '../types';
 import { ExportCsvButton } from './ExportCsvButton';
 import type { CsvColumn } from '../csvExport';
@@ -306,16 +307,21 @@ export function GroupComparisonChart() {
           if (param.seriesType === 'boxplot') {
             const b = boxes.find((x) => x.name === param.name);
             if (!b) return '';
-            return `<strong>${b.name}</strong> (n=${b.n})<br/>`
-              + `Max ${pct(b.max, 2)}<br/>Q3 ${pct(b.q3, 2)}<br/>Median ${pct(b.median, 2)}<br/>`
-              + `Q1 ${pct(b.q1, 2)}<br/>Min ${pct(b.min, 2)}`;
+            return tooltipHtml(`${b.name} (n=${b.n})`, [
+              { text: `Max ${pct(b.max, 2)}` },
+              { text: `Q3 ${pct(b.q3, 2)} · Median ${pct(b.median, 2)} · Q1 ${pct(b.q1, 2)}`, muted: true },
+              { text: `Min ${pct(b.min, 2)}`, muted: true },
+            ]);
           }
           const d = param.data;
           if (d?.name && d.value) {
-            return `<strong>${d.name}</strong><br/>${pct(d.value[1], 2)}${d.cert ? '<br/><span style="opacity:.65">Click to open</span>' : ''}`;
+            return tooltipHtml(d.name, [
+              { text: pct(d.value[1], 2) },
+              ...(d.cert ? [{ text: 'Click to open', muted: true }] : []),
+            ]);
           }
           const v = Array.isArray(param.value) ? param.value[1] : param.value;
-          return typeof v === 'number' ? pct(v, 2) : '';
+          return typeof v === 'number' ? tooltipHtml(pct(v, 2)) : '';
         },
       },
       series,
@@ -399,11 +405,11 @@ export function GroupComparisonChart() {
       {error && <p className="app-banner-error">{error}</p>}
 
       {!error && rows && boxes.length === 0 && (
-        <p className="muted gcc-empty">
+        <ChartEmpty>
           {groupBy === 'peer_set' && peerCerts.size === 0
             ? 'Add at least one bank above to compare it against the rest of the population.'
             : `Not enough banks with a reported value in any group (need ${MIN_GROUP_N}+ per group).`}
-        </p>
+        </ChartEmpty>
       )}
 
       {boxes.length > 0 && (

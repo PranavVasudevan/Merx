@@ -1,4 +1,4 @@
-/* BankLens Overview Page - Redesigned with Glassmorphism */
+/* BankLens Overview Page */
 
 .overview-page {
   display: flex;
@@ -10,20 +10,16 @@
   text-align: center;
   padding: var(--space-8);
   border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(6, 182, 212, 0.05) 100%);
-  border: 1px solid rgba(59, 130, 246, 0.2);
-  backdrop-filter: var(--glass-blur);
+  background: var(--surface);
+  border: 1px solid var(--border);
 }
 
 .overview-title {
   font-size: 32px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: -0.02em;
   margin: 0 0 var(--space-3);
-  background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 50%, #3b82f6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary);
 }
 
 .overview-subtitle {
@@ -52,27 +48,25 @@
   font-weight: 600;
   text-decoration: none;
   transition: all var(--duration-fast) var(--ease-organic);
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(8px);
+  background: var(--surface-2);
 }
 
 .overview-cta:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--surface-elevated);
   border-color: var(--border-strong);
   color: var(--text-primary);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 .overview-cta-primary {
-  background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+  background: var(--accent);
   border-color: transparent;
-  color: #fff;
-  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+  color: var(--page);
 }
 
 .overview-cta-primary:hover {
-  box-shadow: 0 12px 32px rgba(59, 130, 246, 0.4);
-  transform: translateY(-2px);
+  background: color-mix(in srgb, var(--accent) 88%, white);
+  transform: translateY(-1px);
 }
 
 /* KPI Grid */
@@ -104,36 +98,16 @@
   padding: var(--space-5);
   border-radius: var(--radius-lg);
   background: var(--surface);
-  backdrop-filter: var(--glass-blur);
   border: 1px solid var(--border);
-  box-shadow: var(--glass-glow);
-  transition: all var(--duration-fast) var(--ease-organic);
+  transition: border-color var(--duration-fast) var(--ease-organic),
+              box-shadow var(--duration-fast) var(--ease-organic);
   position: relative;
   overflow: hidden;
 }
 
-.overview-kpi::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, transparent 100%);
-  opacity: 0;
-  transition: opacity var(--duration-fast) var(--ease-organic);
-}
-
 .overview-kpi:hover {
   border-color: var(--border-strong);
-  box-shadow: 0 0 0 1px rgba(148, 163, 196, 0.15),
-              0 12px 40px rgba(0, 0, 0, 0.6),
-              0 0 50px -8px rgba(59, 130, 246, 0.4);
-  transform: translateY(-4px);
-}
-
-.overview-kpi:hover::before {
-  opacity: 1;
+  box-shadow: var(--shadow);
 }
 
 .overview-kpi-label {
@@ -165,9 +139,7 @@
   padding: var(--space-6);
   border-radius: var(--radius-lg);
   background: var(--surface);
-  backdrop-filter: var(--glass-blur);
   border: 1px solid var(--border);
-  box-shadow: var(--glass-glow);
 }
 
 .overview-clusters h2,
@@ -204,13 +176,13 @@
   gap: var(--space-3);
   padding: var(--space-3);
   border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--surface-2);
   border: 1px solid var(--border);
   transition: all var(--duration-fast) var(--ease-organic);
 }
 
 .overview-cluster-row:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface-elevated);
   border-color: var(--border-strong);
 }
 
@@ -229,7 +201,7 @@
 .overview-cluster-track {
   flex: 1;
   height: 6px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--surface-elevated);
   border-radius: var(--radius-pill);
   overflow: hidden;
   position: relative;
@@ -237,9 +209,8 @@
 
 .overview-cluster-fill {
   height: 100%;
-  background: linear-gradient(90deg, #3b82f6 0%, #06b6d4 100%);
+  background: var(--accent);
   border-radius: var(--radius-pill);
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
 }
 
 .overview-cluster-count {
@@ -260,7 +231,7 @@
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius);
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface-2);
   color: var(--text-primary);
   font-size: var(--text-sm);
   cursor: pointer;
@@ -269,7 +240,7 @@
 
 .overview-leaderboard-select:hover {
   border-color: var(--border-strong);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface-elevated);
 }
 
 .overview-leaderboard-filters {

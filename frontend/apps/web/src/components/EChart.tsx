@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as echarts from 'echarts/core';
 import {
-  BoxplotChart, GraphChart, HeatmapChart, RadarChart, ScatterChart, TreemapChart,
+  BoxplotChart, GraphChart, HeatmapChart, RadarChart, SankeyChart, ScatterChart, TreemapChart,
 } from 'echarts/charts';
 import {
   GridComponent, LegendComponent, RadarComponent, TitleComponent, TooltipComponent, VisualMapComponent,
@@ -9,15 +9,18 @@ import {
 import { CanvasRenderer } from 'echarts/renderers';
 import type { EChartsOption } from 'echarts';
 import { onThemeChange } from '../colors';
+import { ECHARTS_ANIMATION } from '../chartMotion';
 
 // Tree-shaken registration. Importing the `echarts` barrel instead would pull ~1MB
 // minified; registering only what's used keeps the vendor chunk to the charts this
 // app actually renders. Anything new must be added here or it silently won't draw.
 // BoxplotChart + ScatterChart: GroupComparisonChart.tsx's per-cluster/size-band/
 // state/peer-set boxplot with a jittered beeswarm overlay. RadarChart: D6's
-// normalised multi-bank comparison view on /compare.
+// normalised multi-bank comparison view on /compare. SankeyChart: E11's
+// CompositionSankeyPanel.tsx — deposit-type/loan-category mix migration across
+// a bank's landed quarters, one node per category per quarter.
 echarts.use([
-  TreemapChart, HeatmapChart, GraphChart, BoxplotChart, ScatterChart, RadarChart,
+  TreemapChart, HeatmapChart, GraphChart, BoxplotChart, ScatterChart, RadarChart, SankeyChart,
   GridComponent, TooltipComponent, VisualMapComponent, LegendComponent, TitleComponent, RadarComponent,
   CanvasRenderer,
 ]);
@@ -82,7 +85,11 @@ export function EChart({ option, height = 420, resetKey, className, ariaLabel, o
 
   useEffect(() => {
     // `true` = replace rather than merge, so removing a series actually removes it.
-    chartRef.current?.setOption(option, true);
+    // ECHARTS_ANIMATION spreads first so any per-chart option (none currently
+    // set their own animationDuration/animationEasing) can still override it —
+    // this is what gives every ECharts panel in the app the same entrance
+    // timing (chartMotion.ts) without each one repeating the values.
+    chartRef.current?.setOption({ ...ECHARTS_ANIMATION, ...option }, true);
   }, [option, themeTick]);
 
   return (

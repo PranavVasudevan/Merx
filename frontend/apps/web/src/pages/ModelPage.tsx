@@ -4,10 +4,11 @@ import {
   CartesianGrid, Line, LineChart, ResponsiveContainer, Scatter, ScatterChart, Tooltip,
   XAxis, YAxis, ZAxis,
 } from 'recharts';
-import { motion } from 'motion/react';
 import { api } from '../api';
 import { chartColors } from '../colors';
+import { RECHARTS_ENTRANCE } from '../chartMotion';
 import { RISK_DISCLAIMER } from '../csvExport';
+import { ChartTooltipShell } from '../components/ChartTooltip';
 import type {
   MaWeightValidationResult, ModelCardDriverPoint, ModelCardResult, XrayValidationResult,
 } from '../types';
@@ -24,15 +25,68 @@ const FEATURE_LABELS: Record<string, string> = {
 
 interface BeePoint extends ModelCardDriverPoint { y: number }
 
+/** Visual 95% bootstrap CI whisker for one standardized coefficient — a
+ * shaded range from `lo` to `hi` plus a tick at the point estimate, against a
+ * shared domain across every feature so magnitudes are comparable at a
+ * glance. The coefficient table already prints the CI as text; this makes
+ * "how wide is the uncertainty relative to the estimate" visible without
+ * reading numbers, which is the point of showing a CI at all (E13). */
+function CoefWhisker({ point, lo, hi, domain }: { point: number; lo: number | null; hi: number | null; domain: number }) {
+  const pct = (v: number) => ((v + domain) / (2 * domain)) * 100;
+  const zeroPct = pct(0);
+  const pointPct = Math.min(100, Math.max(0, pct(point)));
+  const positive = point >= 0;
+  return (
+    <div className="model-coef-whisker" role="img"
+      aria-label={`standardized coefficient ${point.toFixed(3)}${lo !== null && hi !== null ? `, 95% bootstrap CI ${lo.toFixed(3)} to ${hi.toFixed(3)}` : ''}`}>
+      <div className="model-coef-whisker-zero" style={{ left: `${zeroPct}%` }} />
+      {lo !== null && hi !== null && (
+        <div
+          className="model-coef-whisker-range"
+          style={{
+            left: `${Math.min(100, Math.max(0, pct(lo)))}%`,
+            width: `${Math.max(0, Math.min(100, pct(hi)) - Math.min(100, Math.max(0, pct(lo))))}%`,
+            background: positive ? 'var(--status-critical)' : 'var(--cat-blue)',
+          }}
+        />
+      )}
+      <div
+        className="model-coef-whisker-point"
+        style={{ left: `${pointPct}%`, background: positive ? 'var(--status-critical)' : 'var(--cat-blue)' }}
+      />
+    </div>
+  );
+}
+
+/** Shared tooltip for the three curve charts below (ROC / PR / calibration) —
+ *  they used to pass recharts a bare `formatter` prop with no `content`,
+ *  which renders recharts' own UNSTYLED default tooltip box (it doesn't pick
+ *  up `.chart-tooltip` at all) rather than the shared shell every other
+ *  chart in the app uses. */
+function CurveTooltip({ active, payload, label }: {
+  active?: boolean; payload?: { name?: string; value?: number | string; color?: string }[]; label?: number | string;
+}) {
+  if (!active || !payload?.length) return null;
+  const lines = payload
+    .filter((p) => p.name !== 'random classifier' && p.name !== 'perfect calibration')
+    .map((p) => ({
+      text: `${p.name}: ${typeof p.value === 'number' ? p.value.toFixed(3) : p.value}`,
+      style: { color: p.color },
+    }));
+  return <ChartTooltipShell label={typeof label === 'number' ? label.toFixed(2) : label} lines={lines} />;
+}
+
 function BeeswarmTip({ active, payload }: { active?: boolean; payload?: { payload: BeePoint }[] }) {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
   return (
-    <motion.div className="chart-tooltip" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.12 }}>
-      <div className="chart-tooltip-label">{d.name}</div>
-      <div className="chart-tooltip-value tabular">value {d.value} · log-odds {d.contribution > 0 ? '+' : ''}{d.contribution.toFixed(2)}</div>
-      <div className="chart-tooltip-sub muted">raw model output {d.risk_score.toFixed(3)} (not a probability)</div>
-    </motion.div>
+    <ChartTooltipShell
+      label={d.name}
+      lines={[
+        { text: `value ${d.value} · log-odds ${d.contribution > 0 ? '+' : ''}${d.contribution.toFixed(2)}` },
+        { text: `raw model output ${d.risk_score.toFixed(3)} (not a probability)`, className: 'chart-tooltip-sub muted' },
+      ]}
+    />
   );
 }
 
@@ -75,8 +129,8 @@ function DriverBeeswarm({ feature, points }: { feature: string; points: ModelCar
           <YAxis type="number" dataKey="y" hide domain={[0, 1]} />
           <ZAxis range={[14, 14]} />
           <Tooltip content={<BeeswarmTip />} cursor={false} />
-          <Scatter data={up} fill={colors.critical} fillOpacity={0.45} animationDuration={500} animationEasing="ease-out" />
-          <Scatter data={down} fill={colors.blue} fillOpacity={0.45} animationDuration={500} animationEasing="ease-out" />
+          <Scatter data={up} fill={colors.critical} fillOpacity={0.45} {...RECHARTS_ENTRANCE} />
+          <Scatter data={down} fill={colors.blue} fillOpacity={0.45} {...RECHARTS_ENTRANCE} />
         </ScatterChart>
       </ResponsiveContainer>
     </div>
@@ -110,6 +164,22 @@ export function ModelPage() {
         return wb - wa;
       })
     : [];
+
+  // Shared domain for the coefficient CI whiskers — symmetric around 0 and
+  // wide enough to fit every point estimate AND every bootstrap CI bound, so
+  // one feature's whisker is directly comparable to another's.
+  const coefDomain = useMemo(() => {
+    if (!card) return 1;
+    const vals: number[] = [...card.weights];
+    if (card.bootstrap) {
+      for (const ci of Object.values(card.bootstrap.coefficients)) {
+        if (ci.lo !== null) vals.push(ci.lo);
+        if (ci.hi !== null) vals.push(ci.hi);
+      }
+    }
+    const maxAbs = Math.max(0.01, ...vals.map((v) => Math.abs(v)));
+    return maxAbs * 1.15;
+  }, [card]);
 
   return (
     <div className="model-page">
@@ -158,6 +228,7 @@ export function ModelPage() {
                   <th className="model-th">Feature</th>
                   <th className="model-th model-th-right">Weight (standardized)</th>
                   <th className="model-th model-th-right">95% bootstrap CI</th>
+                  <th className="model-th">CI whisker</th>
                   <th className="model-th model-th-right">Imputed</th>
                 </tr>
               </thead>
@@ -172,7 +243,10 @@ export function ModelPage() {
                         {w >= 0 ? '+' : ''}{w.toFixed(3)}
                       </td>
                       <td className="tabular model-td-right muted">
-                        {ci ? `[${ci.lo}, ${ci.hi}]` : '—'}
+                        {ci && ci.lo !== null && ci.hi !== null ? `[${ci.lo}, ${ci.hi}]` : '—'}
+                      </td>
+                      <td className="model-td-whisker">
+                        <CoefWhisker point={w} lo={ci?.lo ?? null} hi={ci?.hi ?? null} domain={coefDomain} />
                       </td>
                       <td className="tabular model-td-right muted">
                         {card.imputation_rates[f] !== undefined ? `${card.imputation_rates[f]}%` : '—'}
@@ -182,9 +256,40 @@ export function ModelPage() {
                 })}
               </tbody>
             </table>
+            <p className="muted chart-caption model-coef-whisker-caption">
+              Whisker: shaded range is the 95% bootstrap CI (40 resampled refits, see below); the
+              tick is the point estimate; the dashed line is zero (no effect). A CI that crosses
+              zero means the resamples disagree on the coefficient's sign.
+            </p>
             <p className="muted model-positives">
               Trained to recognize: {card.positives.map((p) => p.name).join(', ')}.
             </p>
+          </div>
+
+          <div className="panel">
+            <h2>ROC curve</h2>
+            <p className="muted chart-caption">
+              False-positive rate vs. true-positive rate swept over the model's score
+              thresholds. The dashed diagonal is a random classifier (AUC 0.5); the in-sample
+              AUC above is the area under this curve — this shows WHERE that tradeoff sits (a
+              curve that only clears the diagonal at high FPR is a very different finding from
+              one that clears it early), not just the summary number.
+            </p>
+            {card.roc_curve.length > 0 ? (
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={card.roc_curve} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+                  <CartesianGrid stroke="var(--gridline)" />
+                  <XAxis dataKey="fpr" type="number" domain={[0, 1]} tick={{ fontSize: 10.5 }}
+                    tickFormatter={(v: number) => v.toFixed(1)} label={{ value: 'false positive rate', position: 'insideBottom', offset: -2, fontSize: 11 }} />
+                  <YAxis dataKey="tpr" type="number" domain={[0, 1]} tick={{ fontSize: 10.5 }}
+                    tickFormatter={(v: number) => v.toFixed(1)} label={{ value: 'true positive rate', angle: -90, position: 'insideLeft', fontSize: 11 }} />
+                  <Tooltip content={<CurveTooltip />} />
+                  <Line type="linear" dataKey="diag" data={[{ fpr: 0, diag: 0 }, { fpr: 1, diag: 1 }]}
+                    stroke="var(--baseline)" strokeDasharray="4 4" dot={false} isAnimationActive={false} legendType="none" name="random classifier" />
+                  <Line type="monotone" dataKey="tpr" stroke="var(--cat-blue)" dot={false} strokeWidth={2} isAnimationActive={false} name="ROC" />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : <p className="muted">No ROC curve persisted — retrain via deposit_flight_cli.</p>}
           </div>
 
           <div className="panel">
@@ -203,7 +308,7 @@ export function ModelPage() {
                     tickFormatter={(v: number) => v.toFixed(1)} label={{ value: 'recall', position: 'insideBottom', offset: -2, fontSize: 11 }} />
                   <YAxis dataKey="precision" type="number" domain={[0, 1]} tick={{ fontSize: 10.5 }}
                     tickFormatter={(v: number) => v.toFixed(1)} label={{ value: 'precision', angle: -90, position: 'insideLeft', fontSize: 11 }} />
-                  <Tooltip formatter={(v, name) => [typeof v === 'number' ? v.toFixed(3) : v, name]} />
+                  <Tooltip content={<CurveTooltip />} />
                   <Line type="monotone" dataKey="precision" stroke="var(--cat-blue)" dot={false} strokeWidth={2} isAnimationActive={false} />
                 </LineChart>
               </ResponsiveContainer>
@@ -225,7 +330,7 @@ export function ModelPage() {
                     tickFormatter={(v: number) => v.toFixed(1)} label={{ value: 'mean predicted', position: 'insideBottom', offset: -2, fontSize: 11 }} />
                   <YAxis type="number" domain={[0, 1]} tick={{ fontSize: 10.5 }}
                     tickFormatter={(v: number) => v.toFixed(1)} label={{ value: 'observed rate', angle: -90, position: 'insideLeft', fontSize: 11 }} />
-                  <Tooltip formatter={(v, name) => [typeof v === 'number' ? v.toFixed(3) : v, name]} />
+                  <Tooltip content={<CurveTooltip />} />
                   <Line type="linear" dataKey="diag" data={[{ mean_predicted: 0, diag: 0 }, { mean_predicted: 1, diag: 1 }]}
                     stroke="var(--baseline)" strokeDasharray="4 4" dot={false} isAnimationActive={false} legendType="none" name="perfect calibration" />
                   <Line type="monotone" dataKey="observed_rate" stroke="var(--status-critical)" dot={{ r: 3 }} strokeWidth={2} isAnimationActive={false} name="observed" />

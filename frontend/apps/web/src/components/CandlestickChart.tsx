@@ -5,7 +5,10 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../api';
 import { chartColors, onThemeChange } from '../colors';
+import { compactNumber, signedPct } from '../metricFormat';
 import { BankSearch } from './BankSearch';
+import { ChartEmpty } from './ChartTooltip';
+import { Figure } from './Figure';
 import type { CandlesResult, MarketCoverageResult, MarketSnapshot, PriceBar } from '../types';
 import './CandlestickChart.css';
 
@@ -21,16 +24,11 @@ const RANGE_DAYS: Record<Exclude<RangeSel, 'All'>, number> = { '1M': 30, '3M': 9
 interface ComparePeer { cert: number; name: string }
 interface CrosshairInfo { date: string; open: number; high: number; low: number; close: number; volume: number | null }
 
-function fmtPct(v: number | null): string {
-  return v === null || v === undefined ? '—' : `${v > 0 ? '+' : ''}${v.toFixed(2)}%`;
-}
-
-function fmtVolume(v: number): string {
-  if (v >= 1e9) return `${(v / 1e9).toFixed(2)}B`;
-  if (v >= 1e6) return `${(v / 1e6).toFixed(2)}M`;
-  if (v >= 1e3) return `${(v / 1e3).toFixed(1)}K`;
-  return String(Math.round(v));
-}
+// signedPct/compactNumber (metricFormat.ts) are the shared equivalents of
+// what used to be local fmtPct/fmtVolume here — kept as thin aliases so the
+// many call sites below don't all need renaming.
+const fmtPct = (v: number | null): string => signedPct(v);
+const fmtVolume = (v: number): string => compactNumber(v, 2);
 
 /** First bar date on/after "N days before the last bar" — used both to set the
     visible time range and to pick the base bar the comparison series indexes to 100. */
@@ -201,11 +199,11 @@ export function CandlestickChart({ cert }: { cert: number }) {
     return (
       <div className="panel">
         <h2>Price chart</h2>
-        <p className="muted candle-empty">
+        <ChartEmpty>
           No real price data landed for this bank yet. Market data needs its own free
           Tiingo API key (unlike FDIC/SEC, which need no key at all) — see{' '}
           <code>scripts/land_market_data.ps1</code> in the repo. ({error})
-        </p>
+        </ChartEmpty>
         {coverage?.landed_yet && (
           <p className="muted candle-coverage">
             {coverage.landed} of {coverage.eligible} eligible tickers landed so far
@@ -223,6 +221,16 @@ export function CandlestickChart({ cert }: { cert: number }) {
     date: lastBar.date, open: lastBar.open, high: lastBar.high, low: lastBar.low,
     close: lastBar.close, volume: lastBar.volume,
   });
+
+  // Same bars the plotted candles/SMA/volume series were built from, sliced
+  // to the currently selected range — so the data-table toggle and CSV match
+  // what's actually drawn rather than the full 760-day fetch window.
+  const visibleBars = candles?.bars?.length
+    ? (rangeSel === 'All' ? candles.bars : (() => {
+        const from = rangeStartDate(candles.bars, rangeSel);
+        return candles.bars.filter((b) => b.date >= from);
+      })())
+    : [];
 
   return (
     <div className="panel">
@@ -276,21 +284,38 @@ export function CandlestickChart({ cert }: { cert: number }) {
       )}
       {compareError && <p className="muted candle-compare-error">Comparison unavailable: {compareError}</p>}
 
-      <div className="candle-chart-wrap">
-        <div ref={containerRef} className="candle-container" />
-        {readout && (
-          <div className="candle-crosshair-readout tabular">
-            <span className="ccr-date">{readout.date}</span>
-            <span>O <b>{readout.open.toFixed(2)}</b></span>
-            <span>H <b>{readout.high.toFixed(2)}</b></span>
-            <span>L <b>{readout.low.toFixed(2)}</b></span>
-            <span className={readout.close >= readout.open ? 'candle-up' : 'candle-down'}>
-              C <b>{readout.close.toFixed(2)}</b>
-            </span>
-            <span className="muted">Vol <b>{readout.volume !== null ? fmtVolume(readout.volume) : '—'}</b></span>
+      {candles && (
+        <Figure
+          ariaLabel={`Candlestick price chart for ${candles.ticker} over ${rangeSel === 'All' ? 'all available history' : `the trailing ${rangeSel}`}, with 50-day and 200-day moving averages and a volume histogram`}
+          rows={visibleBars}
+          columns={[
+            { key: 'date', label: 'Date' },
+            { key: 'open', label: 'Open', format: (r) => r.open.toFixed(2) },
+            { key: 'high', label: 'High', format: (r) => r.high.toFixed(2) },
+            { key: 'low', label: 'Low', format: (r) => r.low.toFixed(2) },
+            { key: 'close', label: 'Close', format: (r) => r.close.toFixed(2) },
+            { key: 'volume', label: 'Volume', format: (r) => fmtVolume(r.volume) },
+          ]}
+          filename={`banklens-price-${candles.ticker}-${rangeSel}.csv`}
+          csvMeta={{ sourceLabel: 'Tiingo EOD (real, landed data)' }}
+        >
+          <div className="candle-chart-wrap">
+            <div ref={containerRef} className="candle-container" />
+            {readout && (
+              <div className="candle-crosshair-readout tabular">
+                <span className="ccr-date">{readout.date}</span>
+                <span>O <b>{readout.open.toFixed(2)}</b></span>
+                <span>H <b>{readout.high.toFixed(2)}</b></span>
+                <span>L <b>{readout.low.toFixed(2)}</b></span>
+                <span className={readout.close >= readout.open ? 'candle-up' : 'candle-down'}>
+                  C <b>{readout.close.toFixed(2)}</b>
+                </span>
+                <span className="muted">Vol <b>{readout.volume !== null ? fmtVolume(readout.volume) : '—'}</b></span>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </Figure>
+      )}
       <div className="candle-legend">
         <span className="candle-legend-item"><i style={{ background: colors.blue }} /> 50D SMA</span>
         <span className="candle-legend-item"><i style={{ background: colors.violet }} /> 200D SMA</span>

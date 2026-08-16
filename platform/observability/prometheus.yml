@@ -9,6 +9,12 @@ global:
   scrape_interval: 5s
   evaluation_interval: 5s
 
+# F18 — BridgeInternalServerError: a real alerting rule, not just a
+# dashboard panel. See prometheus/rules/bridge-alerts.yml for what it fires
+# on and why.
+rule_files:
+  - "rules/*.yml"
+
 scrape_configs:
   - job_name: banklens-bridge
     static_configs:

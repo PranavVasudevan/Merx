@@ -24,7 +24,8 @@ from banklens_transforms.data_quality import summarize
 from banklens_transforms.deposit_flight import (
     EXCLUDED_CANDIDATES, bootstrap_stats, build_rows, calibration_curve,
     cv_select_l2, derive_positive_certs, era_standardization_report,
-    imputation_rates, leave_one_out, pr_curve, save_card, score_vector, train,
+    imputation_rates, leave_one_out, pr_curve, roc_curve, save_card,
+    score_vector, train,
 )
 
 from .bronze.writer import write_partition
@@ -145,6 +146,7 @@ def run(data_dir: Path) -> None:
     card["imputation_rates"] = imputation_rates(rows)
     card["bootstrap"] = bootstrap_stats(rows, positive_certs, l2=selected_l2)
     card["pr_curve"] = pr_curve(fit["y"], fit["scores"])
+    card["roc_curve"] = roc_curve(fit["y"], fit["scores"])
     card["calibration_curve"] = calibration_curve(fit["y"], fit["scores"])
     save_card(card)
 

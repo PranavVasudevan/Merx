@@ -1,6 +1,9 @@
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { motion } from 'motion/react';
 import { chartColors } from '../colors';
+import { RECHARTS_ENTRANCE } from '../chartMotion';
+import { usd } from '../metricFormat';
+import { ChartTooltipShell } from './ChartTooltip';
+import { Figure } from './Figure';
 import './charts.css';
 
 export interface LegContribution {
@@ -14,21 +17,20 @@ export interface LegContribution {
   applicable: boolean;
 }
 
-function fmtB(v: number): string {
-  return `$${(v / 1e9).toFixed(2)}B`;
-}
-
 function TornadoTip({ active, payload }: { active?: boolean; payload?: { payload: LegContribution }[] }) {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
   return (
-    <motion.div className="chart-tooltip" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.12 }}>
-      <div className="chart-tooltip-label">{d.label}</div>
-      <div className="chart-tooltip-value tabular">{fmtB(d.contribution)}</div>
-      <div className="chart-tooltip-sub muted">
-        {d.applicable ? 'capital hit attributable to this leg (held-out diff)' : 'not applicable to this bank'}
-      </div>
-    </motion.div>
+    <ChartTooltipShell
+      label={d.label}
+      lines={[
+        { text: usd(d.contribution) },
+        {
+          text: d.applicable ? 'capital hit attributable to this leg (held-out diff)' : 'not applicable to this bank',
+          className: 'chart-tooltip-sub muted',
+        },
+      ]}
+    />
   );
 }
 
@@ -47,21 +49,32 @@ export function MarginalContributionChart({ contributions }: { contributions: Le
   const height = Math.max(90, data.length * 34);
 
   return (
-    <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data} layout="vertical" margin={{ top: 4, right: 40, left: 4, bottom: 0 }}>
-        <XAxis type="number" tick={{ fill: colors.muted, fontSize: 10.5 }}
-          axisLine={{ stroke: colors.baseline }} tickLine={false}
-          tickFormatter={(v: number) => fmtB(v)} />
-        <YAxis type="category" dataKey="label" tick={{ fill: colors.muted, fontSize: 10.5 }}
-          axisLine={false} tickLine={false} width={150} />
-        <Tooltip content={<TornadoTip />} cursor={{ fill: 'var(--surface-2)' }} />
-        <Bar dataKey="contribution" radius={3} maxBarSize={18} animationDuration={600} animationEasing="ease-out">
-          {data.map((d, i) => (
-            <Cell key={i} fill={d.applicable ? colors.critical : colors.muted}
-              fillOpacity={d.applicable ? 1 : 0.35} />
-          ))}
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
+    <Figure
+      ariaLabel="Tornado chart of each stress-test shock leg's marginal contribution to the total capital hit, ranked largest to smallest"
+      rows={data}
+      columns={[
+        { key: 'label', label: 'Shock leg' },
+        { key: 'contribution', label: 'Marginal contribution ($)', format: (r) => usd(r.contribution) },
+        { key: 'applicable', label: 'Applicable to this bank', value: (r) => (r.applicable ? 'yes' : 'no') },
+      ]}
+      filename="banklens-marginal-contribution.csv"
+    >
+      <ResponsiveContainer width="100%" height={height}>
+        <BarChart data={data} layout="vertical" margin={{ top: 4, right: 40, left: 4, bottom: 0 }}>
+          <XAxis type="number" tick={{ fill: colors.muted, fontSize: 10.5 }}
+            axisLine={{ stroke: colors.baseline }} tickLine={false}
+            tickFormatter={(v: number) => usd(v)} />
+          <YAxis type="category" dataKey="label" tick={{ fill: colors.muted, fontSize: 10.5 }}
+            axisLine={false} tickLine={false} width={150} />
+          <Tooltip content={<TornadoTip />} cursor={{ fill: 'var(--surface-2)' }} />
+          <Bar dataKey="contribution" radius={3} maxBarSize={18} {...RECHARTS_ENTRANCE}>
+            {data.map((d, i) => (
+              <Cell key={i} fill={d.applicable ? colors.critical : colors.muted}
+                fillOpacity={d.applicable ? 1 : 0.35} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </Figure>
   );
 }

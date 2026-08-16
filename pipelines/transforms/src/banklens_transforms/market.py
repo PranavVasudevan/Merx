@@ -183,7 +183,7 @@ def beta_vs_benchmark(returns: dict[str, float], benchmark_returns: dict[str, fl
 _QUARTER_END = {"Q1": "0331", "Q2": "0630", "Q3": "0930", "Q4": "1231"}
 
 
-def quarter_end_date(quarter: str) -> str | None:
+def quarter_end_date(quarter: str | None) -> str | None:
     """"2026Q1" -> "2026-03-31". None if `quarter` isn't that shape. A stated
     simplification: uses the calendar quarter-end, not the (~30-45 day later)
     date a Call Report actually becomes public — this backtest does not model

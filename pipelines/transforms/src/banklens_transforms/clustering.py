@@ -154,6 +154,7 @@ def choose_k(X, k_range=range(2, 8), **kw):
         scores[k] = round(s, 4)
         if best is None or s > best[0]:
             best = (s, k, labels, centroids)
+    assert best is not None, "choose_k() needs a non-empty k_range to pick a best k"
     return best[1], best[2], best[3], scores
 
 

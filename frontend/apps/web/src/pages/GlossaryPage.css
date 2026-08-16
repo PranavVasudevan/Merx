@@ -1,0 +1,8 @@
+.glossary-page { display: flex; flex-direction: column; gap: var(--space-3); }
+.glossary-subtitle { margin: 0; font-size: var(--text-sm); }
+.glossary-entry-label { margin: 0 0 var(--space-2); font-size: var(--text-lg); }
+.glossary-entry-def { margin: 0 0 var(--space-3); font-size: var(--text-sm); color: var(--text-secondary); }
+.glossary-entry-dl { display: grid; grid-template-columns: 140px 1fr; gap: 6px var(--space-3); margin: 0; font-size: var(--text-sm); }
+.glossary-entry-dl dt { color: var(--text-muted); font-weight: 600; }
+.glossary-entry-dl dd { margin: 0; }
+.glossary-entry-formula { font-family: ui-monospace, monospace; font-size: var(--text-xs); }

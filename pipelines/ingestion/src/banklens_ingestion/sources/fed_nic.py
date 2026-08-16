@@ -194,7 +194,8 @@ class FedNicSource(Source):
             out = []
             for line in f:
                 vals = line.decode("utf-8", errors="replace").rstrip("\r\n").split("^")
-                row = {"rssd": vals[idx["RSSD9001"]], "period": vals[idx["RSSD9999"]]}
+                row: dict[str, str | float | None] = {
+                    "rssd": vals[idx["RSSD9001"]], "period": vals[idx["RSSD9999"]]}
                 for code, field in FINANCIAL_FIELDS.items():
                     v = vals[idx[code]].strip()
                     row[field] = float(v) if v else None

@@ -1,26 +1,26 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { motion } from 'motion/react';
 import { api } from '../api';
 import { chartColors } from '../colors';
+import { RECHARTS_ENTRANCE } from '../chartMotion';
+import { usd } from '../metricFormat';
+import { ChartError, ChartTooltipShell } from './ChartTooltip';
 import type { StressResult } from '../types';
 import './StressPanel.css';
 import './charts.css';
 
 function fmtB(v: number): string {
-  return `$${(v / 1e9).toFixed(1)}B`;
+  return usd(v);
 }
 
 function WaterfallTip({ active, payload }: { active?: boolean; payload?: { payload: { label: string; delta: number; kind: string } }[] }) {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
   return (
-    <motion.div className="chart-tooltip" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.12 }}>
-      <div className="chart-tooltip-label">{d.label}</div>
-      <div className="chart-tooltip-value tabular">
-        {d.kind === 'loss' ? '−' : ''}{fmtB(Math.abs(d.delta))}
-      </div>
-    </motion.div>
+    <ChartTooltipShell
+      label={d.label}
+      lines={[{ text: `${d.kind === 'loss' ? '−' : ''}${fmtB(Math.abs(d.delta))}` }]}
+    />
   );
 }
 
@@ -107,21 +107,25 @@ export function StressPanel({ cert }: { cert: number }) {
       </div>
 
       {error && !result && (
-        <p className="muted stress-liq-note">
+        <ChartError>
           {error.includes('not permitted')
             ? 'Running the stress simulator requires the analyst role — sign in as analyst1 to use this panel.'
             : error}
-        </p>
+        </ChartError>
       )}
 
       {result && (
         <>
-          <div className={`stress-verdict ${result.passes_all ? 'stress-pass' : 'stress-fail'}`}>
-            {result.passes_all
-              ? (result.fully_covered
-                  ? 'PASS — clears all regulatory minimums'
-                  : 'PARTIAL PASS — clears minimums, but not all shocks could be applied')
-              : 'FAIL — breaches a regulatory minimum'}
+          <div className={`stress-verdict ${
+            result.passes_all === null ? 'stress-unknown' : result.passes_all ? 'stress-pass' : 'stress-fail'
+          }`}>
+            {result.passes_all === null
+              ? 'NOT ASSESSED — no regulatory ratio could be computed for this bank (no disclosed denominator)'
+              : result.passes_all
+                ? (result.fully_covered
+                    ? 'PASS — clears all regulatory minimums'
+                    : 'PARTIAL PASS — clears minimums, but not all shocks could be applied')
+                : 'FAIL — breaches a regulatory minimum'}
             {loading && <span className="muted"> · recalculating…</span>}
           </div>
 
@@ -150,9 +154,13 @@ export function StressPanel({ cert }: { cert: number }) {
               <div className="stress-ratio" key={k}>
                 <div className="stress-ratio-label muted">{k.toUpperCase()}</div>
                 <div className="tabular stress-ratio-nums">
-                  <span>{result.before[k]}%</span>
+                  <span>{result.before[k] === null ? 'n/a' : `${result.before[k]}%`}</span>
                   <span className="muted"> → </span>
-                  <span className={result.passes[k] ? 'stress-good-text' : 'stress-bad-text'}>{result.after[k]}%</span>
+                  {result.after[k] === null ? (
+                    <span className="muted" title="No disclosed denominator to compute this ratio against">n/a</span>
+                  ) : (
+                    <span className={result.passes[k] ? 'stress-good-text' : 'stress-bad-text'}>{result.after[k]}%</span>
+                  )}
                 </div>
               </div>
             ))}
@@ -167,7 +175,7 @@ export function StressPanel({ cert }: { cert: number }) {
               <Tooltip content={<WaterfallTip />} cursor={{ fill: 'var(--surface-2)' }} />
               <Bar dataKey="base" stackId="w" fill="transparent" />
               <Bar dataKey="delta" stackId="w" radius={[0, 4, 4, 0]} maxBarSize={20}
-                animationDuration={500} animationEasing="ease-out">
+                {...RECHARTS_ENTRANCE}>
                 {waterfall.map((d, i) => (
                   <Cell key={i} fill={d.kind === 'total' ? colors.violet : colors.critical} />
                 ))}

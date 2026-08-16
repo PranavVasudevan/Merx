@@ -71,6 +71,7 @@ MCP_TOOL_TIERS: dict[str, str] = {
     "run_stress_comparison": "analyst",
     "search_filings_text": "viewer",
     "get_filings_coverage": "viewer",
+    "get_population_trend_sparklines": "viewer",
 }
 
 _VALID_ROLES = {"viewer", "analyst"}
