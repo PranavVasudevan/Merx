@@ -1,4 +1,4 @@
-# BankLens
+# Merx
 
 BankLens is a bank intelligence platform built on public regulatory filings from
 the United States and the European Union. A single data pipeline turns raw
