@@ -134,7 +134,7 @@ jobs:
           pip install cyclonedx-bom==7.3.1
           cyclonedx-py environment -o sbom-python.json --of JSON
       - name: Upload SBOM (Python)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sbom-python
           path: sbom-python.json
@@ -184,7 +184,7 @@ jobs:
       - name: Generate SBOM — ingestion
         run: cargo cyclonedx --format json --manifest-path services/ingestion/Cargo.toml
       - name: Upload SBOM (Rust)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sbom-rust
           path: |
@@ -224,7 +224,7 @@ jobs:
       - name: Generate SBOM
         run: npx --yes @cyclonedx/cyclonedx-npm --output-file sbom-npm.json
       - name: Upload SBOM (npm)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sbom-npm
           path: frontend/apps/web/sbom-npm.json
